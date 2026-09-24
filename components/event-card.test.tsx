@@ -6,6 +6,8 @@ import type { Event } from "@/lib/types";
 const event: Event = {
   id: "390004",
   title: "React LT Night Tokyo",
+  catch: null,
+  description: null,
   date: "2026-09-24",
   start: "19:00",
   end: "21:30",

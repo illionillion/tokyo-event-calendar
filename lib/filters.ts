@@ -20,7 +20,17 @@ export function matchesKeyword(event: Event, keyword: string): boolean {
   if (!normalized) return true;
 
   const haystack = normalize(
-    [event.title, event.venueName, event.area, event.address, ...event.tags].join("\n")
+    [
+      event.title,
+      event.catch,
+      event.description,
+      event.address,
+      event.venueName,
+      event.area,
+      ...event.tags,
+    ]
+      .filter((value) => value)
+      .join("\n")
   );
 
   return normalized.split(/\s+/).every((term) => haystack.includes(term));

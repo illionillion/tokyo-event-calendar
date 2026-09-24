@@ -12,6 +12,8 @@ function event(overrides: Partial<Event> = {}): Event {
   return {
     id: "1",
     title: "React LT Night",
+    catch: null,
+    description: null,
     date: "2026-09-24",
     start: "19:00",
     end: "21:00",

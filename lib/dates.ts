@@ -42,6 +42,18 @@ export function formatDateParts(year: number, month: number, day: number): strin
   return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
+export function daysBetween(from: string, to: string): number {
+  const start = parseDateKey(from);
+  const end = parseDateKey(to);
+  if (!start || !end) {
+    throw new Error(`不正な日付です: ${from}`);
+  }
+
+  const startUtc = Date.UTC(start.year, start.month - 1, start.day);
+  const endUtc = Date.UTC(end.year, end.month - 1, end.day);
+  return Math.round((endUtc - startUtc) / 86_400_000);
+}
+
 export function addDays(dateKey: string, amount: number): string {
   const parts = parseDateKey(dateKey);
   if (!parts) {
