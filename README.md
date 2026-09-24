@@ -11,6 +11,8 @@ pnpm dev
 
 [http://localhost:3000](http://localhost:3000) を開いて確認してください。
 
+connpass API のキーが無い間は、`data/events.json` のモックを表示します。日付は東京の今日からの相対日です。検索条件は URL に保持します。
+
 ## Scripts
 
 | Command              | Description           |
