@@ -18,6 +18,7 @@ const event: Event = {
   venueName: "渋谷ヒカリエ 8F",
   address: "東京都渋谷区渋谷2-21-1",
   tags: ["React", "LT"],
+  imageUrl: null,
   accepted: 48,
   limit: 80,
   url: "https://connpass.com/event/390004/",

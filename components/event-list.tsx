@@ -28,7 +28,7 @@ export function EventList({
 
   return (
     <section id="events" aria-labelledby="event-list-heading">
-      <div className="flex flex-wrap items-end justify-between gap-2">
+      <div className="flex flex-wrap items-end justify-between gap-2 lg:sr-only">
         <h2 id="event-list-heading" className="text-lg font-semibold text-balance">
           {formatDayHeading(filters.date)}
           {isToday ? <span className="ml-2 text-sm font-medium text-primary">今日</span> : null}

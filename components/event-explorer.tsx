@@ -7,6 +7,7 @@ import { EventList } from "@/components/event-list";
 import { FiltersPanel } from "@/components/filters-panel";
 import { MiniCalendar } from "@/components/mini-calendar";
 import { groupAreas } from "@/lib/areas";
+import { parseDateKey } from "@/lib/dates";
 import { countByArea, filterEvents, matchingDates } from "@/lib/filters";
 import { buildQuery, parseFilters } from "@/lib/query";
 import type { Event, Filters } from "@/lib/types";
@@ -39,19 +40,33 @@ export function EventExplorer({ events, today, now }: EventExplorerProps) {
     navigate({ ...filters, ...partial }, mode);
   }
 
+  const selected = parseDateKey(filters.date);
+  const selectedLabel = selected ? `${selected.month}月${selected.day}日` : filters.date;
+
   return (
     <div className="mx-auto max-w-[1080px] px-4 py-4">
       <div className="sticky top-0 z-10 -mx-4 bg-background px-4 py-2">
-        <DateNavigation
-          selectedDate={filters.date}
-          today={today}
-          onSelectDate={(date) => {
-            if (date !== filters.date) update({ date });
-          }}
-        />
+        <div className="flex items-center justify-between gap-6">
+          <DateNavigation
+            selectedDate={filters.date}
+            today={today}
+            onSelectDate={(date) => {
+              if (date !== filters.date) update({ date });
+            }}
+          />
+          <div className="hidden shrink-0 text-right lg:block" aria-hidden="true">
+            <p className="text-lg leading-none font-semibold tabular-nums">{selectedLabel}</p>
+            {filters.date === today ? (
+              <p className="mt-1 text-sm leading-none font-medium text-primary">今日</p>
+            ) : null}
+            <p className="mt-1 text-sm leading-none text-secondary tabular-nums">
+              {visible.length}件
+            </p>
+          </div>
+        </div>
       </div>
       <div className="mt-4 grid items-start gap-4 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-6">
-        <aside className="space-y-4 lg:sticky lg:top-[138px]">
+        <aside className="space-y-4 lg:sticky lg:top-24">
           <div className="hidden lg:block">
             <MiniCalendar
               selectedDate={filters.date}

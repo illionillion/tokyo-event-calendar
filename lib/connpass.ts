@@ -109,6 +109,7 @@ export function toCalendarEvent(event: ConnpassEvent, dayDelta = 0): Event | nul
     venueName: event.place ?? "",
     address: event.address ?? "",
     tags: event.hash_tag ? [event.hash_tag] : [],
+    imageUrl: event.image_url,
     accepted: event.accepted,
     limit: event.limit,
     url: event.url,

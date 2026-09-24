@@ -17,6 +17,7 @@ export type Event = {
   venueName: string;
   address: string;
   tags: string[];
+  imageUrl: string | null;
   accepted: number;
   limit: number | null;
   url: string;

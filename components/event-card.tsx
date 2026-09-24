@@ -31,16 +31,24 @@ export function EventCard({ event, now }: EventCardProps) {
       href={event.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex gap-3 rounded-lg border border-border bg-card p-3 hover:border-primary hover:bg-primary-soft hover:shadow-sm"
+      className="flex flex-col overflow-hidden rounded-lg border border-border bg-card hover:border-primary hover:bg-primary-soft hover:shadow-sm md:flex-row md:items-stretch"
     >
-      <span
-        aria-hidden="true"
-        className="flex size-16 shrink-0 items-center justify-center rounded-md text-lg font-semibold sm:size-[72px]"
-        style={{ backgroundColor: thumb.background, color: thumb.foreground }}
-      >
-        {initial}
+      <span className="relative block aspect-[16/9] w-full shrink-0 overflow-hidden md:aspect-auto md:min-h-40 md:w-72 md:self-stretch">
+        {event.imageUrl ? (
+          // connpass の image_url は期限付きで、最適化プロキシに載せない
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={event.imageUrl} alt="" className="absolute inset-0 size-full object-cover" />
+        ) : (
+          <span
+            aria-hidden="true"
+            className="absolute inset-0 flex items-center justify-center text-3xl font-semibold"
+            style={{ backgroundColor: thumb.background, color: thumb.foreground }}
+          >
+            {initial}
+          </span>
+        )}
       </span>
-      <span className="min-w-0 flex-1">
+      <span className="flex min-w-0 flex-1 flex-col justify-center px-3 py-3 md:px-4">
         <span className="flex items-baseline gap-2">
           <span className="text-[13px] text-secondary tabular-nums">
             {event.start}–{event.end}

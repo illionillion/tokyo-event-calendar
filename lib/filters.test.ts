@@ -24,6 +24,7 @@ function event(overrides: Partial<Event> = {}): Event {
     venueName: "渋谷ヒカリエ",
     address: "東京都渋谷区渋谷2-21-1",
     tags: ["React", "LT"],
+    imageUrl: null,
     accepted: 10,
     limit: 20,
     url: "https://connpass.com/event/1/",
