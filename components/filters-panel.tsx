@@ -9,6 +9,7 @@ import type { Filters, FormatFilter } from "@/lib/types";
 const FORMAT_OPTIONS: FormatFilter[] = ["all", "online", "offline"];
 
 type FiltersPanelProps = {
+  keywordResetKey: number;
   filters: Filters;
   groups: AreaGroups;
   counts: Map<string, number>;
@@ -19,6 +20,7 @@ type FiltersPanelProps = {
 };
 
 export function FiltersPanel({
+  keywordResetKey,
   filters,
   groups,
   counts,
@@ -70,7 +72,7 @@ export function FiltersPanel({
         </div>
       </fieldset>
 
-      <KeywordField keyword={filters.keyword} onKeyword={onKeyword} />
+      <KeywordField key={keywordResetKey} keyword={filters.keyword} onKeyword={onKeyword} />
 
       <AreaFilter filters={filters} groups={groups} counts={counts} onArea={onArea} />
     </section>

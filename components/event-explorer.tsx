@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { DateNavigation } from "@/components/date-navigation";
 import { EventList } from "@/components/event-list";
 import { FiltersPanel } from "@/components/filters-panel";
@@ -21,6 +21,7 @@ type EventExplorerProps = {
 export function EventExplorer({ events, today, now }: EventExplorerProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [keywordResetKey, setKeywordResetKey] = useState(0);
   const filters = useMemo(() => parseFilters(searchParams, today), [searchParams, today]);
   const visible = useMemo(() => filterEvents(events, filters), [events, filters]);
   const counts = useMemo(() => countByArea(events, filters), [events, filters]);
@@ -38,6 +39,11 @@ export function EventExplorer({ events, today, now }: EventExplorerProps) {
 
   function update(partial: Partial<Filters>, mode: "push" | "replace" = "push") {
     navigate({ ...filters, ...partial }, mode);
+  }
+
+  function clearFilters() {
+    setKeywordResetKey((key) => key + 1);
+    update({ area: null, format: "all", keyword: "" });
   }
 
   const selected = parseDateKey(filters.date);
@@ -78,6 +84,7 @@ export function EventExplorer({ events, today, now }: EventExplorerProps) {
             />
           </div>
           <FiltersPanel
+            keywordResetKey={keywordResetKey}
             filters={filters}
             groups={groups}
             counts={counts}
@@ -90,7 +97,7 @@ export function EventExplorer({ events, today, now }: EventExplorerProps) {
             onKeyword={(keyword) => {
               if (keyword !== filters.keyword) update({ keyword }, "replace");
             }}
-            onClear={() => update({ area: null, format: "all", keyword: "" })}
+            onClear={clearFilters}
           />
         </aside>
         <EventList
@@ -102,7 +109,7 @@ export function EventExplorer({ events, today, now }: EventExplorerProps) {
             if (date !== filters.date) update({ date });
           }}
           onChangeFilters={(partial) => update(partial)}
-          onClearFilters={() => update({ area: null, format: "all", keyword: "" })}
+          onClearFilters={clearFilters}
         />
       </div>
     </div>
