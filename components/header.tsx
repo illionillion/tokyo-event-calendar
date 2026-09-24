@@ -15,27 +15,26 @@ function CalendarMark() {
   );
 }
 
+/**
+ * 全ページ共通のコンパクトなサイトヘッダー。
+ * sticky 高さは h-12（3rem）。カレンダーの日付バー / サイドバー offset と揃えること。
+ */
 export function Header() {
   return (
-    <header className="border-b border-border bg-card">
-      <div className="mx-auto flex h-14 max-w-[1080px] items-center px-4">
+    <header className="sticky top-0 z-20 h-12 border-b border-border bg-card">
+      <div className="mx-auto flex h-full max-w-[1080px] items-center px-4">
         <a
           href="#events"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-20 focus:rounded-md focus:bg-card focus:px-3 focus:py-2 focus:shadow-sm"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-30 focus:rounded-md focus:bg-card focus:px-3 focus:py-2 focus:shadow-sm"
         >
           イベント一覧へ
         </a>
-        <Link href="/" className="flex items-center gap-2.5 rounded-md text-foreground">
-          <span className="flex size-8 items-center justify-center rounded-md bg-primary text-white">
+        <Link href="/" className="flex items-center gap-2 rounded-md text-foreground">
+          <span className="flex size-7 items-center justify-center rounded-md bg-primary text-white">
             <CalendarMark />
           </span>
-          <span>
-            <span className="block text-[15px] leading-tight font-semibold text-balance">
-              東京イベントカレンダー
-            </span>
-            <span className="hidden text-[12px] text-secondary sm:block">
-              connpass の東京イベントを日付で眺める
-            </span>
+          <span className="text-[15px] leading-none font-semibold text-balance">
+            東京イベントカレンダー
           </span>
         </Link>
       </div>
