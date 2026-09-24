@@ -85,6 +85,12 @@ describe("filters", () => {
     expect(matchesKeyword(event({ address: "東京都北区赤羽1-1-1", area: "北区" }), "赤羽")).toBe(
       true
     );
+
+    expect(matchesKeyword(event(), "React, LT")).toBe(true);
+    expect(matchesKeyword(event(), "React,LT")).toBe(true);
+    expect(matchesKeyword(event(), "React LT")).toBe(true);
+    expect(matchesKeyword(event(), "React、LT")).toBe(true);
+    expect(matchesKeyword(event(), "React, Python")).toBe(false);
   });
 
   it("県名は県内の会場をまとめて当てる", () => {

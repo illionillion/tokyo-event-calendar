@@ -32,4 +32,27 @@ describe("EventList", () => {
     await user.click(screen.getByRole("button", { name: "条件をクリア" }));
     expect(onClearFilters).toHaveBeenCalled();
   });
+
+  it("キーワードは語ごとにチップになり、1語外すと残りで再検索する", async () => {
+    const user = userEvent.setup();
+    const onChangeFilters = vi.fn();
+
+    render(
+      <EventList
+        filters={{ ...filters, keyword: "React, LT" }}
+        events={[]}
+        today="2026-09-24"
+        now="2026-09-24T00:00:00.000Z"
+        onSelectDate={vi.fn()}
+        onChangeFilters={onChangeFilters}
+        onClearFilters={vi.fn()}
+      />
+    );
+
+    expect(screen.getByRole("button", { name: "Reactの条件を解除" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "LTの条件を解除" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Reactの条件を解除" }));
+    expect(onChangeFilters).toHaveBeenCalledWith({ keyword: "LT" });
+  });
 });
