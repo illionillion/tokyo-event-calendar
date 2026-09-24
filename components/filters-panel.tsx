@@ -163,6 +163,7 @@ function AreaFilter({
   const sections = [
     { label: "23区", names: groups.wards },
     { label: "市", names: groups.cities },
+    { label: "県", names: groups.prefectures },
     { label: "その他", names: groups.other },
   ].filter((section) => section.names.length > 0);
 

@@ -36,9 +36,13 @@ export const TOKYO_CITIES = [
   "町田市",
 ] as const;
 
+/** 市町村には分けず、県名でまとめて選ぶ。 */
+export const NEIGHBOR_PREFECTURES = ["神奈川県", "埼玉県", "千葉県"] as const;
+
 export type AreaGroups = {
   wards: string[];
   cities: string[];
+  prefectures: string[];
   other: string[];
 };
 
@@ -51,7 +55,7 @@ export function groupAreas(events: Event[], selected: string | null): AreaGroups
 
   if (selected) present.add(selected);
 
-  const known = new Set<string>([...TOKYO_WARDS, ...TOKYO_CITIES]);
+  const known = new Set<string>([...TOKYO_WARDS, ...TOKYO_CITIES, ...NEIGHBOR_PREFECTURES]);
   const other = [...present]
     .filter((name) => !known.has(name))
     .sort((left, right) => left.localeCompare(right, "ja"));
@@ -59,6 +63,7 @@ export function groupAreas(events: Event[], selected: string | null): AreaGroups
   return {
     wards: TOKYO_WARDS.filter((name) => present.has(name)),
     cities: TOKYO_CITIES.filter((name) => present.has(name)),
+    prefectures: NEIGHBOR_PREFECTURES.filter((name) => present.has(name)),
     other,
   };
 }

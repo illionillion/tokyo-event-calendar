@@ -87,6 +87,30 @@ describe("filters", () => {
     );
   });
 
+  it("県名は県内の会場をまとめて当てる", () => {
+    const events = [
+      event({
+        id: "1",
+        area: "神奈川県",
+        address: "神奈川県横浜市西区みなとみらい2-3-5",
+        title: "横浜",
+      }),
+      event({
+        id: "2",
+        area: "神奈川県",
+        address: "神奈川県川崎市川崎区駅前本町26-2",
+        title: "川崎",
+        startedAt: "2026-09-24T18:00:00+09:00",
+      }),
+      event({ id: "3", area: "渋谷区" }),
+    ];
+
+    expect(
+      filterEvents(events, { ...baseFilters, area: "神奈川県" }).map((item) => item.id)
+    ).toEqual(["2", "1"]);
+    expect(countByArea(events, baseFilters).get("神奈川県")).toBe(2);
+  });
+
   it("エリア件数は選択中のエリア以外の条件で数える", () => {
     const events = [
       event(),

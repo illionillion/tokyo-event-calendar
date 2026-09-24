@@ -9,7 +9,7 @@ export const MOCK_DATE_ANCHOR = "2026-09-24";
 /**
  * `data/events.json` は connpass API v2 のイベント一覧レスポンス。
  * https://connpass.com/about/api/v2/
- * 区・市と開催形態は API に無いので、住所とキャッチから画面用に決める。
+ * 区・市・県と開催形態は API に無いので、住所とキャッチから画面用に決める。
  */
 export function materializeEvents(
   today: string,

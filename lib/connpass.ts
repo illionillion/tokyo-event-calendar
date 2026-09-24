@@ -1,4 +1,4 @@
-import { TOKYO_CITIES, TOKYO_WARDS } from "@/lib/areas";
+import { NEIGHBOR_PREFECTURES, TOKYO_CITIES, TOKYO_WARDS } from "@/lib/areas";
 import type { ConnpassEvent, Event, EventFormat } from "@/lib/types";
 
 const AREAS = [...TOKYO_WARDS, ...TOKYO_CITIES].sort((left, right) => right.length - left.length);
@@ -13,6 +13,8 @@ const OPEN_STATUSES = new Set<ConnpassEvent["open_status"]>([
 
 export function areaFromAddress(address: string | null): string {
   if (!address) return "";
+  const prefecture = NEIGHBOR_PREFECTURES.find((name) => address.includes(name));
+  if (prefecture) return prefecture;
   return AREAS.find((name) => address.includes(name)) ?? "";
 }
 

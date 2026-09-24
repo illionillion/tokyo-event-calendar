@@ -36,6 +36,10 @@ describe("connpass", () => {
   it("住所から区・市を取る", () => {
     expect(areaFromAddress("東京都北区赤羽1-1-1")).toBe("北区");
     expect(areaFromAddress("東京都豊島区西池袋1-1-1")).toBe("豊島区");
+    expect(areaFromAddress("神奈川県横浜市西区みなとみらい2-3-5")).toBe("神奈川県");
+    expect(areaFromAddress("神奈川県川崎市川崎区駅前本町26-2")).toBe("神奈川県");
+    expect(areaFromAddress("埼玉県さいたま市北区宮原町1-1-1")).toBe("埼玉県");
+    expect(areaFromAddress("千葉県千葉市中央区中央1-1-1")).toBe("千葉県");
     expect(areaFromAddress(null)).toBe("");
   });
 
