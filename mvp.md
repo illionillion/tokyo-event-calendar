@@ -213,6 +213,10 @@ MVPでは以下を作らない。
 
 # 8. Architecture
 
+仕様は以下を参考にデータ構造などを定義する
+
+https://connpass.com/about/api/v2/
+
 ```text
 connpass API
      │
