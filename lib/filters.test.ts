@@ -3,8 +3,11 @@ import {
   countByArea,
   filterEvents,
   formatPlace,
+  joinKeywordTerms,
+  keywordPlaceholder,
   matchesFormat,
   matchesKeyword,
+  splitKeywordTerms,
 } from "@/lib/filters";
 import type { Event, Filters } from "@/lib/types";
 
@@ -83,6 +86,22 @@ describe("filters", () => {
     expect(matchesKeyword(event(), "Ｒｅａｃｔ")).toBe(true);
     expect(matchesKeyword(event(), "赤羽")).toBe(false);
     expect(matchesKeyword(event({ address: "東京都北区赤羽1-1-1", area: "北区" }), "赤羽")).toBe(
+      true
+    );
+
+    expect(joinKeywordTerms(["LT", "渋谷"])).toBe("LT, 渋谷");
+    expect(keywordPlaceholder).toBe("React, LT, 渋谷");
+
+    expect(matchesKeyword(event(), "React, LT")).toBe(true);
+    expect(matchesKeyword(event(), "React,LT")).toBe(true);
+    expect(matchesKeyword(event(), "React LT")).toBe(true);
+    expect(matchesKeyword(event(), "React、LT")).toBe(true);
+    expect(matchesKeyword(event(), "React, Python")).toBe(false);
+    expect(splitKeywordTerms("React Native, LT")).toEqual(["React Native", "LT"]);
+    expect(
+      matchesKeyword(event({ title: "React", tags: ["Native"], catch: null }), "React Native")
+    ).toBe(false);
+    expect(matchesKeyword(event({ title: "React Native Night", tags: [] }), "React Native")).toBe(
       true
     );
   });
