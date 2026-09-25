@@ -1,6 +1,6 @@
 import { EventCard } from "@/components/event-card";
 import { addDays, formatDayHeading, hasEnded } from "@/lib/dates";
-import { formatLabel, hasActiveFilters, splitKeywordTerms } from "@/lib/filters";
+import { formatLabel, hasActiveFilters, joinKeywordTerms, splitKeywordTerms } from "@/lib/filters";
 import type { Event, Filters } from "@/lib/types";
 
 type EventListProps = {
@@ -64,7 +64,7 @@ export function EventList({
                 label={term}
                 onClear={() =>
                   onChangeFilters({
-                    keyword: terms.filter((_, i) => i !== index).join(" "),
+                    keyword: joinKeywordTerms(terms.filter((_, i) => i !== index)),
                   })
                 }
                 clearLabel={`${term}の条件を解除`}

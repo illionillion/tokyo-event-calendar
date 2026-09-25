@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { AreaGroups } from "@/lib/areas";
 import { cn } from "@/lib/cn";
-import { formatLabel, hasActiveFilters } from "@/lib/filters";
+import { formatLabel, hasActiveFilters, keywordPlaceholder } from "@/lib/filters";
 import type { Filters, FormatFilter } from "@/lib/types";
 
 const FORMAT_OPTIONS: FormatFilter[] = ["all", "online", "offline"];
@@ -139,7 +139,7 @@ function KeywordField({
         id="keyword"
         type="search"
         value={draft}
-        placeholder="React, LT, 渋谷"
+        placeholder={keywordPlaceholder}
         onChange={(event) => {
           const value = event.target.value;
           setDraft(value);

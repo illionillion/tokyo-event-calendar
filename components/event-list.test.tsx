@@ -39,7 +39,7 @@ describe("EventList", () => {
 
     render(
       <EventList
-        filters={{ ...filters, keyword: "React, LT" }}
+        filters={{ ...filters, keyword: "React LT 渋谷" }}
         events={[]}
         today="2026-09-24"
         now="2026-09-24T00:00:00.000Z"
@@ -51,8 +51,9 @@ describe("EventList", () => {
 
     expect(screen.getByRole("button", { name: "Reactの条件を解除" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "LTの条件を解除" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "渋谷の条件を解除" })).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Reactの条件を解除" }));
-    expect(onChangeFilters).toHaveBeenCalledWith({ keyword: "LT" });
+    expect(onChangeFilters).toHaveBeenCalledWith({ keyword: "LT, 渋谷" });
   });
 });

@@ -11,6 +11,15 @@ export function splitKeywordTerms(keyword: string): string[] {
     .filter(Boolean);
 }
 
+/** プレースホルダとチップ解除後のテキストで共通の区切り。 */
+export const keywordTermSeparator = ", ";
+
+export function joinKeywordTerms(terms: string[]): string {
+  return terms.join(keywordTermSeparator);
+}
+
+export const keywordPlaceholder = joinKeywordTerms(["React", "LT", "渋谷"]);
+
 export function matchesArea(event: Event, area: string | null): boolean {
   if (!area) return true;
   return event.area === area;

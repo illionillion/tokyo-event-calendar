@@ -3,6 +3,8 @@ import {
   countByArea,
   filterEvents,
   formatPlace,
+  joinKeywordTerms,
+  keywordPlaceholder,
   matchesFormat,
   matchesKeyword,
 } from "@/lib/filters";
@@ -85,6 +87,9 @@ describe("filters", () => {
     expect(matchesKeyword(event({ address: "東京都北区赤羽1-1-1", area: "北区" }), "赤羽")).toBe(
       true
     );
+
+    expect(joinKeywordTerms(["LT", "渋谷"])).toBe("LT, 渋谷");
+    expect(keywordPlaceholder).toBe("React, LT, 渋谷");
 
     expect(matchesKeyword(event(), "React, LT")).toBe(true);
     expect(matchesKeyword(event(), "React,LT")).toBe(true);
