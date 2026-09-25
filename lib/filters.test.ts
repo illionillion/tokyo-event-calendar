@@ -7,6 +7,7 @@ import {
   keywordPlaceholder,
   matchesFormat,
   matchesKeyword,
+  splitKeywordTerms,
 } from "@/lib/filters";
 import type { Event, Filters } from "@/lib/types";
 
@@ -96,6 +97,13 @@ describe("filters", () => {
     expect(matchesKeyword(event(), "React LT")).toBe(true);
     expect(matchesKeyword(event(), "React、LT")).toBe(true);
     expect(matchesKeyword(event(), "React, Python")).toBe(false);
+    expect(splitKeywordTerms("React Native, LT")).toEqual(["React Native", "LT"]);
+    expect(
+      matchesKeyword(event({ title: "React", tags: ["Native"], catch: null }), "React Native")
+    ).toBe(false);
+    expect(matchesKeyword(event({ title: "React Native Night", tags: [] }), "React Native")).toBe(
+      true
+    );
   });
 
   it("県名は県内の会場をまとめて当てる", () => {

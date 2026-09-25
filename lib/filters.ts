@@ -6,8 +6,8 @@ function normalize(value: string): string {
 
 export function splitKeywordTerms(keyword: string): string[] {
   return keyword
-    .trim()
-    .split(/[\s,、]+/)
+    .split(/[,、]+/)
+    .map((term) => term.trim())
     .filter(Boolean);
 }
 
