@@ -23,9 +23,9 @@ export function DateNavigation({ selectedDate, today, onSelectDate }: DateNaviga
   return (
     <nav
       aria-label="日付"
-      className="w-full rounded-lg border border-border bg-card p-2 md:w-fit md:p-2.5"
+      className="w-full rounded-lg border border-border bg-card p-2 lg:w-fit lg:p-2.5"
     >
-      <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+      <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-3">
         <div className="flex items-center gap-2">
           <label className="min-w-0">
             <span className="sr-only">月を選択</span>
@@ -60,7 +60,7 @@ export function DateNavigation({ selectedDate, today, onSelectDate }: DateNaviga
           >
             <span aria-hidden="true">‹</span>
           </button>
-          <div className="grid min-w-0 flex-1 grid-cols-7 gap-1 md:flex-none">
+          <div className="grid min-w-0 flex-1 grid-cols-7 gap-1 lg:flex-none">
             {days.map((date) => {
               const selected = date === selectedDate;
               const isToday = date === today;
@@ -75,7 +75,7 @@ export function DateNavigation({ selectedDate, today, onSelectDate }: DateNaviga
                   aria-label={`${formatDayHeading(date)}${isToday ? " 今日" : ""}`}
                   onClick={() => onSelectDate(date)}
                   className={cn(
-                    "mx-auto flex h-[52px] w-full min-w-0 flex-col items-center justify-center rounded-md px-0.5 text-foreground md:w-12",
+                    "mx-auto flex h-[52px] w-full min-w-0 flex-col items-center justify-center rounded-md px-0.5 text-foreground lg:w-12",
                     selected && "bg-primary text-white",
                     !selected && isToday && "text-primary",
                     !selected && !isToday && isPast && "text-muted",
