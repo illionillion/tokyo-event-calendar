@@ -4,6 +4,22 @@ function normalize(value: string): string {
   return value.normalize("NFKC").toLowerCase();
 }
 
+export function splitKeywordTerms(keyword: string): string[] {
+  return keyword
+    .split(/[,、]+/)
+    .map((term) => term.trim())
+    .filter(Boolean);
+}
+
+/** プレースホルダとチップ解除後のテキストで共通の区切り。 */
+export const keywordTermSeparator = ", ";
+
+export function joinKeywordTerms(terms: string[]): string {
+  return terms.join(keywordTermSeparator);
+}
+
+export const keywordPlaceholder = joinKeywordTerms(["React", "LT", "渋谷"]);
+
 export function matchesArea(event: Event, area: string | null): boolean {
   if (!area) return true;
   return event.area === area;
@@ -16,8 +32,8 @@ export function matchesFormat(event: Event, format: FormatFilter): boolean {
 }
 
 export function matchesKeyword(event: Event, keyword: string): boolean {
-  const normalized = normalize(keyword).trim();
-  if (!normalized) return true;
+  const terms = splitKeywordTerms(normalize(keyword));
+  if (terms.length === 0) return true;
 
   const haystack = normalize(
     [
@@ -33,7 +49,7 @@ export function matchesKeyword(event: Event, keyword: string): boolean {
       .join("\n")
   );
 
-  return normalized.split(/\s+/).every((term) => haystack.includes(term));
+  return terms.every((term) => haystack.includes(term));
 }
 
 export function hasActiveFilters(filters: Filters): boolean {
