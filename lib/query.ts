@@ -48,3 +48,16 @@ export function buildQuery(filters: Filters): string {
 export function filtersHref(filters: Filters): string {
   return `/?${buildQuery(filters)}`;
 }
+
+/**
+ * 絞り込みの URL を History API で更新する。
+ * Next.js は pushState / replaceState を useSearchParams に同期し、RSC は取り直さない。
+ */
+export function syncFilterUrl(filters: Filters, mode: "push" | "replace"): void {
+  const url = filtersHref(filters);
+  if (mode === "replace") {
+    window.history.replaceState(null, "", url);
+    return;
+  }
+  window.history.pushState(null, "", url);
+}
