@@ -42,9 +42,9 @@ export function DateNavigation({ selectedDate, today, onSelectDate }: DateNaviga
   return (
     <nav
       aria-label="日付"
-      className="w-full rounded-lg border border-border bg-card p-2 lg:w-fit lg:p-2.5"
+      className="w-full min-w-0 rounded-lg border border-border bg-card p-2 lg:w-fit lg:p-2.5"
     >
-      <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-3">
+      <div className="flex min-w-0 flex-col gap-2 lg:flex-row lg:items-center lg:gap-3">
         <div className="flex items-center gap-2">
           <label className="min-w-0">
             <span className="sr-only">月を選択</span>
@@ -70,7 +70,7 @@ export function DateNavigation({ selectedDate, today, onSelectDate }: DateNaviga
             今日
           </button>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex min-w-0 items-center gap-1">
           <button
             type="button"
             className="inline-flex size-9 shrink-0 items-center justify-center rounded-md border border-border bg-card text-foreground hover:bg-surface"
@@ -79,7 +79,7 @@ export function DateNavigation({ selectedDate, today, onSelectDate }: DateNaviga
           >
             <DayChevron direction="previous" />
           </button>
-          <div className="grid min-w-0 flex-1 grid-cols-7 gap-1 lg:flex-none">
+          <div className="grid min-w-0 flex-1 grid-cols-[repeat(7,minmax(0,1fr))] gap-1 lg:flex-none">
             {days.map((date) => {
               const selected = date === selectedDate;
               const isToday = date === today;

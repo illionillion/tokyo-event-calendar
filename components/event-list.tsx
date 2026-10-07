@@ -27,7 +27,7 @@ export function EventList({
   const isToday = filters.date === today;
 
   return (
-    <section id="events" aria-labelledby="event-list-heading">
+    <section id="events" aria-labelledby="event-list-heading" className="min-w-0">
       <div className="flex flex-wrap items-end justify-between gap-2 lg:sr-only">
         <h2 id="event-list-heading" className="text-lg font-semibold text-balance">
           {formatDayHeading(filters.date)}

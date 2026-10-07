@@ -26,9 +26,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja" className={`${notoSansJp.variable} min-h-dvh`}>
-      <body className="flex min-h-dvh flex-col bg-background font-sans text-foreground antialiased">
+      <body className="flex min-h-dvh min-w-0 flex-col bg-background font-sans text-foreground antialiased">
         <Header />
-        <div className="flex flex-1 flex-col pb-8">{children}</div>
+        <div className="flex min-w-0 flex-1 flex-col pb-8">{children}</div>
         <Footer />
         <BackToTop />
       </body>

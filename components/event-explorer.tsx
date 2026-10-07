@@ -50,9 +50,9 @@ export function EventExplorer({ events, today, now }: EventExplorerProps) {
   const selectedLabel = selected ? `${selected.month}月${selected.day}日` : filters.date;
 
   return (
-    <div className="mx-auto max-w-[1080px] px-4 py-4">
+    <div className="mx-auto w-full min-w-0 max-w-[1080px] px-4 py-4">
       {/* top-12 = サイトヘッダー h-12 */}
-      <div className="sticky top-12 z-10 -mx-4 bg-background px-4 py-2">
+      <div className="sticky top-12 z-10 -mx-4 min-w-0 bg-background px-4 py-2">
         <div className="flex items-center justify-between gap-6">
           <DateNavigation
             selectedDate={filters.date}
@@ -72,7 +72,7 @@ export function EventExplorer({ events, today, now }: EventExplorerProps) {
           </div>
         </div>
       </div>
-      <div className="mt-4 grid items-start gap-4 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-6">
+      <div className="mt-4 grid min-w-0 items-start gap-4 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-6">
         <aside className="min-h-0 space-y-4">
           <div className="hidden lg:block">
             <MiniCalendar
