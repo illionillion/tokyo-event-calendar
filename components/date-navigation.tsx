@@ -10,6 +10,25 @@ import {
   weekdayLabel,
 } from "@/lib/dates";
 
+function DayChevron({ direction }: { direction: "previous" | "next" }) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      className={cn("size-4", direction === "previous" && "-scale-x-100")}
+      aria-hidden="true"
+    >
+      <path
+        d="M6 3.5 10.5 8 6 12.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 type DateNavigationProps = {
   selectedDate: string;
   today: string;
@@ -23,15 +42,15 @@ export function DateNavigation({ selectedDate, today, onSelectDate }: DateNaviga
   return (
     <nav
       aria-label="日付"
-      className="w-full rounded-lg border border-border bg-card p-2 md:w-fit md:p-2.5"
+      className="w-full min-w-0 rounded-lg border border-border bg-card p-2 lg:w-fit lg:p-2.5"
     >
-      <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+      <div className="flex min-w-0 flex-col gap-2 lg:flex-row lg:items-center lg:gap-3">
         <div className="flex items-center gap-2">
           <label className="min-w-0">
             <span className="sr-only">月を選択</span>
             <select
               aria-label="月を選択"
-              className="h-9 rounded-md border border-border bg-card px-2 text-sm text-foreground"
+              className="h-9 max-w-full rounded-md border border-border bg-card px-2 text-sm text-foreground"
               value={monthValue(selectedDate)}
               onChange={(event) => onSelectDate(dateInMonth(selectedDate, event.target.value))}
             >
@@ -51,16 +70,16 @@ export function DateNavigation({ selectedDate, today, onSelectDate }: DateNaviga
             今日
           </button>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex min-w-0 items-center gap-1">
           <button
             type="button"
-            className="inline-flex size-9 shrink-0 items-center justify-center rounded-md border border-border bg-card text-lg leading-none text-foreground hover:bg-surface"
+            className="inline-flex size-9 shrink-0 items-center justify-center rounded-md border border-border bg-card text-foreground hover:bg-surface"
             aria-label="前の日"
             onClick={() => onSelectDate(addDays(selectedDate, -1))}
           >
-            <span aria-hidden="true">‹</span>
+            <DayChevron direction="previous" />
           </button>
-          <div className="grid min-w-0 flex-1 grid-cols-7 gap-1 md:flex-none">
+          <div className="grid min-w-0 flex-1 grid-cols-[repeat(7,minmax(0,1fr))] gap-1 lg:flex-none">
             {days.map((date) => {
               const selected = date === selectedDate;
               const isToday = date === today;
@@ -75,7 +94,7 @@ export function DateNavigation({ selectedDate, today, onSelectDate }: DateNaviga
                   aria-label={`${formatDayHeading(date)}${isToday ? " 今日" : ""}`}
                   onClick={() => onSelectDate(date)}
                   className={cn(
-                    "mx-auto flex h-[52px] w-full min-w-0 flex-col items-center justify-center rounded-md px-0.5 text-foreground md:w-12",
+                    "mx-auto flex h-[52px] w-full min-w-0 flex-col items-center justify-center rounded-md px-0.5 text-foreground lg:w-12",
                     selected && "bg-primary text-white",
                     !selected && isToday && "text-primary",
                     !selected && !isToday && isPast && "text-muted",
@@ -93,11 +112,11 @@ export function DateNavigation({ selectedDate, today, onSelectDate }: DateNaviga
           </div>
           <button
             type="button"
-            className="inline-flex size-9 shrink-0 items-center justify-center rounded-md border border-border bg-card text-lg leading-none text-foreground hover:bg-surface"
+            className="inline-flex size-9 shrink-0 items-center justify-center rounded-md border border-border bg-card text-foreground hover:bg-surface"
             aria-label="次の日"
             onClick={() => onSelectDate(addDays(selectedDate, 1))}
           >
-            <span aria-hidden="true">›</span>
+            <DayChevron direction="next" />
           </button>
         </div>
       </div>

@@ -17,11 +17,11 @@ function CalendarMark() {
 
 /**
  * 全ページ共通のコンパクトなサイトヘッダー。
- * sticky 高さは h-12（3rem）。カレンダーの日付バー / サイドバー offset と揃えること。
+ * sticky 高さは h-12（3rem）。日付バーの sticky top と揃えること。
  */
 export function Header() {
   return (
-    <header className="sticky top-0 z-20 h-12 border-b border-border bg-card">
+    <header className="sticky top-0 z-20 h-12 min-w-0 border-b border-border bg-card">
       <div className="mx-auto flex h-full max-w-[1080px] items-center px-4">
         <a
           href="#events"
