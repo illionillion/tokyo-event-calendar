@@ -64,4 +64,29 @@ describe("events", () => {
 
     expect(events[0]?.date).toBe("2026-09-24");
   });
+
+  it("同じスナップショットの変換結果を再利用する", () => {
+    const records = [anchoredEvent({ description: "<p>本文です</p>" })];
+    const first = materializeEvents("2026-10-07", records, null);
+    const second = materializeEvents("2026-10-08", records, null);
+
+    expect(second).toBe(first);
+    expect(first[0]?.description).toBe("本文です");
+
+    const shifted = materializeEvents("2026-09-25", records, "2026-09-24");
+    expect(shifted).not.toBe(first);
+    expect(shifted[0]).toMatchObject({ date: "2026-09-25", description: "本文です" });
+  });
+
+  it("公開スナップショットは日付が違っても変換し直さない", () => {
+    const first = materializeEvents("2026-10-07");
+    const second = materializeEvents("2026-10-08");
+    const sample = first.find((event) => event.id === "405236");
+
+    expect(second).toBe(first);
+    expect(sample?.description).toContain("ヤバい武器");
+    expect(sample?.description).not.toContain("<p>");
+    expect(sample?.description).not.toContain("<h1>");
+    expect(sample?.description).not.toContain("<a ");
+  });
 });

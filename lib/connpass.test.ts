@@ -70,4 +70,14 @@ describe("connpass", () => {
       url: "https://connpass.com/event/1/",
     });
   });
+
+  it("説明文は検索用のプレーンテキストにする", () => {
+    const event = toCalendarEvent(
+      connpassEvent({
+        description: "<p>会場で<strong>ハンズオン</strong>をします。<br>Q&amp;A あり</p>",
+      })
+    );
+
+    expect(event?.description).toBe("会場でハンズオンをします。 Q&A あり");
+  });
 });

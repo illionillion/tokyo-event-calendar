@@ -82,6 +82,37 @@ describe("filters", () => {
     expect(matchesFormat(event({ format: "online" }), "offline")).toBe(false);
   });
 
+  it("説明文の本文をキーワード検索できる", () => {
+    expect(
+      matchesKeyword(
+        event({
+          title: "無関係",
+          catch: null,
+          description: "会場で React のハンズオンをします",
+          address: "",
+          venueName: "",
+          area: "",
+          tags: [],
+        }),
+        "ハンズオン"
+      )
+    ).toBe(true);
+    expect(
+      matchesKeyword(
+        event({
+          title: "無関係",
+          catch: null,
+          description: "Q&A の時間があります",
+          address: "",
+          venueName: "",
+          area: "",
+          tags: [],
+        }),
+        "Q&A"
+      )
+    ).toBe(true);
+  });
+
   it("全角英数とタグを検索できる", () => {
     expect(matchesKeyword(event(), "Ｒｅａｃｔ")).toBe(true);
     expect(matchesKeyword(event(), "赤羽")).toBe(false);

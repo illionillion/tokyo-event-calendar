@@ -1,4 +1,5 @@
 import { NEIGHBOR_PREFECTURES, TOKYO_CITIES, TOKYO_WARDS } from "@/lib/areas";
+import { plainTextFromHtml } from "@/lib/html-text";
 import type { ConnpassEvent, Event, EventFormat } from "@/lib/types";
 
 const AREAS = [...TOKYO_WARDS, ...TOKYO_CITIES].sort((left, right) => right.length - left.length);
@@ -100,7 +101,7 @@ export function toCalendarEvent(event: ConnpassEvent, dayDelta = 0): Event | nul
     id: String(event.id),
     title: event.title,
     catch: event.catch,
-    description: event.description,
+    description: plainTextFromHtml(event.description),
     date: started.date,
     start: started.time,
     end: ended.time,
