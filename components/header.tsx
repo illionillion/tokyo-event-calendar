@@ -21,7 +21,7 @@ function CalendarMark() {
  */
 export function Header() {
   return (
-    <header className="sticky top-0 z-20 h-12 border-b border-border bg-card">
+    <header className="sticky top-0 z-20 h-12 min-w-0 border-b border-border bg-card">
       <div className="mx-auto flex h-full max-w-[1080px] items-center px-4">
         <a
           href="#events"

@@ -99,9 +99,9 @@ export function EventList({
               </button>
             </div>
           ) : null}
-          <ul className="mt-3 space-y-2">
+          <ul className="mt-3 min-w-0 space-y-2">
             {events.map((event) => (
-              <li key={event.id}>
+              <li key={event.id} className="min-w-0">
                 <EventCard event={event} now={now} />
               </li>
             ))}

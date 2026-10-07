@@ -50,7 +50,7 @@ export function DateNavigation({ selectedDate, today, onSelectDate }: DateNaviga
             <span className="sr-only">月を選択</span>
             <select
               aria-label="月を選択"
-              className="h-9 rounded-md border border-border bg-card px-2 text-sm text-foreground"
+              className="h-9 max-w-full rounded-md border border-border bg-card px-2 text-sm text-foreground"
               value={monthValue(selectedDate)}
               onChange={(event) => onSelectDate(dateInMonth(selectedDate, event.target.value))}
             >
