@@ -34,4 +34,4 @@ connpass API のキーが無い間は、`data/events.json` のスナップショ
 - **Test**: Vitest + Testing Library
 - **Git hooks**: lefthook（pre-commit / commit-msg）
 - **Commit message**: Conventional Commits（commitlint）
-- **CI**: GitHub Actions（`.github/workflows/ci.yml`）。Cloudflare Workers Builds のプレビューは、リポジトリ直下の `wrangler.jsonc`（`previews`）を参照します。
+- **CI**: GitHub Actions（`.github/workflows/ci.yml`）
