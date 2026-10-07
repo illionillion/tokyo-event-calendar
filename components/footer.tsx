@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export function Footer() {
   return (
-    <footer className="mt-8 border-t border-border bg-card">
+    <footer className="mt-auto min-w-0 border-t border-border bg-card">
       <div className="mx-auto flex max-w-[1080px] flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-pretty text-[13px] text-secondary">
           掲載中のイベントはモックデータです。カードを開くと connpass のイベントページへ移動します。

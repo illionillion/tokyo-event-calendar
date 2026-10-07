@@ -31,9 +31,9 @@ export function EventCard({ event, now }: EventCardProps) {
       href={event.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex flex-col overflow-hidden rounded-lg border border-border bg-card hover:border-primary hover:bg-primary-soft hover:shadow-sm md:flex-row md:items-stretch"
+      className="flex w-full min-w-0 max-w-full flex-col overflow-hidden rounded-lg border border-border bg-card hover:border-primary hover:bg-primary-soft hover:shadow-sm lg:flex-row lg:items-stretch"
     >
-      <span className="relative block aspect-[16/9] w-full shrink-0 overflow-hidden md:aspect-auto md:min-h-40 md:w-72 md:self-stretch">
+      <span className="relative block aspect-[16/9] w-full shrink-0 overflow-hidden lg:aspect-auto lg:min-h-40 lg:w-72 lg:self-stretch">
         {event.imageUrl ? (
           // connpass の image_url は期限付きで、最適化プロキシに載せない
           // eslint-disable-next-line @next/next/no-img-element
@@ -48,7 +48,7 @@ export function EventCard({ event, now }: EventCardProps) {
           </span>
         )}
       </span>
-      <span className="flex min-w-0 flex-1 flex-col justify-center px-3 py-3 md:px-4">
+      <span className="flex min-w-0 flex-1 flex-col justify-center px-3 py-3 lg:px-4">
         <span className="flex items-baseline gap-2">
           <span className="text-[13px] text-secondary tabular-nums">
             {event.start}–{event.end}
@@ -57,7 +57,7 @@ export function EventCard({ event, now }: EventCardProps) {
             {ended ? "終了" : formatCapacity(event.accepted, event.limit)}
           </span>
         </span>
-        <span className="mt-1 block text-[15px] leading-5 font-semibold text-pretty text-foreground line-clamp-2">
+        <span className="mt-1 block text-[15px] leading-5 font-semibold wrap-anywhere text-pretty text-foreground line-clamp-2">
           {event.title}
           <span className="sr-only">（connpassで開く）</span>
         </span>
@@ -66,9 +66,9 @@ export function EventCard({ event, now }: EventCardProps) {
           {event.format === "online" ? "" : ` ${event.venueName}`}
         </span>
         {event.tags.length > 0 ? (
-          <span className="mt-1.5 flex flex-wrap gap-x-2 gap-y-1">
+          <span className="mt-1.5 flex min-w-0 flex-wrap gap-x-2 gap-y-1">
             {event.tags.map((tag) => (
-              <span key={tag} className="text-[12px] text-muted">
+              <span key={tag} className="min-w-0 wrap-anywhere text-[12px] text-muted">
                 #{tag}
               </span>
             ))}

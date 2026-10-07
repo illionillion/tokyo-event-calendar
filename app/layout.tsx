@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Noto_Sans_JP } from "next/font/google";
+import { BackToTop } from "@/components/back-to-top";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import "./globals.css";
@@ -24,11 +25,12 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <html lang="ja" className={`${notoSansJp.variable} h-full`}>
-      <body className="flex min-h-dvh flex-col bg-background font-sans text-foreground antialiased">
+    <html lang="ja" className={`${notoSansJp.variable} min-h-dvh`}>
+      <body className="flex min-h-dvh min-w-0 flex-col bg-background font-sans text-foreground antialiased">
         <Header />
-        <div className="flex-1">{children}</div>
+        <div className="flex min-w-0 flex-1 flex-col pb-8">{children}</div>
         <Footer />
+        <BackToTop />
       </body>
     </html>
   );
