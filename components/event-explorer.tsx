@@ -1,13 +1,13 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DateNavigation } from "@/components/date-navigation";
 import { EventList } from "@/components/event-list";
 import { FiltersPanel } from "@/components/filters-panel";
 import { MiniCalendar } from "@/components/mini-calendar";
 import { groupAreas } from "@/lib/areas";
-import { parseDateKey } from "@/lib/dates";
+import { parseDateKey, todayKey } from "@/lib/dates";
 import { countByArea, filterEvents, matchingDates } from "@/lib/filters";
 import { parseFilters, syncFilterUrl } from "@/lib/query";
 import type { Event, Filters } from "@/lib/types";
@@ -18,12 +18,20 @@ type EventExplorerProps = {
   now: string;
 };
 
-export function EventExplorer({ events, today, now: serverNow }: EventExplorerProps) {
+export function EventExplorer({ events, today: serverToday, now: serverNow }: EventExplorerProps) {
   const searchParams = useSearchParams();
   const [keywordResetKey, setKeywordResetKey] = useState(0);
-  // History API の遷移ではサーバーの now が更新されないため、操作のたびに手元で取り直す。
+  // History API の遷移ではサーバーの now / today が更新されないため、操作や戻る・進むのたびに手元で取り直す。
   const [clientNow, setClientNow] = useState<string | null>(null);
   const now = clientNow !== null && clientNow > serverNow ? clientNow : serverNow;
+  const clientToday = clientNow === null ? null : todayKey(new Date(now));
+  const today = clientToday !== null && clientToday > serverToday ? clientToday : serverToday;
+
+  useEffect(() => {
+    const refreshNow = () => setClientNow(new Date().toISOString());
+    window.addEventListener("popstate", refreshNow);
+    return () => window.removeEventListener("popstate", refreshNow);
+  }, []);
   const filters = useMemo(() => parseFilters(searchParams, today), [searchParams, today]);
   const visible = useMemo(() => filterEvents(events, filters), [events, filters]);
   const counts = useMemo(() => countByArea(events, filters), [events, filters]);

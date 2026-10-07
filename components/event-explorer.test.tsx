@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { EventExplorer } from "@/components/event-explorer";
@@ -97,6 +97,40 @@ describe("EventExplorer", () => {
     try {
       vi.setSystemTime(new Date("2026-09-24T13:00:00.000Z"));
       await user.click(screen.getByRole("radio", { name: "オフライン" }));
+    } finally {
+      vi.useRealTimers();
+    }
+
+    expect(screen.getByText("この日のイベントはすべて終了しています")).toBeInTheDocument();
+  });
+
+  it("日付をまたいだあとの操作では、今日を東京の今の日付にする", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(window.history, "pushState");
+    renderExplorer();
+    expect(screen.getByRole("button", { name: "今日" })).toBeDisabled();
+
+    vi.useFakeTimers({ toFake: ["Date"] });
+    try {
+      vi.setSystemTime(new Date("2026-09-24T16:00:00.000Z"));
+      await user.click(screen.getByRole("radio", { name: "オンライン" }));
+    } finally {
+      vi.useRealTimers();
+    }
+
+    expect(screen.getByRole("button", { name: "今日" })).toBeEnabled();
+  });
+
+  it("戻る・進むでも時刻を取り直す", () => {
+    renderExplorer();
+    expect(screen.queryByText("この日のイベントはすべて終了しています")).not.toBeInTheDocument();
+
+    vi.useFakeTimers({ toFake: ["Date"] });
+    try {
+      vi.setSystemTime(new Date("2026-09-24T13:00:00.000Z"));
+      act(() => {
+        window.dispatchEvent(new PopStateEvent("popstate"));
+      });
     } finally {
       vi.useRealTimers();
     }
