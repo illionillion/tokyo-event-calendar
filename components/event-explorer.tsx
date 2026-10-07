@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { DateNavigation } from "@/components/date-navigation";
 import { EventList } from "@/components/event-list";
@@ -9,7 +9,7 @@ import { MiniCalendar } from "@/components/mini-calendar";
 import { groupAreas } from "@/lib/areas";
 import { parseDateKey } from "@/lib/dates";
 import { countByArea, filterEvents, matchingDates } from "@/lib/filters";
-import { buildQuery, parseFilters } from "@/lib/query";
+import { parseFilters, syncFilterUrl } from "@/lib/query";
 import type { Event, Filters } from "@/lib/types";
 
 type EventExplorerProps = {
@@ -19,7 +19,6 @@ type EventExplorerProps = {
 };
 
 export function EventExplorer({ events, today, now }: EventExplorerProps) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [keywordResetKey, setKeywordResetKey] = useState(0);
   const filters = useMemo(() => parseFilters(searchParams, today), [searchParams, today]);
@@ -29,12 +28,7 @@ export function EventExplorer({ events, today, now }: EventExplorerProps) {
   const groups = useMemo(() => groupAreas(events, filters.area), [events, filters.area]);
 
   function navigate(next: Filters, mode: "push" | "replace") {
-    const href = `/?${buildQuery(next)}`;
-    if (mode === "replace") {
-      router.replace(href, { scroll: false });
-      return;
-    }
-    router.push(href, { scroll: false });
+    syncFilterUrl(next, mode);
   }
 
   function update(partial: Partial<Filters>, mode: "push" | "replace" = "push") {

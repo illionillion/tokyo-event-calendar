@@ -10,6 +10,12 @@ import type { ConnpassEvent, Event } from "@/lib/types";
 export const MOCK_DATE_ANCHOR: string | null = null;
 
 /**
+ * 同じ isolate では、同じスナップショットと同じ日付ずらしの変換結果を使い回す。
+ * 開催日をずらさない本番では today が違っても中身は同じなので、1 回分の変換で足りる。
+ */
+const materialized = new WeakMap<ConnpassEvent[], Map<string, Event[]>>();
+
+/**
  * `data/events.json` は connpass API v2 のイベント一覧レスポンス。
  * https://connpass.com/about/api/v2/
  * 区・市・県と開催形態は API に無いので、住所とキャッチから画面用に決める。
@@ -24,9 +30,16 @@ export function materializeEvents(
   }
 
   const dayDelta = anchor ? daysBetween(anchor, today) : 0;
+  const cacheKey = `${anchor ?? ""}\0${dayDelta}`;
+  const cached = materialized.get(records)?.get(cacheKey);
+  if (cached) return cached;
 
-  return records.flatMap((record) => {
+  const events = records.flatMap((record) => {
     const event = toCalendarEvent(record, dayDelta);
     return event ? [event] : [];
   });
+  const bucket = materialized.get(records) ?? new Map<string, Event[]>();
+  bucket.set(cacheKey, events);
+  materialized.set(records, bucket);
+  return events;
 }
