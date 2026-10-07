@@ -29,4 +29,14 @@ describe("plainTextFromHtml", () => {
   it("未知の文字参照はそのまま残す", () => {
     expect(plainTextFromHtml("<p>&unknownentity; です</p>")).toBe("&unknownentity; です");
   });
+
+  it("表のセルとブロック要素の境目で文字をつなげない", () => {
+    expect(
+      plainTextFromHtml(
+        "<table><tr><th>日時</th><th>会場</th></tr><tr><td>19:00</td><td>渋谷</td></tr></table>"
+      )
+    ).toBe("日時 会場 19:00 渋谷");
+    expect(plainTextFromHtml("<table><tr><td>A<td>B</table>")).toBe("A B");
+    expect(plainTextFromHtml("前文<div>本文</div>")).toBe("前文 本文");
+  });
 });
