@@ -86,4 +86,21 @@ describe("EventExplorer", () => {
       parseFilters(new URLSearchParams(lastHistoryUrl(replaceState).split("?")[1]), "2026-09-24")
     ).toMatchObject({ date: "2026-09-24", keyword: "ハンズオン" });
   });
+
+  it("絞り込みを変えると、イベントの終了判定に今の時刻を使う", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(window.history, "pushState");
+    renderExplorer();
+    expect(screen.queryByText("この日のイベントはすべて終了しています")).not.toBeInTheDocument();
+
+    vi.useFakeTimers({ toFake: ["Date"] });
+    try {
+      vi.setSystemTime(new Date("2026-09-24T13:00:00.000Z"));
+      await user.click(screen.getByRole("radio", { name: "オフライン" }));
+    } finally {
+      vi.useRealTimers();
+    }
+
+    expect(screen.getByText("この日のイベントはすべて終了しています")).toBeInTheDocument();
+  });
 });

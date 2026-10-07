@@ -18,9 +18,12 @@ type EventExplorerProps = {
   now: string;
 };
 
-export function EventExplorer({ events, today, now }: EventExplorerProps) {
+export function EventExplorer({ events, today, now: serverNow }: EventExplorerProps) {
   const searchParams = useSearchParams();
   const [keywordResetKey, setKeywordResetKey] = useState(0);
+  // History API の遷移ではサーバーの now が更新されないため、操作のたびに手元で取り直す。
+  const [clientNow, setClientNow] = useState<string | null>(null);
+  const now = clientNow !== null && clientNow > serverNow ? clientNow : serverNow;
   const filters = useMemo(() => parseFilters(searchParams, today), [searchParams, today]);
   const visible = useMemo(() => filterEvents(events, filters), [events, filters]);
   const counts = useMemo(() => countByArea(events, filters), [events, filters]);
@@ -28,6 +31,7 @@ export function EventExplorer({ events, today, now }: EventExplorerProps) {
   const groups = useMemo(() => groupAreas(events, filters.area), [events, filters.area]);
 
   function navigate(next: Filters, mode: "push" | "replace") {
+    setClientNow(new Date().toISOString());
     syncFilterUrl(next, mode);
   }
 
