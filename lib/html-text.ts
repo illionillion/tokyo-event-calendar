@@ -1,34 +1,7 @@
-const NAMED_ENTITIES: Record<string, string> = {
-  amp: "&",
-  lt: "<",
-  gt: ">",
-  quot: '"',
-  apos: "'",
-  nbsp: " ",
-};
+import { decodeHTML } from "entities/decode";
 
-function codePointOrEntity(code: number, entity: string): string {
-  if (
-    !Number.isInteger(code) ||
-    code < 0 ||
-    code > 0x10ffff ||
-    (code >= 0xd800 && code <= 0xdfff)
-  ) {
-    return entity;
-  }
-  return String.fromCodePoint(code);
-}
-
-function decodeHtmlEntities(value: string): string {
-  return value.replace(/&(#x[0-9a-f]+|#\d+|[a-z][a-z0-9]+);/gi, (entity, body: string) => {
-    const lower = body.toLowerCase();
-    if (lower.startsWith("#x"))
-      return codePointOrEntity(Number.parseInt(lower.slice(2), 16), entity);
-    if (lower.startsWith("#"))
-      return codePointOrEntity(Number.parseInt(lower.slice(1), 10), entity);
-    return NAMED_ENTITIES[lower] ?? entity;
-  });
-}
+/** ZWNJ・ZWSP・ソフトハイフンなど、見た目に出ず検索語との一致を妨げる書式文字。 */
+const INVISIBLE_FORMAT_CHARS = /\p{Cf}/gu;
 
 /**
  * 検索に渡す説明文。タグと属性は捨て、本文と文字参照だけを残す。
@@ -47,6 +20,9 @@ export function plainTextFromHtml(html: string | null): string | null {
       "\n"
     )
     .replace(/<[^>]+>/g, "");
-  const text = decodeHtmlEntities(withBreaks).replace(/\s+/gu, " ").trim();
+  const text = decodeHTML(withBreaks)
+    .replace(INVISIBLE_FORMAT_CHARS, "")
+    .replace(/\s+/gu, " ")
+    .trim();
   return text.length > 0 ? text : null;
 }

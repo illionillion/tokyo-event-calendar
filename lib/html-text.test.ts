@@ -19,4 +19,14 @@ describe("plainTextFromHtml", () => {
   it("数値文字参照を本文にする", () => {
     expect(plainTextFromHtml("<p>&#12354;&#x3042;</p>")).toBe("ああ");
   });
+
+  it("名前付き文字参照を標準どおりに戻し、不可視の書式文字は捨てる", () => {
+    expect(plainTextFromHtml("<p>AGENTS&zwnj;.md&emsp;を読む</p>")).toBe("AGENTS.md を読む");
+    expect(plainTextFromHtml("<p>&copy; 2026&hellip;</p>")).toBe("\u00a9 2026\u2026");
+    expect(plainTextFromHtml("<p>Next&#8203;.js&shy;入門</p>")).toBe("Next.js入門");
+  });
+
+  it("未知の文字参照はそのまま残す", () => {
+    expect(plainTextFromHtml("<p>&unknownentity; です</p>")).toBe("&unknownentity; です");
+  });
 });
