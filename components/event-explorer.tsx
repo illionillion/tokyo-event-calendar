@@ -51,7 +51,7 @@ export function EventExplorer({ events, today, now }: EventExplorerProps) {
 
   return (
     <div className="mx-auto max-w-[1080px] px-4 py-4">
-      {/* top-12 = サイトヘッダー h-12。サイドバーはヘッダー+日付バー分 (3rem+6rem) */}
+      {/* top-12 = サイトヘッダー h-12 */}
       <div className="sticky top-12 z-10 -mx-4 bg-background px-4 py-2">
         <div className="flex items-center justify-between gap-6">
           <DateNavigation
@@ -73,7 +73,7 @@ export function EventExplorer({ events, today, now }: EventExplorerProps) {
         </div>
       </div>
       <div className="mt-4 grid items-start gap-4 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-6">
-        <aside className="space-y-4 lg:sticky lg:top-[calc(3rem+6rem)]">
+        <aside className="min-h-0 space-y-4">
           <div className="hidden lg:block">
             <MiniCalendar
               selectedDate={filters.date}

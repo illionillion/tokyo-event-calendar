@@ -10,6 +10,25 @@ import {
   weekdayLabel,
 } from "@/lib/dates";
 
+function DayChevron({ direction }: { direction: "previous" | "next" }) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      className={cn("size-4", direction === "previous" && "-scale-x-100")}
+      aria-hidden="true"
+    >
+      <path
+        d="M6 3.5 10.5 8 6 12.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 type DateNavigationProps = {
   selectedDate: string;
   today: string;
@@ -54,11 +73,11 @@ export function DateNavigation({ selectedDate, today, onSelectDate }: DateNaviga
         <div className="flex items-center gap-1">
           <button
             type="button"
-            className="inline-flex size-9 shrink-0 items-center justify-center rounded-md border border-border bg-card text-lg leading-none text-foreground hover:bg-surface"
+            className="inline-flex size-9 shrink-0 items-center justify-center rounded-md border border-border bg-card text-foreground hover:bg-surface"
             aria-label="前の日"
             onClick={() => onSelectDate(addDays(selectedDate, -1))}
           >
-            <span aria-hidden="true">‹</span>
+            <DayChevron direction="previous" />
           </button>
           <div className="grid min-w-0 flex-1 grid-cols-7 gap-1 lg:flex-none">
             {days.map((date) => {
@@ -93,11 +112,11 @@ export function DateNavigation({ selectedDate, today, onSelectDate }: DateNaviga
           </div>
           <button
             type="button"
-            className="inline-flex size-9 shrink-0 items-center justify-center rounded-md border border-border bg-card text-lg leading-none text-foreground hover:bg-surface"
+            className="inline-flex size-9 shrink-0 items-center justify-center rounded-md border border-border bg-card text-foreground hover:bg-surface"
             aria-label="次の日"
             onClick={() => onSelectDate(addDays(selectedDate, 1))}
           >
-            <span aria-hidden="true">›</span>
+            <DayChevron direction="next" />
           </button>
         </div>
       </div>

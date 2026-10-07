@@ -192,7 +192,7 @@ function AreaFilter({
           ))}
         </select>
       </label>
-      <div className="mt-2 hidden max-h-80 overflow-y-auto lg:block">
+      <div className="mt-2 hidden h-80 overflow-y-auto contain-paint lg:block">
         <AreaOption
           name="すべて"
           count={null}
