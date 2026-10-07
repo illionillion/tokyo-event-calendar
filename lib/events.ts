@@ -3,8 +3,11 @@ import { toCalendarEvent } from "@/lib/connpass";
 import { daysBetween, parseDateKey } from "@/lib/dates";
 import type { ConnpassEvent, Event } from "@/lib/types";
 
-/** モック JSON の開催日の基準。実データの JSON に差し替えるときは null を渡して日付をずらさない。 */
-export const MOCK_DATE_ANCHOR = "2026-09-24";
+/**
+ * 公開カレンダーから写したスナップショットは、ページ上の開催日のまま読む。
+ * 日付をまとめて動かして試すときだけ、materializeEvents の anchor に基準日を渡す。
+ */
+export const MOCK_DATE_ANCHOR: string | null = null;
 
 /**
  * `data/events.json` は connpass API v2 のイベント一覧レスポンス。

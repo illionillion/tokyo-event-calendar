@@ -11,7 +11,7 @@ pnpm dev
 
 [http://localhost:3000](http://localhost:3000) を開いて確認してください。
 
-connpass API のキーが無い間は、`data/events.json` のモックを表示します。中身は [connpass API v2](https://connpass.com/about/api/v2/) のイベント一覧と同じ形で、表示するときだけ基準日を東京の今日に合わせます。検索条件は URL に保持します。
+connpass API のキーが無い間は、`data/events.json` のスナップショットを表示します。中身は [connpass API v2](https://connpass.com/about/api/v2/) のイベント一覧と同じ形で、東京都・千葉県・埼玉県・神奈川県の公開カレンダー（2026年9月から11月）に載っているイベントページから写したものです。開催日は各ページの日時のままです。検索条件は URL に保持します。
 
 ## Scripts
 
