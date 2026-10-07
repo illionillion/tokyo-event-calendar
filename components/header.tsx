@@ -17,7 +17,7 @@ function CalendarMark() {
 
 /**
  * 全ページ共通のコンパクトなサイトヘッダー。
- * sticky 高さは h-12（3rem）。カレンダーの日付バー / サイドバー offset と揃えること。
+ * sticky 高さは h-12（3rem）。日付バーの sticky top と揃えること。
  */
 export function Header() {
   return (
