@@ -13,6 +13,19 @@
   --primary-soft: #f8eceb;
 }
 
+/*
+ * Noto Sans JP を読み込むまでの代替。next/font/google が Noto Sans JP（Regular）と Arial の寸法から
+ * 出していた値と同じにして、同梱フォントに替えても読み込み中の行の高さや幅が変わらないようにする。
+ */
+@font-face {
+  font-family: "Noto Sans JP Fallback";
+  src: local("Arial");
+  ascent-override: 110.73%;
+  descent-override: 27.49%;
+  line-gap-override: 0%;
+  size-adjust: 104.76%;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
