@@ -96,7 +96,12 @@ export function EventCard({ event, now }: EventCardProps) {
       </span>
       <span className="flex min-w-0 flex-1 flex-col justify-center px-3 py-3 lg:px-4">
         <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className="text-[13px] text-secondary tabular-nums">
+          <span
+            className={cn(
+              "text-[13px] font-semibold tabular-nums",
+              ended ? "text-secondary" : "text-foreground"
+            )}
+          >
             {event.start}–{event.end}
           </span>
           <span

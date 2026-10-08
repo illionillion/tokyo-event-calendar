@@ -86,4 +86,15 @@ describe("EventCard", () => {
 
     expect(screen.getByText("48人")).toHaveClass("font-semibold", "rounded-full");
   });
+
+  it("時間帯は太字で、開催前は本文色・終了後は一段薄い色にする", () => {
+    const { unmount } = render(<EventCard event={event} now="2026-09-24T08:00:00.000Z" />);
+    expect(screen.getByText("19:00–21:30")).toHaveClass("font-semibold", "text-foreground");
+    expect(screen.getByText("19:00–21:30")).not.toHaveClass("text-secondary");
+    unmount();
+
+    render(<EventCard event={event} now="2026-09-24T13:00:00.000Z" />);
+    expect(screen.getByText("19:00–21:30")).toHaveClass("font-semibold", "text-secondary");
+    expect(screen.getByText("19:00–21:30")).not.toHaveClass("text-foreground");
+  });
 });
