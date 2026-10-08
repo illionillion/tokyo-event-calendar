@@ -32,13 +32,58 @@ describe("EventCard", () => {
     expect(link).toHaveAttribute("href", "https://connpass.com/event/390004/");
     expect(link).toHaveAttribute("target", "_blank");
     expect(screen.getByText("19:00–21:30")).toBeInTheDocument();
-    expect(screen.getByText(/渋谷区/)).toBeInTheDocument();
-    expect(screen.getByText("#React")).toBeInTheDocument();
-    expect(screen.getByText("48 / 80人")).toBeInTheDocument();
   });
 
-  it("終了したイベントには終了と表示する", () => {
+  it("人数・場所・タグをカード上で識別できる", () => {
+    render(<EventCard event={event} now="2026-09-24T08:00:00.000Z" />);
+
+    const capacity = screen.getByText("48 / 80人");
+    expect(capacity).toHaveClass("font-semibold", "rounded-full", "text-primary");
+
+    const place = screen.getByText("渋谷区 渋谷ヒカリエ 8F");
+    expect(place).toHaveClass("font-medium");
+    expect(place.parentElement).toHaveClass("text-foreground");
+    expect(place.parentElement?.querySelector("[data-place-icon='venue']")).toBeInTheDocument();
+
+    expect(screen.getByText("#React")).toHaveClass(
+      "rounded-md",
+      "border-border",
+      "bg-surface",
+      "font-medium"
+    );
+    expect(screen.getByText("#LT")).toHaveClass("rounded-md", "bg-surface");
+  });
+
+  it("終了したイベントは終了と人数を併記する", () => {
     render(<EventCard event={event} now="2026-09-24T13:00:00.000Z" />);
-    expect(screen.getByText("終了")).toBeInTheDocument();
+
+    expect(screen.getByText("終了")).toHaveClass("rounded-full", "font-semibold");
+    expect(screen.getByText("48 / 80人")).toHaveClass("font-semibold", "bg-surface");
+  });
+
+  it("オンライン開催は場所をオンラインとして強調する", () => {
+    render(
+      <EventCard
+        event={{ ...event, format: "online", area: "", venueName: "Teams Online Meeting" }}
+        now="2026-09-24T08:00:00.000Z"
+      />
+    );
+
+    const place = screen.getByText("オンライン");
+    expect(place).toHaveClass("font-medium", "text-primary");
+    expect(place.parentElement?.querySelector("[data-place-icon='online']")).toBeInTheDocument();
+    expect(screen.queryByText(/Teams Online Meeting/)).not.toBeInTheDocument();
+  });
+
+  it("オンライン併用はエリアと会場を場所行に出す", () => {
+    render(<EventCard event={{ ...event, format: "hybrid" }} now="2026-09-24T08:00:00.000Z" />);
+
+    expect(screen.getByText("渋谷区（オンライン併用） 渋谷ヒカリエ 8F")).toBeInTheDocument();
+  });
+
+  it("定員がないときは参加人数だけをピルで出す", () => {
+    render(<EventCard event={{ ...event, limit: null }} now="2026-09-24T08:00:00.000Z" />);
+
+    expect(screen.getByText("48人")).toHaveClass("font-semibold", "rounded-full");
   });
 });
