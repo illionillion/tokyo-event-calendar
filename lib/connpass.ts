@@ -20,16 +20,9 @@ const OPEN_STATUSES = new Set<ConnpassEvent["open_status"]>([
 /** 画面用の変換に使う項目。ユーザー項目を除いたスナップショットのイベントも、API のイベントもそのまま渡せる。 */
 export type CalendarSourceEvent = Omit<ConnpassEvent, ConnpassUserField>;
 
-/**
- * 近隣の県の地名を含む東京都の市町村。絞り込みの選択肢にはないが、県と取り違えないよう地名としては探す
- * （「東大和市」を神奈川県の「大和市」にしない）。
- */
-const TOKYO_LOOKALIKES = ["東大和市"] as const;
-
 /** 県名のない住所で探す地名と、そのときのエリア。東京都の区・市と、近隣の県の市町村。 */
 const PLACE_NAMES: ReadonlyArray<readonly [name: string, area: string]> = [
   ...AREAS.map((name) => [name, name] as const),
-  ...TOKYO_LOOKALIKES.map((name) => [name, ""] as const),
   ...NEIGHBOR_PREFECTURES.flatMap((prefecture) =>
     NEIGHBOR_PREFECTURE_HINTS[prefecture].map((hint) => [hint, prefecture] as const)
   ),

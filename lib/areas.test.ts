@@ -35,6 +35,13 @@ describe("groupAreas", () => {
     expect(groups.other).toEqual([]);
   });
 
+  it("東京都の市はどの市も「市」に並べ、その他には入れない", () => {
+    const groups = groupAreas([event("東大和市"), event("小金井市"), event("八王子市")], null);
+
+    expect(groups.cities).toEqual(["八王子市", "小金井市", "東大和市"]);
+    expect(groups.other).toEqual([]);
+  });
+
   it("県名は市町村に分けず、その他にも入れない", () => {
     const groups = groupAreas([event("千葉県"), event("神奈川県")], "埼玉県");
 

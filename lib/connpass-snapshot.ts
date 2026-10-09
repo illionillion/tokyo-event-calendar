@@ -1,9 +1,4 @@
-import type {
-  ConnpassEvent,
-  ConnpassEventListResponse,
-  EventSnapshot,
-  SnapshotEvent,
-} from "@/lib/types";
+import type { EventSnapshot, SnapshotEvent } from "@/lib/types";
 
 /** connpass API v2 のイベント一覧。https://connpass.com/about/api/v2/ */
 export const CONNPASS_EVENTS_ENDPOINT = "https://connpass.com/api/v2/events/";
@@ -92,9 +87,10 @@ function isGroup(value: unknown): boolean {
 
 /**
  * スナップショットに書く項目がすべて EventSchema どおりの型か。欠けた項目を `undefined` のまま書き出さないよう、
- * 1 つでも合わなければ false にする。保存しないユーザー項目（owner_*）は見ない。
+ * 1 つでも合わなければ false にする。保存しないユーザー項目（owner_*）は見ないので、型はユーザー項目を除いた
+ * `SnapshotEvent` に絞る（owner_* があるとは扱わない）。
  */
-export function isConnpassEvent(value: unknown): value is ConnpassEvent {
+export function isSnapshotSourceEvent(value: unknown): value is SnapshotEvent {
   if (!isRecord(value)) return false;
   return (
     Number.isInteger(value.id) &&
@@ -121,8 +117,11 @@ export function isConnpassEvent(value: unknown): value is ConnpassEvent {
   );
 }
 
-/** イベント一覧レスポンスの形か。件数の項目と events の長さが食い違うときも false にする。 */
-export function isEventListResponse(value: unknown): value is ConnpassEventListResponse {
+/**
+ * イベント一覧レスポンスの形か。件数の項目と events の長さが食い違うときも false にする。
+ * events はユーザー項目を確かめていないので `SnapshotEvent` として扱う。
+ */
+export function isEventListResponse(value: unknown): value is EventSnapshot {
   if (!isRecord(value)) return false;
   return (
     Number.isInteger(value.results_returned) &&
@@ -130,12 +129,15 @@ export function isEventListResponse(value: unknown): value is ConnpassEventListR
     Number.isInteger(value.results_start) &&
     Array.isArray(value.events) &&
     value.results_returned === value.events.length &&
-    value.events.every(isConnpassEvent)
+    value.events.every(isSnapshotSourceEvent)
   );
 }
 
-/** 主催者などのユーザー項目を落とす。画像 URL はカード表示に使うので残す。 */
-export function toSnapshotEvent(event: ConnpassEvent): SnapshotEvent {
+/**
+ * スナップショットに書く項目だけを取り出す。API のイベント（`ConnpassEvent`）を渡しても、主催者などのユーザー項目は
+ * 書き出さない。画像 URL はカード表示に使うので残す。
+ */
+export function toSnapshotEvent(event: SnapshotEvent): SnapshotEvent {
   return {
     id: event.id,
     title: event.title,
@@ -169,7 +171,7 @@ export function toSnapshotEvent(event: ConnpassEvent): SnapshotEvent {
 }
 
 /** 全ページ分のイベントを、イベント一覧レスポンスと同じ形のスナップショットにまとめる。 */
-export function buildSnapshot(events: readonly ConnpassEvent[]): EventSnapshot {
+export function buildSnapshot(events: readonly SnapshotEvent[]): EventSnapshot {
   const seen = new Set<number>();
   const unique: SnapshotEvent[] = [];
   for (const event of events) {
@@ -212,13 +214,13 @@ export async function fetchConnpassEvents({
   intervalMs = REQUEST_INTERVAL_MS,
   maxRequests = MAX_REQUESTS,
   log = () => {},
-}: FetchEventsOptions): Promise<ConnpassEvent[]> {
+}: FetchEventsOptions): Promise<SnapshotEvent[]> {
   if (!apiKey) throw new Error("connpass API キーがありません");
   if (intervalMs < REQUEST_INTERVAL_MS) {
     throw new Error(`リクエスト間隔は ${REQUEST_INTERVAL_MS}ms 以上にしてください`);
   }
 
-  const events: ConnpassEvent[] = [];
+  const events: SnapshotEvent[] = [];
   let start = 1;
 
   for (let request = 1; ; request += 1) {
@@ -242,7 +244,9 @@ export async function fetchConnpassEvents({
     }
 
     events.push(...body.events);
-    if (body.events.length < PAGE_SIZE) return events;
+    // 短いページか、results_available まで取り切ったら終わり（ちょうど割り切れる件数で余分に呼ばない）
+    const fetched = start - 1 + body.events.length;
+    if (body.events.length < PAGE_SIZE || fetched >= body.results_available) return events;
     start += body.events.length;
   }
 }

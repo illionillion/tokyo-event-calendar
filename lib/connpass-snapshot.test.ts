@@ -3,7 +3,7 @@ import {
   buildSnapshot,
   eventsSearchUrl,
   fetchConnpassEvents,
-  isConnpassEvent,
+  isSnapshotSourceEvent,
   isEventListResponse,
   PAGE_SIZE,
   REQUEST_INTERVAL_MS,
@@ -127,12 +127,14 @@ describe("connpass-snapshot", () => {
   });
 
   it("コミット済みのスナップショットのイベントは、どれも検証を通る形", () => {
-    expect(committedSnapshot.events.every((event) => isConnpassEvent(event))).toBe(true);
+    expect(committedSnapshot.events.every((event) => isSnapshotSourceEvent(event))).toBe(true);
   });
 
   it("ページを順に取り、2 回目以降は 5 秒あけてから呼ぶ", async () => {
     const pages = [page(1, PAGE_SIZE), page(101, PAGE_SIZE), page(201, 3)];
-    const fetchMock = vi.fn(async () => jsonResponse(eventListResponse(pages.shift() ?? [])));
+    const fetchMock = vi.fn(async () =>
+      jsonResponse(eventListResponse(pages.shift() ?? [], { results_available: PAGE_SIZE * 2 + 3 }))
+    );
     const sleep = vi.fn(async () => {});
 
     const events = await fetchConnpassEvents({
@@ -160,6 +162,24 @@ describe("connpass-snapshot", () => {
     expect(calls.some(([url]) => url.toString().includes(TEST_KEY))).toBe(false);
   });
 
+  it("results_available まで取り切ったら、ちょうど 100 件で割り切れても次のページを呼ばない", async () => {
+    const pages = [page(1, PAGE_SIZE), page(101, PAGE_SIZE)];
+    const fetchMock = vi.fn(async () =>
+      jsonResponse(eventListResponse(pages.shift() ?? [], { results_available: PAGE_SIZE * 2 }))
+    );
+
+    const events = await fetchConnpassEvents({
+      apiKey: TEST_KEY,
+      months: ["202610"],
+      fetch: fetchMock as unknown as typeof fetch,
+      sleep: async () => {},
+      maxRequests: 2,
+    });
+
+    expect(events).toHaveLength(PAGE_SIZE * 2);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
   it("リクエスト同士の間隔は 5 秒より短くできない", async () => {
     const fetchMock = vi.fn();
 
@@ -175,7 +195,10 @@ describe("connpass-snapshot", () => {
   });
 
   it("エラーのステータスでは途中のデータを返さずに失敗し、API キーをメッセージに含めない", async () => {
-    const responses = [jsonResponse(eventListResponse(page(1, PAGE_SIZE))), jsonResponse({}, 429)];
+    const responses = [
+      jsonResponse(eventListResponse(page(1, PAGE_SIZE), { results_available: 1_000 })),
+      jsonResponse({}, 429),
+    ];
     const fetchMock = vi.fn(async () => responses.shift() as Response);
 
     const result = fetchConnpassEvents({
@@ -190,7 +213,9 @@ describe("connpass-snapshot", () => {
   });
 
   it("リクエスト数の上限を超えたら止める", async () => {
-    const fetchMock = vi.fn(async () => jsonResponse(eventListResponse(page(1, PAGE_SIZE))));
+    const fetchMock = vi.fn(async () =>
+      jsonResponse(eventListResponse(page(1, PAGE_SIZE), { results_available: 10_000 }))
+    );
 
     await expect(
       fetchConnpassEvents({
