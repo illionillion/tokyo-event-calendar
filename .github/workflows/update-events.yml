@@ -1,0 +1,64 @@
+name: Update events snapshot
+
+# connpass API からイベントを取得し、data/events.json を更新して main に push する。
+# サイトからは connpass API を呼ばず、API を呼ぶのはこの定期実行だけにする。
+on:
+  schedule:
+    # 1 日 1 回（UTC 18:00 = 日本時間 3:00）
+    - cron: "0 18 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  update:
+    name: Fetch connpass events
+    runs-on: ubuntu-latest
+    # API キーは Environment「workflow」の secret CONNPASS_API_KEY に置く
+    environment: workflow
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Fetch events from connpass API
+        env:
+          CONNPASS_API_KEY: ${{ secrets.CONNPASS_API_KEY }}
+        run: pnpm fetch:events
+
+      - name: Commit and push snapshot
+        env:
+          LEFTHOOK: "0"
+        run: |
+          git add data/events.json
+          if git diff --cached --quiet; then
+            echo "data/events.json に変更はありません"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: connpass のイベントスナップショットを更新する"
+          git push origin HEAD:main
