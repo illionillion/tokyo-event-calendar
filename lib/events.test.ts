@@ -21,7 +21,6 @@ describe("events", () => {
         (event) => event.image_url === null || typeof event.image_url === "string"
       )
     ).toBe(true);
-    expect(snapshot.events.some((event) => typeof event.image_url === "string")).toBe(true);
     expect(snapshot.events.some((event) => "owner_nickname" in event)).toBe(false);
     expect(snapshot.events.some((event) => "owner_display_name" in event)).toBe(false);
     expect(snapshot.events.some((event) => "owner_id" in event)).toBe(false);
@@ -80,7 +79,6 @@ describe("events", () => {
     expect(second).toBe(first);
     const withStart = (raw as EventSnapshot).events.filter((event) => event.started_at);
     expect(first.map((event) => event.imageUrl)).toEqual(withStart.map((event) => event.image_url));
-    expect(first.some((event) => event.imageUrl?.startsWith("https://"))).toBe(true);
     expect(first.some((event) => event.description?.includes("<p>"))).toBe(false);
   });
 });

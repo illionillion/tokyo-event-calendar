@@ -243,10 +243,24 @@ export async function fetchConnpassEvents({
       throw new Error("connpass API のレスポンスを読み取れませんでした");
     }
 
-    events.push(...body.events);
-    // 短いページか、results_available まで取り切ったら終わり（ちょうど割り切れる件数で余分に呼ばない）
+    // 頼んだページと違う（同じページが返ってきた など）、または件数の辻つまが合わないときは、
+    // 一部だけのスナップショットを書き出さないよう失敗させる
+    if (body.events.length > 0 && body.results_start !== start) {
+      throw new Error(`connpass API が start=${start} と違うページを返しました`);
+    }
     const fetched = start - 1 + body.events.length;
-    if (body.events.length < PAGE_SIZE || fetched >= body.results_available) return events;
+    if (fetched > body.results_available) {
+      throw new Error("connpass API の件数が results_available を超えました");
+    }
+
+    events.push(...body.events);
+    // results_available まで取り切ったら終わり（ちょうど割り切れる件数で余分に呼ばない）
+    if (fetched === body.results_available) return events;
+    if (body.events.length < PAGE_SIZE) {
+      throw new Error(
+        "connpass API のページが途中で途切れました（results_available まで取れていません）"
+      );
+    }
     start += body.events.length;
   }
 }

@@ -132,8 +132,13 @@ describe("connpass-snapshot", () => {
 
   it("ページを順に取り、2 回目以降は 5 秒あけてから呼ぶ", async () => {
     const pages = [page(1, PAGE_SIZE), page(101, PAGE_SIZE), page(201, 3)];
-    const fetchMock = vi.fn(async () =>
-      jsonResponse(eventListResponse(pages.shift() ?? [], { results_available: PAGE_SIZE * 2 + 3 }))
+    const fetchMock = vi.fn(async (url: URL) =>
+      jsonResponse(
+        eventListResponse(pages.shift() ?? [], {
+          results_available: PAGE_SIZE * 2 + 3,
+          results_start: Number(url.searchParams.get("start")),
+        })
+      )
     );
     const sleep = vi.fn(async () => {});
 
@@ -164,8 +169,13 @@ describe("connpass-snapshot", () => {
 
   it("results_available まで取り切ったら、ちょうど 100 件で割り切れても次のページを呼ばない", async () => {
     const pages = [page(1, PAGE_SIZE), page(101, PAGE_SIZE)];
-    const fetchMock = vi.fn(async () =>
-      jsonResponse(eventListResponse(pages.shift() ?? [], { results_available: PAGE_SIZE * 2 }))
+    const fetchMock = vi.fn(async (url: URL) =>
+      jsonResponse(
+        eventListResponse(pages.shift() ?? [], {
+          results_available: PAGE_SIZE * 2,
+          results_start: Number(url.searchParams.get("start")),
+        })
+      )
     );
 
     const events = await fetchConnpassEvents({
@@ -178,6 +188,52 @@ describe("connpass-snapshot", () => {
 
     expect(events).toHaveLength(PAGE_SIZE * 2);
     expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("頼んだページと違うページ（同じページの繰り返しなど）が返ってきたら失敗する", async () => {
+    const fetchMock = vi.fn(async () =>
+      jsonResponse(eventListResponse(page(1, PAGE_SIZE), { results_available: 1_000 }))
+    );
+
+    await expect(
+      fetchConnpassEvents({
+        apiKey: TEST_KEY,
+        months: ["202610"],
+        fetch: fetchMock as unknown as typeof fetch,
+        sleep: async () => {},
+      })
+    ).rejects.toThrow("start=101 と違うページ");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("まだ残りがあるのに短いページが返ってきたら、途中までで書き出さずに失敗する", async () => {
+    const fetchMock = vi.fn(async () =>
+      jsonResponse(eventListResponse(page(1, 3), { results_available: 250 }))
+    );
+
+    await expect(
+      fetchConnpassEvents({
+        apiKey: TEST_KEY,
+        months: ["202610"],
+        fetch: fetchMock as unknown as typeof fetch,
+        sleep: async () => {},
+      })
+    ).rejects.toThrow("途中で途切れました");
+  });
+
+  it("results_available を超える件数が返ってきたら失敗する", async () => {
+    const fetchMock = vi.fn(async () =>
+      jsonResponse(eventListResponse(page(1, 3), { results_available: 2 }))
+    );
+
+    await expect(
+      fetchConnpassEvents({
+        apiKey: TEST_KEY,
+        months: ["202610"],
+        fetch: fetchMock as unknown as typeof fetch,
+        sleep: async () => {},
+      })
+    ).rejects.toThrow("results_available を超えました");
   });
 
   it("リクエスト同士の間隔は 5 秒より短くできない", async () => {
@@ -213,8 +269,13 @@ describe("connpass-snapshot", () => {
   });
 
   it("リクエスト数の上限を超えたら止める", async () => {
-    const fetchMock = vi.fn(async () =>
-      jsonResponse(eventListResponse(page(1, PAGE_SIZE), { results_available: 10_000 }))
+    const fetchMock = vi.fn(async (url: URL) =>
+      jsonResponse(
+        eventListResponse(page(1, PAGE_SIZE), {
+          results_available: 10_000,
+          results_start: Number(url.searchParams.get("start")),
+        })
+      )
     );
 
     await expect(
