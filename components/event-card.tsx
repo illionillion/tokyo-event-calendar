@@ -77,8 +77,8 @@ function EventThumbnail({ event }: { event: Event }) {
 
   useEffect(() => {
     const image = imageRef.current;
-    if (image && image.complete && image.naturalWidth === 0 && image.currentSrc) {
-      setFailedUrl(image.currentSrc);
+    if (event.imageUrl && image?.complete && image.naturalWidth === 0) {
+      setFailedUrl(event.imageUrl);
     }
   }, [event.imageUrl]);
 
