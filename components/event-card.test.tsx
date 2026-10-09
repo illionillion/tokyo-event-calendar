@@ -25,6 +25,20 @@ const event: Event = {
 };
 
 describe("EventCard", () => {
+  it("画像 URL があるときはその画像を表示する", () => {
+    const { container } = render(
+      <EventCard
+        event={{ ...event, imageUrl: "https://media.connpass.com/thumbs/00/00/example.png" }}
+        now="2026-09-24T08:00:00.000Z"
+      />
+    );
+
+    expect(container.querySelector("img")).toHaveAttribute(
+      "src",
+      "https://media.connpass.com/thumbs/00/00/example.png"
+    );
+  });
+
   it("connpass のイベントページへ遷移できる", () => {
     render(<EventCard event={event} now="2026-09-24T08:00:00.000Z" />);
 

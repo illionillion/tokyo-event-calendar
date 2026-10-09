@@ -9,14 +9,19 @@ function anchoredEvent(overrides: Partial<ConnpassEvent> = {}): SnapshotEvent {
 }
 
 describe("events", () => {
-  it("スナップショットはイベント一覧レスポンスの形で、ユーザー情報と画像 URL を持たない", () => {
+  it("スナップショットはイベント一覧レスポンスの形で、ユーザー情報を持たず画像 URL は残す", () => {
     const snapshot = raw as EventSnapshot;
 
     expect(Number.isInteger(snapshot.results_returned)).toBe(true);
     expect(Number.isInteger(snapshot.results_available)).toBe(true);
     expect(snapshot.results_start).toBe(1);
     expect(snapshot.events.length).toBe(snapshot.results_returned);
-    expect(snapshot.events.every((event) => event.image_url === null)).toBe(true);
+    expect(
+      snapshot.events.every(
+        (event) => event.image_url === null || typeof event.image_url === "string"
+      )
+    ).toBe(true);
+    expect(snapshot.events.some((event) => typeof event.image_url === "string")).toBe(true);
     expect(snapshot.events.some((event) => "owner_nickname" in event)).toBe(false);
     expect(snapshot.events.some((event) => "owner_display_name" in event)).toBe(false);
     expect(snapshot.events.some((event) => "owner_id" in event)).toBe(false);
@@ -35,7 +40,12 @@ describe("events", () => {
     const events = materializeEvents("2026-10-07", records, null);
 
     expect(events.map((event) => event.date)).toEqual(["2026-10-01", "2026-10-12"]);
-    expect(events[1]).toMatchObject({ id: "2", start: "19:00", area: "港区", imageUrl: null });
+    expect(events[1]).toMatchObject({
+      id: "2",
+      start: "19:00",
+      area: "港区",
+      imageUrl: "https://media.connpass.com/thumbs/00/00/example.png",
+    });
   });
 
   it("基準日を渡したときだけ開催日をずらす", () => {
@@ -68,7 +78,9 @@ describe("events", () => {
     const second = materializeEvents("2026-10-08");
 
     expect(second).toBe(first);
-    expect(first.every((event) => event.imageUrl === null)).toBe(true);
+    const withStart = (raw as EventSnapshot).events.filter((event) => event.started_at);
+    expect(first.map((event) => event.imageUrl)).toEqual(withStart.map((event) => event.image_url));
+    expect(first.some((event) => event.imageUrl?.startsWith("https://"))).toBe(true);
     expect(first.some((event) => event.description?.includes("<p>"))).toBe(false);
   });
 });

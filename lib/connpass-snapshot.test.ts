@@ -6,6 +6,7 @@ import {
   isEventListResponse,
   PAGE_SIZE,
   REQUEST_INTERVAL_MS,
+  TARGET_PREFECTURES,
   targetMonths,
   toSnapshotEvent,
 } from "@/lib/connpass-snapshot";
@@ -51,13 +52,18 @@ describe("connpass-snapshot", () => {
     expect(url.searchParams.get("count")).toBe(String(PAGE_SIZE));
   });
 
-  it("ユーザー項目を落とし、画像 URL を null にする", () => {
+  it("取得対象は東京都・神奈川県・埼玉県・千葉県", () => {
+    expect([...TARGET_PREFECTURES]).toEqual(["tokyo", "kanagawa", "saitama", "chiba"]);
+  });
+
+  it("ユーザー項目を落とし、画像 URL は残す", () => {
     const event = toSnapshotEvent(connpassEvent());
 
     expect(event).not.toHaveProperty("owner_id");
     expect(event).not.toHaveProperty("owner_nickname");
     expect(event).not.toHaveProperty("owner_display_name");
-    expect(event.image_url).toBeNull();
+    expect(event.image_url).toBe("https://media.connpass.com/thumbs/00/00/example.png");
+    expect(toSnapshotEvent(connpassEvent({ image_url: null })).image_url).toBeNull();
     expect(event).toMatchObject({
       id: 1,
       title: "勉強会",
@@ -114,7 +120,12 @@ describe("connpass-snapshot", () => {
 
     const calls = fetchMock.mock.calls as unknown as [URL, RequestInit][];
     expect(calls.map(([url]) => url.searchParams.get("start"))).toEqual(["1", "101", "201"]);
-    expect(calls.every(([url]) => url.searchParams.get("prefecture") === "tokyo")).toBe(true);
+    expect(
+      calls.every(
+        ([url]) =>
+          url.searchParams.getAll("prefecture").join(",") === "tokyo,kanagawa,saitama,chiba"
+      )
+    ).toBe(true);
     expect(calls[0]?.[1].headers).toMatchObject({ "X-API-Key": TEST_KEY });
     expect(calls.some(([url]) => url.toString().includes(TEST_KEY))).toBe(false);
   });

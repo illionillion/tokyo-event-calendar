@@ -1,10 +1,11 @@
 /**
- * connpass API v2 から東京都のイベントを取得し、`data/events.json` に書き出す。
+ * connpass API v2 から東京都・神奈川県・埼玉県・千葉県のイベントを取得し、`data/events.json` に書き出す。
  * GitHub Actions の定期実行（.github/workflows/update-events.yml）から 1 日 1 回だけ動かす。
  *
  *   pnpm fetch:events          … CI（環境変数は workflow が渡す）
  *   pnpm fetch:events:local    … 手元（package.json で --env-file=.env）
  *   CONNPASS_API_KEY=... pnpm fetch:events
+ *
  * API キーは環境変数からだけ読み、ログやファイルには出さない。
  */
 import { writeFile } from "node:fs/promises";

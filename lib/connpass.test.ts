@@ -51,7 +51,7 @@ describe("connpass", () => {
     expect(event?.description).toBe("会場でハンズオンをします。 Q&A あり");
   });
 
-  it("スナップショットのイベントも同じように変換し、画像は出さない", () => {
+  it("スナップショットのイベントも同じように変換し、画像 URL を渡す", () => {
     const event = toCalendarEvent(snapshotEvent({ title: "スナップショット" }));
 
     expect(event).toMatchObject({
@@ -59,7 +59,7 @@ describe("connpass", () => {
       title: "スナップショット",
       date: "2026-09-24",
       area: "渋谷区",
-      imageUrl: null,
+      imageUrl: "https://media.connpass.com/thumbs/00/00/example.png",
     });
   });
 

@@ -21,8 +21,11 @@ export const PAGE_SIZE = 100;
 /** 想定外に件数が多いときに止める上限。全部取り切れないときは書き出さずに失敗させる。 */
 export const MAX_REQUESTS = 100;
 
-/** 利用申請の範囲に合わせ、東京都で開催されるイベントだけを取る。 */
-export const TARGET_PREFECTURES = ["tokyo"] as const;
+/**
+ * 取得する都道府県。API の `prefecture`（東京都・神奈川県・埼玉県・千葉県）。
+ * 複数指定は同じ名前のパラメーターを並べる。開催地はどれか 1 つなので、年月と同じく和集合として取る。
+ */
+export const TARGET_PREFECTURES = ["tokyo", "kanagawa", "saitama", "chiba"] as const;
 
 /** 今月を含めて何か月分を取るか。 */
 export const TARGET_MONTH_COUNT = 3;
@@ -86,7 +89,7 @@ export function isEventListResponse(value: unknown): value is ConnpassEventListR
   );
 }
 
-/** 主催者などのユーザー項目を落とし、画像 URL は直接参照しないので null にする。 */
+/** 主催者などのユーザー項目を落とす。画像 URL はカード表示に使うので残す。 */
 export function toSnapshotEvent(event: ConnpassEvent): SnapshotEvent {
   return {
     id: event.id,
@@ -94,7 +97,7 @@ export function toSnapshotEvent(event: ConnpassEvent): SnapshotEvent {
     catch: event.catch,
     description: event.description,
     url: event.url,
-    image_url: null,
+    image_url: event.image_url,
     hash_tag: event.hash_tag,
     started_at: event.started_at,
     ended_at: event.ended_at,
