@@ -13,6 +13,15 @@ describe("connpass", () => {
     expect(areaFromAddress(null)).toBe("");
   });
 
+  it("県名がない住所も市名から神奈川県・埼玉県・千葉県にまとめる", () => {
+    expect(areaFromAddress("〒220-0012 横浜市西区みなとみらい2-3-5")).toBe("神奈川県");
+    expect(areaFromAddress("さいたま市中央区新都心1-1")).toBe("埼玉県");
+    expect(areaFromAddress("千葉市中央区中央1-1-1")).toBe("千葉県");
+    expect(areaFromAddress("1-1 Nakase, Mihama-ku, Chiba")).toBe("千葉県");
+    expect(areaFromAddress("〒104-0061 東京都中央区銀座1-1-1")).toBe("中央区");
+    expect(areaFromAddress("渋谷区松濤1-29-1")).toBe("渋谷区");
+  });
+
   it("住所とキャッチから開催形態を決める", () => {
     expect(formatFromConnpass(connpassEvent({ address: null, place: "オンライン" }))).toBe(
       "online"

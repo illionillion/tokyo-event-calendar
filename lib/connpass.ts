@@ -1,4 +1,9 @@
-import { NEIGHBOR_PREFECTURES, TOKYO_CITIES, TOKYO_WARDS } from "@/lib/areas";
+import {
+  NEIGHBOR_PREFECTURE_HINTS,
+  NEIGHBOR_PREFECTURES,
+  TOKYO_CITIES,
+  TOKYO_WARDS,
+} from "@/lib/areas";
 import { plainTextFromHtml } from "@/lib/html-text";
 import type { ConnpassEvent, ConnpassUserField, Event, EventFormat } from "@/lib/types";
 
@@ -15,9 +20,21 @@ const OPEN_STATUSES = new Set<ConnpassEvent["open_status"]>([
 /** 画面用の変換に使う項目。ユーザー項目を除いたスナップショットのイベントも、API のイベントもそのまま渡せる。 */
 export type CalendarSourceEvent = Omit<ConnpassEvent, ConnpassUserField>;
 
+/**
+ * 住所から絞り込みのエリアを決める。東京都は区・市、神奈川県・埼玉県・千葉県は県名にまとめる。
+ * API の EventSchema には都道府県の項目がないので、住所（address）だけで判断する。
+ */
 export function areaFromAddress(address: string | null): string {
   if (!address) return "";
-  const prefecture = NEIGHBOR_PREFECTURES.find((name) => address.includes(name));
+  if (address.includes("東京都")) {
+    return AREAS.find((name) => address.includes(name)) ?? "";
+  }
+
+  const prefecture =
+    NEIGHBOR_PREFECTURES.find((name) => address.includes(name)) ??
+    NEIGHBOR_PREFECTURES.find((name) =>
+      NEIGHBOR_PREFECTURE_HINTS[name].some((hint) => address.includes(hint))
+    );
   if (prefecture) return prefecture;
   return AREAS.find((name) => address.includes(name)) ?? "";
 }
