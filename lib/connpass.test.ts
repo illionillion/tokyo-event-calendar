@@ -22,6 +22,18 @@ describe("connpass", () => {
     expect(areaFromAddress("渋谷区松濤1-29-1")).toBe("渋谷区");
   });
 
+  it("県名がない住所は、各県のどの市でも県にまとめ、東京都の地名と重なるときは前に出てくる方を使う", () => {
+    expect(areaFromAddress("大和市中央1-1-1")).toBe("神奈川県");
+    expect(areaFromAddress("茅ケ崎市東海岸北1-1")).toBe("神奈川県");
+    expect(areaFromAddress("熊谷市宮町2-47-1")).toBe("埼玉県");
+    expect(areaFromAddress("成田市花崎町760")).toBe("千葉県");
+    expect(areaFromAddress("鎌ヶ谷市新鎌ヶ谷2-6-1")).toBe("千葉県");
+    expect(areaFromAddress("相模原市中央区中央2-11-15")).toBe("神奈川県");
+    expect(areaFromAddress("東大和市中央3-930")).toBe("");
+    expect(areaFromAddress("八王子市旭町1-1")).toBe("八王子市");
+    expect(areaFromAddress("横浜市港北区新横浜2-1")).toBe("神奈川県");
+  });
+
   it("住所とキャッチから開催形態を決める", () => {
     expect(formatFromConnpass(connpassEvent({ address: null, place: "オンライン" }))).toBe(
       "online"

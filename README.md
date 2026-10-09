@@ -15,7 +15,7 @@ pnpm dev
 
 ## イベントデータの更新
 
-サイトからは connpass API を呼びません。API を呼ぶのは GitHub Actions の定期実行だけです。
+サイトからは connpass API を呼びません（利用者のアクセスで API を呼ぶことはありません）。API を呼ぶのは、スナップショットを更新するとき（GitHub Actions の定期実行・手動実行、または手元の `pnpm fetch:events` / `pnpm fetch:events:local`）だけです。
 
 1. `.github/workflows/update-events.yml` が 1 日 1 回（UTC 18:00 = 日本時間 3:00、手動実行も可）動く
 2. `scripts/fetch-connpass-events.ts` が connpass API v2 のイベント一覧（`GET /api/v2/events/`）から、東京都・神奈川県・埼玉県・千葉県（`prefecture=tokyo`, `kanagawa`, `saitama`, `chiba`）で今月から 3 か月分のイベントを開催日時順に 100 件ずつ取得する。リクエストは 5 秒に 1 回まで

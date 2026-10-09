@@ -21,8 +21,25 @@ const OPEN_STATUSES = new Set<ConnpassEvent["open_status"]>([
 export type CalendarSourceEvent = Omit<ConnpassEvent, ConnpassUserField>;
 
 /**
+ * 近隣の県の地名を含む東京都の市町村。絞り込みの選択肢にはないが、県と取り違えないよう地名としては探す
+ * （「東大和市」を神奈川県の「大和市」にしない）。
+ */
+const TOKYO_LOOKALIKES = ["東大和市"] as const;
+
+/** 県名のない住所で探す地名と、そのときのエリア。東京都の区・市と、近隣の県の市町村。 */
+const PLACE_NAMES: ReadonlyArray<readonly [name: string, area: string]> = [
+  ...AREAS.map((name) => [name, name] as const),
+  ...TOKYO_LOOKALIKES.map((name) => [name, ""] as const),
+  ...NEIGHBOR_PREFECTURES.flatMap((prefecture) =>
+    NEIGHBOR_PREFECTURE_HINTS[prefecture].map((hint) => [hint, prefecture] as const)
+  ),
+];
+
+/**
  * 住所から絞り込みのエリアを決める。東京都は区・市、神奈川県・埼玉県・千葉県は県名にまとめる。
  * API の EventSchema には都道府県の項目がないので、住所（address）だけで判断する。
+ * 県名がないときは、住所の中でいちばん前に出てくる地名を使う（住所は大きい単位から書くので、
+ * 「さいたま市中央区」は埼玉県、「東大和市」は「大和市」ではなく東京都として扱える）。
  */
 export function areaFromAddress(address: string | null): string {
   if (!address) return "";
@@ -30,13 +47,22 @@ export function areaFromAddress(address: string | null): string {
     return AREAS.find((name) => address.includes(name)) ?? "";
   }
 
-  const prefecture =
-    NEIGHBOR_PREFECTURES.find((name) => address.includes(name)) ??
-    NEIGHBOR_PREFECTURES.find((name) =>
-      NEIGHBOR_PREFECTURE_HINTS[name].some((hint) => address.includes(hint))
-    );
+  const prefecture = NEIGHBOR_PREFECTURES.find((name) => address.includes(name));
   if (prefecture) return prefecture;
-  return AREAS.find((name) => address.includes(name)) ?? "";
+
+  let found: { index: number; name: string; area: string } | null = null;
+  for (const [name, area] of PLACE_NAMES) {
+    const index = address.indexOf(name);
+    if (index < 0) continue;
+    if (
+      !found ||
+      index < found.index ||
+      (index === found.index && name.length > found.name.length)
+    ) {
+      found = { index, name, area };
+    }
+  }
+  return found?.area ?? "";
 }
 
 export function formatFromConnpass(

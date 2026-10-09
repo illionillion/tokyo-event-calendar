@@ -3,6 +3,7 @@ import {
   buildSnapshot,
   eventsSearchUrl,
   fetchConnpassEvents,
+  isConnpassEvent,
   isEventListResponse,
   PAGE_SIZE,
   REQUEST_INTERVAL_MS,
@@ -10,6 +11,7 @@ import {
   targetMonths,
   toSnapshotEvent,
 } from "@/lib/connpass-snapshot";
+import committedSnapshot from "@/data/events.json";
 import { connpassEvent, eventListResponse } from "@/lib/connpass.fixtures";
 import type { ConnpassEvent } from "@/lib/types";
 
@@ -98,6 +100,34 @@ describe("connpass-snapshot", () => {
     expect(isEventListResponse(eventListResponse([{ id: "1" } as unknown as ConnpassEvent]))).toBe(
       false
     );
+  });
+
+  it("スナップショットに書く項目が欠けたり型が違ったりするレスポンスは受け付けない", () => {
+    const missing = (field: keyof ConnpassEvent) => {
+      const event: Record<string, unknown> = { ...connpassEvent() };
+      delete event[field];
+      return eventListResponse([event as unknown as ConnpassEvent]);
+    };
+    for (const field of ["event_type", "accepted", "image_url", "group", "updated_at"] as const) {
+      expect(isEventListResponse(missing(field))).toBe(false);
+    }
+
+    const broken = (overrides: Record<string, unknown>) =>
+      eventListResponse([connpassEvent(overrides as Partial<ConnpassEvent>)]);
+    expect(isEventListResponse(broken({ event_type: "unknown" }))).toBe(false);
+    expect(isEventListResponse(broken({ limit: "40" }))).toBe(false);
+    expect(isEventListResponse(broken({ group: { id: 1, title: "BPStudy" } }))).toBe(false);
+    expect(isEventListResponse(broken({ group: null, limit: null, image_url: null }))).toBe(true);
+  });
+
+  it("件数の項目と events の長さが食い違うレスポンスは受け付けない", () => {
+    expect(isEventListResponse(eventListResponse([connpassEvent()], { results_returned: 2 }))).toBe(
+      false
+    );
+  });
+
+  it("コミット済みのスナップショットのイベントは、どれも検証を通る形", () => {
+    expect(committedSnapshot.events.every((event) => isConnpassEvent(event))).toBe(true);
   });
 
   it("ページを順に取り、2 回目以降は 5 秒あけてから呼ぶ", async () => {

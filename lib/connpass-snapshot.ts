@@ -72,6 +72,56 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
+const EVENT_TYPES: readonly unknown[] = ["participation", "advertisement"];
+const OPEN_STATUSES: readonly unknown[] = ["preopen", "open", "close", "cancelled"];
+
+function isStringOrNull(value: unknown): value is string | null {
+  return value === null || typeof value === "string";
+}
+
+function isGroup(value: unknown): boolean {
+  if (value === null) return true;
+  return (
+    isRecord(value) &&
+    Number.isInteger(value.id) &&
+    isStringOrNull(value.subdomain) &&
+    typeof value.title === "string" &&
+    typeof value.url === "string"
+  );
+}
+
+/**
+ * スナップショットに書く項目がすべて EventSchema どおりの型か。欠けた項目を `undefined` のまま書き出さないよう、
+ * 1 つでも合わなければ false にする。保存しないユーザー項目（owner_*）は見ない。
+ */
+export function isConnpassEvent(value: unknown): value is ConnpassEvent {
+  if (!isRecord(value)) return false;
+  return (
+    Number.isInteger(value.id) &&
+    typeof value.title === "string" &&
+    isStringOrNull(value.catch) &&
+    isStringOrNull(value.description) &&
+    typeof value.url === "string" &&
+    isStringOrNull(value.image_url) &&
+    isStringOrNull(value.hash_tag) &&
+    isStringOrNull(value.started_at) &&
+    isStringOrNull(value.ended_at) &&
+    isStringOrNull(value.published_at) &&
+    (value.limit === null || Number.isInteger(value.limit)) &&
+    EVENT_TYPES.includes(value.event_type) &&
+    OPEN_STATUSES.includes(value.open_status) &&
+    isGroup(value.group) &&
+    isStringOrNull(value.address) &&
+    isStringOrNull(value.place) &&
+    isStringOrNull(value.lat) &&
+    isStringOrNull(value.lon) &&
+    Number.isInteger(value.accepted) &&
+    Number.isInteger(value.waiting) &&
+    typeof value.updated_at === "string"
+  );
+}
+
+/** イベント一覧レスポンスの形か。件数の項目と events の長さが食い違うときも false にする。 */
 export function isEventListResponse(value: unknown): value is ConnpassEventListResponse {
   if (!isRecord(value)) return false;
   return (
@@ -79,13 +129,8 @@ export function isEventListResponse(value: unknown): value is ConnpassEventListR
     Number.isInteger(value.results_available) &&
     Number.isInteger(value.results_start) &&
     Array.isArray(value.events) &&
-    value.events.every(
-      (event) =>
-        isRecord(event) &&
-        Number.isInteger(event.id) &&
-        typeof event.title === "string" &&
-        typeof event.url === "string"
-    )
+    value.results_returned === value.events.length &&
+    value.events.every(isConnpassEvent)
   );
 }
 
