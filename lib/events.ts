@@ -1,10 +1,10 @@
 import raw from "@/data/events.json";
 import { toCalendarEvent } from "@/lib/connpass";
 import { daysBetween, parseDateKey } from "@/lib/dates";
-import type { ConnpassEvent, Event } from "@/lib/types";
+import type { Event, EventSnapshot, SnapshotEvent } from "@/lib/types";
 
 /**
- * 公開カレンダーから写したスナップショットは、ページ上の開催日のまま読む。
+ * スナップショットは、connpass API が返す開催日のまま読む。
  * 日付をまとめて動かして試すときだけ、materializeEvents の anchor に基準日を渡す。
  */
 export const MOCK_DATE_ANCHOR: string | null = null;
@@ -13,16 +13,19 @@ export const MOCK_DATE_ANCHOR: string | null = null;
  * 同じ isolate では、同じスナップショットと同じ日付ずらしの変換結果を使い回す。
  * 開催日をずらさない本番では today が違っても中身は同じなので、1 回分の変換で足りる。
  */
-const materialized = new WeakMap<ConnpassEvent[], Map<string, Event[]>>();
+const materialized = new WeakMap<SnapshotEvent[], Map<string, Event[]>>();
+
+const snapshot = raw as EventSnapshot;
 
 /**
- * `data/events.json` は connpass API v2 のイベント一覧レスポンス。
+ * `data/events.json` は connpass API v2 のイベント一覧レスポンスと同じ形のスナップショット。
+ * GitHub Actions の定期実行で `scripts/fetch-connpass-events.ts` が書き出す。
  * https://connpass.com/about/api/v2/
  * 区・市・県と開催形態は API に無いので、住所とキャッチから画面用に決める。
  */
 export function materializeEvents(
   today: string,
-  records: ConnpassEvent[] = raw.events as ConnpassEvent[],
+  records: SnapshotEvent[] = snapshot.events,
   anchor: string | null = MOCK_DATE_ANCHOR
 ): Event[] {
   if (!parseDateKey(today) || (anchor !== null && !parseDateKey(anchor))) {

@@ -1,6 +1,11 @@
-import { NEIGHBOR_PREFECTURES, TOKYO_CITIES, TOKYO_WARDS } from "@/lib/areas";
+import {
+  NEIGHBOR_PREFECTURE_HINTS,
+  NEIGHBOR_PREFECTURES,
+  TOKYO_CITIES,
+  TOKYO_WARDS,
+} from "@/lib/areas";
 import { plainTextFromHtml } from "@/lib/html-text";
-import type { ConnpassEvent, Event, EventFormat } from "@/lib/types";
+import type { ConnpassEvent, ConnpassUserField, Event, EventFormat } from "@/lib/types";
 
 const AREAS = [...TOKYO_WARDS, ...TOKYO_CITIES].sort((left, right) => right.length - left.length);
 
@@ -12,11 +17,45 @@ const OPEN_STATUSES = new Set<ConnpassEvent["open_status"]>([
   "cancelled",
 ]);
 
+/** 画面用の変換に使う項目。ユーザー項目を除いたスナップショットのイベントも、API のイベントもそのまま渡せる。 */
+export type CalendarSourceEvent = Omit<ConnpassEvent, ConnpassUserField>;
+
+/** 県名のない住所で探す地名と、そのときのエリア。東京都の区・市と、近隣の県の市町村。 */
+const PLACE_NAMES: ReadonlyArray<readonly [name: string, area: string]> = [
+  ...AREAS.map((name) => [name, name] as const),
+  ...NEIGHBOR_PREFECTURES.flatMap((prefecture) =>
+    NEIGHBOR_PREFECTURE_HINTS[prefecture].map((hint) => [hint, prefecture] as const)
+  ),
+];
+
+/**
+ * 住所から絞り込みのエリアを決める。東京都は区・市、神奈川県・埼玉県・千葉県は県名にまとめる。
+ * API の EventSchema には都道府県の項目がないので、住所（address）だけで判断する。
+ * 県名がないときは、住所の中でいちばん前に出てくる地名を使う（住所は大きい単位から書くので、
+ * 「さいたま市中央区」は埼玉県、「東大和市」は「大和市」ではなく東京都として扱える）。
+ */
 export function areaFromAddress(address: string | null): string {
   if (!address) return "";
+  if (address.includes("東京都")) {
+    return AREAS.find((name) => address.includes(name)) ?? "";
+  }
+
   const prefecture = NEIGHBOR_PREFECTURES.find((name) => address.includes(name));
   if (prefecture) return prefecture;
-  return AREAS.find((name) => address.includes(name)) ?? "";
+
+  let found: { index: number; name: string; area: string } | null = null;
+  for (const [name, area] of PLACE_NAMES) {
+    const index = address.indexOf(name);
+    if (index < 0) continue;
+    if (
+      !found ||
+      index < found.index ||
+      (index === found.index && name.length > found.name.length)
+    ) {
+      found = { index, name, area };
+    }
+  }
+  return found?.area ?? "";
 }
 
 export function formatFromConnpass(
@@ -31,8 +70,8 @@ export function formatFromConnpass(
   return mentionsOnline ? "hybrid" : "offline";
 }
 
-function assertConnpassEvent(event: ConnpassEvent): void {
-  if (!Number.isInteger(event.id) || !event.title || !event.url || !event.owner_nickname) {
+function assertConnpassEvent(event: CalendarSourceEvent): void {
+  if (!Number.isInteger(event.id) || !event.title || !event.url) {
     throw new Error("イベントデータを読み取れませんでした");
   }
 
@@ -81,7 +120,7 @@ function shiftIso(iso: string, dayDelta: number): string {
   return `${clock.date}T${clock.time}:${clock.second}+09:00`;
 }
 
-export function toCalendarEvent(event: ConnpassEvent, dayDelta = 0): Event | null {
+export function toCalendarEvent(event: CalendarSourceEvent, dayDelta = 0): Event | null {
   assertConnpassEvent(event);
   if (!event.started_at) return null;
 

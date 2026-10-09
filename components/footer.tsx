@@ -5,7 +5,8 @@ export function Footer() {
     <footer className="mt-auto min-w-0 border-t border-border bg-card">
       <div className="mx-auto flex max-w-[1080px] flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-pretty text-[13px] text-secondary">
-          掲載中のイベントはモックデータです。カードを開くと connpass のイベントページへ移動します。
+          掲載しているイベントは、connpass から 1 日 1 回取得した情報です。カードを開くと connpass
+          のイベントページへ移動します。
         </p>
         <nav aria-label="規約・ポリシー" className="flex shrink-0 gap-4 text-[13px]">
           <Link

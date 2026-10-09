@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import { hasEnded } from "@/lib/dates";
 import { formatCapacity, formatPlace } from "@/lib/filters";
@@ -62,6 +65,48 @@ function placeLabel(event: Event): string {
   return venue ? `${place} ${venue}` : place;
 }
 
+/**
+ * イベント画像。connpass の image_url は期限付きなので、読み込めなかったら頭文字のサムネに切り替える。
+ * ハイドレーション前に失敗した画像は onError が届かないため、マウント時にも読み込み結果を確かめる。
+ */
+function EventThumbnail({ event }: { event: Event }) {
+  const imageRef = useRef<HTMLImageElement>(null);
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const thumb = thumbnailStyle(event.id);
+  const initial = Array.from(event.title)[0] ?? "イ";
+
+  useEffect(() => {
+    const image = imageRef.current;
+    if (event.imageUrl && image?.complete && image.naturalWidth === 0) {
+      setFailedUrl(event.imageUrl);
+    }
+  }, [event.imageUrl]);
+
+  if (event.imageUrl && failedUrl !== event.imageUrl) {
+    return (
+      // connpass の image_url は期限付きで、最適化プロキシに載せない
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        ref={imageRef}
+        src={event.imageUrl}
+        alt=""
+        className="absolute inset-0 size-full object-cover"
+        onError={() => setFailedUrl(event.imageUrl)}
+      />
+    );
+  }
+
+  return (
+    <span
+      aria-hidden="true"
+      className="absolute inset-0 flex items-center justify-center text-3xl font-semibold"
+      style={{ backgroundColor: thumb.background, color: thumb.foreground }}
+    >
+      {initial}
+    </span>
+  );
+}
+
 type EventCardProps = {
   event: Event;
   now: string;
@@ -69,8 +114,6 @@ type EventCardProps = {
 
 export function EventCard({ event, now }: EventCardProps) {
   const ended = hasEnded(event.endedAt, now);
-  const thumb = thumbnailStyle(event.id);
-  const initial = Array.from(event.title)[0] ?? "イ";
 
   return (
     <a
@@ -80,19 +123,7 @@ export function EventCard({ event, now }: EventCardProps) {
       className="flex w-full min-w-0 max-w-full flex-col overflow-hidden rounded-lg border border-border bg-card hover:border-primary hover:bg-primary-soft hover:shadow-sm lg:flex-row lg:items-stretch"
     >
       <span className="relative block aspect-[16/9] w-full shrink-0 overflow-hidden lg:aspect-auto lg:min-h-40 lg:w-72 lg:self-stretch">
-        {event.imageUrl ? (
-          // connpass の image_url は期限付きで、最適化プロキシに載せない
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={event.imageUrl} alt="" className="absolute inset-0 size-full object-cover" />
-        ) : (
-          <span
-            aria-hidden="true"
-            className="absolute inset-0 flex items-center justify-center text-3xl font-semibold"
-            style={{ backgroundColor: thumb.background, color: thumb.foreground }}
-          >
-            {initial}
-          </span>
-        )}
+        <EventThumbnail event={event} />
       </span>
       <span className="flex min-w-0 flex-1 flex-col justify-center px-3 py-3 lg:px-4">
         <span className="flex flex-wrap items-center gap-x-2 gap-y-1">

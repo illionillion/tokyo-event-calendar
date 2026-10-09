@@ -1,5 +1,5 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { EventCard } from "@/components/event-card";
 import type { Event } from "@/lib/types";
 
@@ -25,6 +25,77 @@ const event: Event = {
 };
 
 describe("EventCard", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("画像 URL があるときはその画像を表示する", () => {
+    const { container } = render(
+      <EventCard
+        event={{ ...event, imageUrl: "https://media.connpass.com/thumbs/00/00/example.png" }}
+        now="2026-09-24T08:00:00.000Z"
+      />
+    );
+
+    expect(container.querySelector("img")).toHaveAttribute(
+      "src",
+      "https://media.connpass.com/thumbs/00/00/example.png"
+    );
+  });
+
+  it("画像を読み込めなかったら（URL の失効など）頭文字のサムネに切り替える", () => {
+    const { container } = render(
+      <EventCard
+        event={{ ...event, imageUrl: "https://media.connpass.com/thumbs/00/00/expired.png" }}
+        now="2026-09-24T08:00:00.000Z"
+      />
+    );
+
+    const image = container.querySelector("img");
+    expect(image).not.toBeNull();
+    fireEvent.error(image as HTMLImageElement);
+
+    expect(container.querySelector("img")).toBeNull();
+    expect(screen.getByText("R")).toBeInTheDocument();
+  });
+
+  it("ハイドレーション前にすでに読み込みに失敗していた画像も、頭文字のサムネに切り替える", () => {
+    // onError が届く前に失敗が確定している状態（complete かつ naturalWidth が 0）
+    vi.spyOn(HTMLImageElement.prototype, "complete", "get").mockReturnValue(true);
+    vi.spyOn(HTMLImageElement.prototype, "naturalWidth", "get").mockReturnValue(0);
+
+    const { container } = render(
+      <EventCard
+        event={{ ...event, imageUrl: "https://media.connpass.com/thumbs/00/00/expired.png" }}
+        now="2026-09-24T08:00:00.000Z"
+      />
+    );
+
+    expect(container.querySelector("img")).toBeNull();
+    expect(screen.getByText("R")).toBeInTheDocument();
+  });
+
+  it("読み込み中や読み込めた画像はそのまま表示する", () => {
+    vi.spyOn(HTMLImageElement.prototype, "complete", "get").mockReturnValue(true);
+    vi.spyOn(HTMLImageElement.prototype, "naturalWidth", "get").mockReturnValue(640);
+
+    const { container } = render(
+      <EventCard
+        event={{ ...event, imageUrl: "https://media.connpass.com/thumbs/00/00/example.png" }}
+        now="2026-09-24T08:00:00.000Z"
+      />
+    );
+
+    expect(container.querySelector("img")).not.toBeNull();
+  });
+
+  it("画像 URL が無いときは頭文字のサムネを表示する", () => {
+    const { container } = render(<EventCard event={event} now="2026-09-24T08:00:00.000Z" />);
+
+    expect(container.querySelector("img")).toBeNull();
+    expect(screen.getByText("R")).toBeInTheDocument();
+  });
+
   it("connpass のイベントページへ遷移できる", () => {
     render(<EventCard event={event} now="2026-09-24T08:00:00.000Z" />);
 
