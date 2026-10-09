@@ -1,6 +1,7 @@
 /**
  * connpass API v2 から東京都・神奈川県・埼玉県・千葉県のイベントを取得し、`data/events.json` に書き出す。
- * GitHub Actions の定期実行（.github/workflows/update-events.yml）から 1 日 1 回だけ動かす。
+ * 通常は GitHub Actions（.github/workflows/update-events.yml）の定期実行で 1 日 1 回動く。
+ * 同じワークフローの手動実行や、手元から下のコマンドで動かすこともできる（サイトからは呼ばない）。
  *
  *   pnpm fetch:events          … CI（環境変数は workflow が渡す）
  *   pnpm fetch:events:local    … 手元（package.json で --env-file=.env）

@@ -1,7 +1,8 @@
 name: Update events snapshot
 
 # connpass API からイベントを取得し、data/events.json を更新して main に push する。
-# サイトからは connpass API を呼ばず、API を呼ぶのはこの定期実行だけにする。
+# サイトからは connpass API を呼ばない。API を呼ぶのはスナップショットの更新時だけ
+# （このワークフローの定期実行・手動実行と、手元の pnpm fetch:events / fetch:events:local）。
 on:
   schedule:
     # 1 日 1 回（UTC 18:00 = 日本時間 3:00）

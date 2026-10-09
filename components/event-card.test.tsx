@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { EventCard } from "@/components/event-card";
 import type { Event } from "@/lib/types";
@@ -37,6 +37,29 @@ describe("EventCard", () => {
       "src",
       "https://media.connpass.com/thumbs/00/00/example.png"
     );
+  });
+
+  it("画像を読み込めなかったら（URL の失効など）頭文字のサムネに切り替える", () => {
+    const { container } = render(
+      <EventCard
+        event={{ ...event, imageUrl: "https://media.connpass.com/thumbs/00/00/expired.png" }}
+        now="2026-09-24T08:00:00.000Z"
+      />
+    );
+
+    const image = container.querySelector("img");
+    expect(image).not.toBeNull();
+    fireEvent.error(image as HTMLImageElement);
+
+    expect(container.querySelector("img")).toBeNull();
+    expect(screen.getByText("R")).toBeInTheDocument();
+  });
+
+  it("画像 URL が無いときは頭文字のサムネを表示する", () => {
+    const { container } = render(<EventCard event={event} now="2026-09-24T08:00:00.000Z" />);
+
+    expect(container.querySelector("img")).toBeNull();
+    expect(screen.getByText("R")).toBeInTheDocument();
   });
 
   it("connpass のイベントページへ遷移できる", () => {
