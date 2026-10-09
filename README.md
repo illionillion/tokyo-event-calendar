@@ -22,7 +22,7 @@ pnpm dev
 3. 主催者のニックネーム・表示名・ID は落とし、`image_url` は null にして `data/events.json` に書き出す
 4. 変更があれば `main` に commit・push し、アプリはその JSON を読む
 
-API キーは GitHub の Environment `workflow` の secret `CONNPASS_API_KEY` に置き、ワークフローからだけ参照します。手元で試すときは `CONNPASS_API_KEY=... pnpm fetch:events` で実行できます（キーはログに出しません）。
+API キーは GitHub の Environment `workflow` の secret `CONNPASS_API_KEY` に置き、ワークフローから `pnpm fetch:events` で参照します。手元では `.env` にキーを書いて `pnpm fetch:events:local`（`tsx --env-file=.env` 経由）。CI と同じ渡し方なら `CONNPASS_API_KEY=... pnpm fetch:events` でも可（キーはログに出しません）。
 
 API の利用条件は [connpass API利用規約](https://help.connpass.com/api/api-term) と [API リファレンス](https://connpass.com/about/api/v2/) に従います。
 
@@ -40,6 +40,8 @@ API の利用条件は [connpass API利用規約](https://help.connpass.com/api/
 | `pnpm test`          | Vitest（watch）       |
 | `pnpm test:run`      | Vitest（一回実行）    |
 | `pnpm test:coverage` | Vitest + coverage     |
+| `pnpm fetch:events`  | スナップショット取得（CI 用） |
+| `pnpm fetch:events:local` | 同上（`.env` を読む） |
 
 ## Development tooling
 

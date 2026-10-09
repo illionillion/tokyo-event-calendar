@@ -14,6 +14,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "fetch:events": "tsx scripts/fetch-connpass-events.ts",
+    "fetch:events:local": "tsx --env-file=.env scripts/fetch-connpass-events.ts",
     "test": "vitest",
     "test:run": "vitest run",
     "test:watch": "vitest watch",

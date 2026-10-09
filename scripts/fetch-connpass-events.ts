@@ -2,8 +2,9 @@
  * connpass API v2 から東京都のイベントを取得し、`data/events.json` に書き出す。
  * GitHub Actions の定期実行（.github/workflows/update-events.yml）から 1 日 1 回だけ動かす。
  *
+ *   pnpm fetch:events          … CI（環境変数は workflow が渡す）
+ *   pnpm fetch:events:local    … 手元（package.json で --env-file=.env）
  *   CONNPASS_API_KEY=... pnpm fetch:events
- *
  * API キーは環境変数からだけ読み、ログやファイルには出さない。
  */
 import { writeFile } from "node:fs/promises";
@@ -24,7 +25,9 @@ const outputPath = path.join(rootDir, "data", "events.json");
 async function main(): Promise<void> {
   const apiKey = process.env.CONNPASS_API_KEY;
   if (!apiKey) {
-    throw new Error("環境変数 CONNPASS_API_KEY が設定されていません");
+    throw new Error(
+      "環境変数 CONNPASS_API_KEY が設定されていません（手元: pnpm fetch:events:local または CONNPASS_API_KEY=... pnpm fetch:events）"
+    );
   }
 
   const months = targetMonths(new Date());
