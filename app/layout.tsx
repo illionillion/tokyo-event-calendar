@@ -17,7 +17,7 @@ const notoSansJp = Noto_Sans_JP({
 
 const siteTitle = "東京イベントカレンダー";
 const siteDescription =
-  "東京の connpass イベントを、日付・場所・キーワードから探すカレンダーです。";
+  "東京都と神奈川県・埼玉県・千葉県の connpass イベントを、日付・場所・キーワードから探すカレンダーです。";
 
 /**
  * 公開 URL はリクエストのホストから決める。og:image などの絶対 URL に使う。
