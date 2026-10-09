@@ -20,11 +20,9 @@ pnpm dev
 1. `.github/workflows/update-events.yml` が 1 日 1 回（UTC 18:00 = 日本時間 3:00、手動実行も可）動く
 2. `scripts/fetch-connpass-events.ts` が connpass API v2 のイベント一覧（`GET /api/v2/events/`）から、東京都・神奈川県・埼玉県・千葉県（`prefecture=tokyo`, `kanagawa`, `saitama`, `chiba`）で今月から 3 か月分のイベントを開催日時順に 100 件ずつ取得する。リクエストは 5 秒に 1 回まで
 3. 主催者のニックネーム・表示名・ID は落とし、`image_url` はそのまま `data/events.json` に書き出す。カードは URL があるときその画像を表示する。API リファレンスでは、この URL はある程度の時間で失効し、外部サイトでの直接参照は控えるよう記載されている
-4. 変更があれば `main` に commit・push し（push は PAT で行い、Cloudflare Pages のデプロイを起動する）、アプリはその JSON を読む
+4. 変更があれば `main` に commit・push し、アプリはその JSON を読む
 
 API キーは GitHub の Environment `workflow` の secret `CONNPASS_API_KEY` に置き、ワークフローから `pnpm fetch:events` で参照します。手元では `.env` にキーを書いて `pnpm fetch:events:local`（`tsx --env-file=.env` 経由）。CI と同じ渡し方なら `CONNPASS_API_KEY=... pnpm fetch:events` でも可（キーはログに出しません）。
-
-`main` への push には、同じ Environment `workflow` の secret `PAGES_DEPLOY_PAT`（`repo` と `workflow` スコープの Personal Access Token）を使います。`GITHUB_TOKEN` で push すると Cloudflare Pages（Workers Builds）のデプロイが走らないためです。この secret が無いとワークフローは最初のステップで失敗します。
 
 API の利用条件は [connpass API利用規約](https://help.connpass.com/api/api-term) と [API リファレンス](https://connpass.com/about/api/v2/) に従います。
 

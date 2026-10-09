@@ -20,29 +20,16 @@ jobs:
   update:
     name: Fetch connpass events
     runs-on: ubuntu-latest
-    # API キーは Environment「workflow」の secret CONNPASS_API_KEY に置く。
-    # main への push には同じ Environment の secret PAGES_DEPLOY_PAT（repo / workflow スコープの PAT）を使う。
-    # GITHUB_TOKEN による push では Cloudflare Pages（Workers Builds）のデプロイが走らないため。
+    # API キーは Environment「workflow」の secret CONNPASS_API_KEY に置く
     environment: workflow
     timeout-minutes: 20
     permissions:
       contents: write
     steps:
-      - name: Check deploy token
-        env:
-          PAGES_DEPLOY_PAT: ${{ secrets.PAGES_DEPLOY_PAT }}
-        run: |
-          if [ -z "$PAGES_DEPLOY_PAT" ]; then
-            echo "::error::Environment「workflow」に secret PAGES_DEPLOY_PAT がありません。GITHUB_TOKEN で push すると Cloudflare Pages がデプロイしないため、PAT を登録してください。"
-            exit 1
-          fi
-
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           ref: main
-          # PAT で checkout し、後の git push もこの PAT（持ち主のユーザー）として行う
-          token: ${{ secrets.PAGES_DEPLOY_PAT }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -75,4 +62,5 @@ jobs:
           git config user.name "Yuto Ichinose"
           git config user.email "60034520+illionillion@users.noreply.github.com"
           git commit -m "chore: connpass のイベントスナップショットを更新する"
+          # push は GITHUB_TOKEN で行う（この push では Cloudflare Pages のデプロイが走らないことがある）
           git push origin HEAD:main
