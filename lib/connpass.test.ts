@@ -1,36 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { areaFromAddress, formatFromConnpass, toCalendarEvent } from "@/lib/connpass";
-import type { ConnpassEvent } from "@/lib/types";
-
-function connpassEvent(overrides: Partial<ConnpassEvent> = {}): ConnpassEvent {
-  return {
-    id: 1,
-    title: "勉強会",
-    catch: null,
-    description: null,
-    url: "https://connpass.com/event/1/",
-    image_url: null,
-    hash_tag: "golang",
-    started_at: "2026-09-24T19:00:00+09:00",
-    ended_at: "2026-09-24T21:00:00+09:00",
-    published_at: "2026-09-01T10:00:00+09:00",
-    limit: 40,
-    event_type: "participation",
-    open_status: "open",
-    group: null,
-    address: "東京都渋谷区渋谷2-21-1",
-    place: "渋谷ヒカリエ",
-    lat: null,
-    lon: null,
-    owner_id: 8,
-    owner_nickname: "haru",
-    owner_display_name: "佐藤 治",
-    accepted: 10,
-    waiting: 0,
-    updated_at: "2026-09-20T12:00:00+09:00",
-    ...overrides,
-  };
-}
+import { connpassEvent, snapshotEvent } from "@/lib/connpass.fixtures";
 
 describe("connpass", () => {
   it("住所から区・市を取る", () => {
@@ -79,5 +49,27 @@ describe("connpass", () => {
     );
 
     expect(event?.description).toBe("会場でハンズオンをします。 Q&A あり");
+  });
+
+  it("スナップショットのイベントも同じように変換し、画像は出さない", () => {
+    const event = toCalendarEvent(snapshotEvent({ title: "スナップショット" }));
+
+    expect(event).toMatchObject({
+      id: "1",
+      title: "スナップショット",
+      date: "2026-09-24",
+      area: "渋谷区",
+      imageUrl: null,
+    });
+  });
+
+  it("開催日時が無いイベントは表示しない", () => {
+    expect(toCalendarEvent(snapshotEvent({ started_at: null }))).toBeNull();
+  });
+
+  it("必須項目が欠けたイベントはエラーにする", () => {
+    expect(() => toCalendarEvent(snapshotEvent({ title: "" }))).toThrow(
+      "イベントデータを読み取れませんでした"
+    );
   });
 });

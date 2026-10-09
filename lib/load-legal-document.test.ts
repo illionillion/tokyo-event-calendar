@@ -74,7 +74,7 @@ describe("loadLegalDocument", () => {
     const doc = loadLegalDocument("terms");
     expect(doc.title).toBe("利用規約");
     expect(doc.canonicalPath).toBe("terms");
-    expect(doc.content).toContain("モックデータ");
+    expect(doc.content).toContain("connpass API から 1 日 1 回取得");
     expect(doc.content).toContain("日本法");
   });
 });

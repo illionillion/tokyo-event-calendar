@@ -1,6 +1,6 @@
 import { NEIGHBOR_PREFECTURES, TOKYO_CITIES, TOKYO_WARDS } from "@/lib/areas";
 import { plainTextFromHtml } from "@/lib/html-text";
-import type { ConnpassEvent, Event, EventFormat } from "@/lib/types";
+import type { ConnpassEvent, ConnpassUserField, Event, EventFormat } from "@/lib/types";
 
 const AREAS = [...TOKYO_WARDS, ...TOKYO_CITIES].sort((left, right) => right.length - left.length);
 
@@ -11,6 +11,9 @@ const OPEN_STATUSES = new Set<ConnpassEvent["open_status"]>([
   "close",
   "cancelled",
 ]);
+
+/** 画面用の変換に使う項目。ユーザー項目を除いたスナップショットのイベントも、API のイベントもそのまま渡せる。 */
+export type CalendarSourceEvent = Omit<ConnpassEvent, ConnpassUserField>;
 
 export function areaFromAddress(address: string | null): string {
   if (!address) return "";
@@ -31,8 +34,8 @@ export function formatFromConnpass(
   return mentionsOnline ? "hybrid" : "offline";
 }
 
-function assertConnpassEvent(event: ConnpassEvent): void {
-  if (!Number.isInteger(event.id) || !event.title || !event.url || !event.owner_nickname) {
+function assertConnpassEvent(event: CalendarSourceEvent): void {
+  if (!Number.isInteger(event.id) || !event.title || !event.url) {
     throw new Error("イベントデータを読み取れませんでした");
   }
 
@@ -81,7 +84,7 @@ function shiftIso(iso: string, dayDelta: number): string {
   return `${clock.date}T${clock.time}:${clock.second}+09:00`;
 }
 
-export function toCalendarEvent(event: ConnpassEvent, dayDelta = 0): Event | null {
+export function toCalendarEvent(event: CalendarSourceEvent, dayDelta = 0): Event | null {
   assertConnpassEvent(event);
   if (!event.started_at) return null;
 

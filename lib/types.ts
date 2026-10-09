@@ -58,6 +58,30 @@ export type ConnpassEvent = {
   updated_at: string;
 };
 
+/** connpass API v2 の GET /api/v2/events/ のレスポンス（EventListResponseSchema）。 */
+export type ConnpassEventListResponse = {
+  results_returned: number;
+  results_available: number;
+  results_start: number;
+  events: ConnpassEvent[];
+};
+
+/** 主催者（connpass ユーザー）に当たる項目。スナップショットには残さない。 */
+export type ConnpassUserField = "owner_id" | "owner_nickname" | "owner_display_name";
+
+/**
+ * `data/events.json` に書くイベント。API の EventSchema からユーザー項目を除き、
+ * 期限付きで直接参照を控えるよう案内されている `image_url` は null にする。
+ */
+export type SnapshotEvent = Omit<ConnpassEvent, ConnpassUserField | "image_url"> & {
+  image_url: null;
+};
+
+/** `data/events.json` の形。イベント一覧レスポンスと同じ形で、全ページ分をまとめたもの。 */
+export type EventSnapshot = Omit<ConnpassEventListResponse, "events"> & {
+  events: SnapshotEvent[];
+};
+
 export type Filters = {
   date: string;
   area: string | null;
