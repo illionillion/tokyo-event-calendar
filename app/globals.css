@@ -11,6 +11,9 @@
   --primary: #c83e3a;
   --primary-hover: #a83330;
   --primary-soft: #f8eceb;
+  /* 土曜・日曜祝日の文字色。白・surface の上でコントラスト 4.5:1 以上 */
+  --saturday: #2b62b0;
+  --holiday: #b83a36;
 }
 
 @theme inline {
@@ -24,6 +27,8 @@
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
   --color-primary-soft: var(--primary-soft);
+  --color-saturday: var(--saturday);
+  --color-holiday: var(--holiday);
   --font-sans:
     var(--font-noto), "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo",
     sans-serif;

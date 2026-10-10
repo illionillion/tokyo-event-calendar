@@ -11,6 +11,7 @@ import {
   shiftMonth,
   weekdayLabel,
 } from "@/lib/dates";
+import { dayKind, dayKindTextClass, holidayName } from "@/lib/holidays";
 
 const WEEKDAY_HEADERS = ["日", "月", "火", "水", "木", "金", "土"];
 
@@ -63,8 +64,13 @@ export function MiniCalendar({
         </button>
       </div>
       <div className="mt-3 grid grid-cols-7 gap-1 text-center text-[11px] text-muted">
-        {WEEKDAY_HEADERS.map((label) => (
-          <span key={label}>{label}</span>
+        {WEEKDAY_HEADERS.map((label, index) => (
+          <span
+            key={label}
+            className={cn(index === 0 && "text-holiday", index === 6 && "text-saturday")}
+          >
+            {label}
+          </span>
         ))}
       </div>
       <div className="mt-1 grid grid-cols-7 gap-1">
@@ -73,6 +79,8 @@ export function MiniCalendar({
           const isToday = cell.date === today;
           const hasEvent = markedDates.has(cell.date);
           const parts = parseDateKey(cell.date);
+          const holiday = holidayName(cell.date);
+          const kindClass = dayKindTextClass(dayKind(cell.date));
 
           return (
             <button
@@ -80,14 +88,17 @@ export function MiniCalendar({
               type="button"
               aria-pressed={selected}
               aria-current={isToday ? "date" : undefined}
-              aria-label={`${cell.date} ${weekdayLabel(cell.date)}曜日${hasEvent ? " イベントあり" : ""}`}
+              aria-label={`${cell.date} ${weekdayLabel(cell.date)}曜日${holiday ? ` ${holiday}` : ""}${hasEvent ? " イベントあり" : ""}`}
+              title={holiday ?? undefined}
               onClick={() => onSelectDate(cell.date)}
               className={cn(
                 "flex h-8 flex-col items-center justify-center rounded-md text-[13px] tabular-nums",
                 selected && "bg-primary font-semibold text-white",
                 !selected && isToday && "font-semibold text-primary ring-1 ring-primary ring-inset",
-                !selected && cell.inMonth && "text-foreground hover:bg-surface",
-                !selected && !cell.inMonth && "text-muted hover:bg-surface"
+                !selected && "hover:bg-surface",
+                // 選択中・今日・前後の月の日は、それぞれの見た目を優先して土日祝の色を付けない。
+                !selected && !isToday && !cell.inMonth && "text-muted",
+                !selected && !isToday && cell.inMonth && (kindClass || "text-foreground")
               )}
             >
               <span className="leading-none">{parts ? dayNumber(cell.date) : ""}</span>
