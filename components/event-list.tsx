@@ -1,6 +1,8 @@
 import { EventCard } from "@/components/event-card";
-import { addDays, formatDayHeading, hasEnded } from "@/lib/dates";
+import { cn } from "@/lib/cn";
+import { addDays, formatMonthDay, hasEnded, weekdayLabel } from "@/lib/dates";
 import { formatLabel, hasActiveFilters, joinKeywordTerms, splitKeywordTerms } from "@/lib/filters";
+import { dayKind, dayKindTextClass, holidayName } from "@/lib/holidays";
 import type { Event, Filters } from "@/lib/types";
 
 type EventListProps = {
@@ -25,12 +27,27 @@ export function EventList({
   const active = hasActiveFilters(filters);
   const allEnded = events.length > 0 && events.every((event) => hasEnded(event.endedAt, now));
   const isToday = filters.date === today;
+  const holiday = holidayName(filters.date);
 
   return (
     <section id="events" aria-labelledby="event-list-heading" className="min-w-0">
       <div className="flex flex-wrap items-end justify-between gap-2 lg:sr-only">
         <h2 id="event-list-heading" className="text-lg font-semibold text-balance">
-          {formatDayHeading(filters.date)}
+          {formatMonthDay(filters.date)}
+          {/* 今日は「今日」の赤を優先し、曜日に土日祝の色を付けない */}
+          <span className={cn(!isToday && dayKindTextClass(dayKind(filters.date)))}>
+            （{weekdayLabel(filters.date)}）
+          </span>
+          {holiday ? (
+            <span
+              className={cn(
+                "ml-2 text-sm font-medium",
+                isToday ? "text-secondary" : "text-holiday"
+              )}
+            >
+              {holiday}
+            </span>
+          ) : null}
           {isToday ? <span className="ml-2 text-sm font-medium text-primary">今日</span> : null}
         </h2>
         <p className="text-sm text-secondary tabular-nums" aria-live="polite">
