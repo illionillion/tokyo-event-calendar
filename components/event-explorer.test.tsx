@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { EventExplorer } from "@/components/event-explorer";
@@ -72,6 +72,24 @@ describe("EventExplorer", () => {
     expect(
       parseFilters(new URLSearchParams(lastHistoryUrl(pushState).split("?")[1]), "2026-09-24")
     ).toMatchObject({ areas: ["渋谷区"] });
+  });
+
+  it("SP のカレンダーを開いて日付を選ぶと pushState で URL を更新して閉じる", async () => {
+    const user = userEvent.setup();
+    const pushState = vi.spyOn(window.history, "pushState");
+    renderExplorer();
+
+    const toggle = screen.getByRole("button", { name: "カレンダーから日付を選ぶ" });
+    await user.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+
+    const calendar = screen.getByRole("region", { name: "ミニカレンダー" });
+    await user.click(within(calendar).getByRole("button", { name: /^2026-09-27 / }));
+
+    expect(
+      parseFilters(new URLSearchParams(lastHistoryUrl(pushState).split("?")[1]), "2026-09-24")
+    ).toMatchObject({ date: "2026-09-27" });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
   });
 
   it("キーワードは replaceState で URL を更新する", async () => {

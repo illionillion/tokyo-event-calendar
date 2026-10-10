@@ -2,10 +2,10 @@
 
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { CollapsibleCalendar } from "@/components/collapsible-calendar";
 import { DateNavigation } from "@/components/date-navigation";
 import { EventList } from "@/components/event-list";
 import { FiltersPanel } from "@/components/filters-panel";
-import { MiniCalendar } from "@/components/mini-calendar";
 import { groupAreas } from "@/lib/areas";
 import { parseDateKey, todayKey } from "@/lib/dates";
 import { countByArea, filterEvents, matchingDates } from "@/lib/filters";
@@ -80,16 +80,14 @@ export function EventExplorer({ events, today: serverToday, now: serverNow }: Ev
       </div>
       <div className="mt-4 grid min-w-0 grid-cols-[minmax(0,1fr)] items-start gap-4 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-6">
         <aside className="min-h-0 min-w-0 space-y-4">
-          <div className="hidden lg:block">
-            <MiniCalendar
-              selectedDate={filters.date}
-              today={today}
-              markedDates={markedDates}
-              onSelectDate={(date) => {
-                if (date !== filters.date) update({ date });
-              }}
-            />
-          </div>
+          <CollapsibleCalendar
+            selectedDate={filters.date}
+            today={today}
+            markedDates={markedDates}
+            onSelectDate={(date) => {
+              if (date !== filters.date) update({ date });
+            }}
+          />
           <FiltersPanel
             keywordResetKey={keywordResetKey}
             filters={filters}
