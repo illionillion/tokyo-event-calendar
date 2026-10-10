@@ -52,7 +52,19 @@ describe("CollapsibleCalendar", () => {
     expect(toggle).toHaveFocus();
   });
 
-  it("開いた状態で Escape を押すと閉じる", async () => {
+  it("開いた直後、開閉ボタンにフォーカスがあるまま Escape を押しても閉じる", async () => {
+    const user = userEvent.setup();
+    const { toggle } = renderCalendar();
+
+    await user.click(toggle);
+    expect(toggle).toHaveFocus();
+    await user.keyboard("{Escape}");
+
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(toggle).toHaveFocus();
+  });
+
+  it("カレンダーの中にフォーカスがあるときも Escape で閉じる", async () => {
     const user = userEvent.setup();
     const { onSelectDate, toggle, calendar } = renderCalendar();
 

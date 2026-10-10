@@ -23,7 +23,14 @@ export function CollapsibleCalendar({ onSelectDate, ...props }: CollapsibleCalen
   }
 
   return (
-    <div>
+    // 開閉ボタンとカレンダーのどちらにフォーカスがあっても Escape で閉じる
+    <div
+      onKeyDown={(event) => {
+        if (event.key !== "Escape" || !open) return;
+        setOpen(false);
+        toggleRef.current?.focus();
+      }}
+    >
       <button
         ref={toggleRef}
         type="button"
@@ -69,15 +76,7 @@ export function CollapsibleCalendar({ onSelectDate, ...props }: CollapsibleCalen
           />
         </svg>
       </button>
-      <div
-        id={calendarId}
-        className={cn("mt-2 lg:mt-0 lg:block", open ? "block" : "hidden")}
-        onKeyDown={(event) => {
-          if (event.key !== "Escape" || !open) return;
-          setOpen(false);
-          toggleRef.current?.focus();
-        }}
-      >
+      <div id={calendarId} className={cn("mt-2 lg:mt-0 lg:block", open ? "block" : "hidden")}>
         <MiniCalendar {...props} onSelectDate={selectDate} />
       </div>
     </div>
