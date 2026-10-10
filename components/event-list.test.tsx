@@ -6,7 +6,7 @@ import type { Filters } from "@/lib/types";
 
 const filters: Filters = {
   date: "2026-09-28",
-  area: "渋谷区",
+  areas: ["渋谷区"],
   format: "all",
   keyword: "",
 };
@@ -56,5 +56,28 @@ describe("EventList", () => {
 
     await user.click(screen.getByRole("button", { name: "React Nativeの条件を解除" }));
     expect(onChangeFilters).toHaveBeenCalledWith({ keyword: "LT, 渋谷" });
+  });
+
+  it("エリアは選んだ数だけチップになり、1つ外すと残りのエリアで絞り込む", async () => {
+    const user = userEvent.setup();
+    const onChangeFilters = vi.fn();
+
+    render(
+      <EventList
+        filters={{ ...filters, areas: ["北区", "港区", "千葉県"] }}
+        events={[]}
+        today="2026-09-24"
+        now="2026-09-24T00:00:00.000Z"
+        onSelectDate={vi.fn()}
+        onChangeFilters={onChangeFilters}
+        onClearFilters={vi.fn()}
+      />
+    );
+
+    expect(screen.getByRole("button", { name: "北区の条件を解除" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "千葉県の条件を解除" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "港区の条件を解除" }));
+    expect(onChangeFilters).toHaveBeenCalledWith({ areas: ["北区", "千葉県"] });
   });
 });

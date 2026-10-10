@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { AreaGroups } from "@/lib/areas";
 import { cn } from "@/lib/cn";
-import { formatLabel, hasActiveFilters, keywordPlaceholder } from "@/lib/filters";
+import { formatLabel, hasActiveFilters, keywordPlaceholder, toggleArea } from "@/lib/filters";
 import type { Filters, FormatFilter } from "@/lib/types";
 
 const FORMAT_OPTIONS: FormatFilter[] = ["all", "online", "offline"];
@@ -14,7 +14,8 @@ type FiltersPanelProps = {
   groups: AreaGroups;
   counts: Map<string, number>;
   onFormat: (format: FormatFilter) => void;
-  onArea: (area: string | null) => void;
+  /** 選んだエリアの一覧を渡す。空配列は「すべて」。 */
+  onAreas: (areas: string[]) => void;
   onKeyword: (keyword: string) => void;
   onClear: () => void;
 };
@@ -25,7 +26,7 @@ export function FiltersPanel({
   groups,
   counts,
   onFormat,
-  onArea,
+  onAreas,
   onKeyword,
   onClear,
 }: FiltersPanelProps) {
@@ -74,7 +75,7 @@ export function FiltersPanel({
 
       <KeywordField key={keywordResetKey} keyword={filters.keyword} onKeyword={onKeyword} />
 
-      <AreaFilter filters={filters} groups={groups} counts={counts} onArea={onArea} />
+      <AreaFilter areas={filters.areas} groups={groups} counts={counts} onAreas={onAreas} />
     </section>
   );
 }
@@ -151,54 +152,87 @@ function KeywordField({
   );
 }
 
+function areaSummary(areas: readonly string[]): string {
+  if (areas.length === 0) return "すべて";
+  if (areas.length <= 2) return areas.join("、");
+  return `${areas[0]} ほか${areas.length - 1}件`;
+}
+
 function AreaFilter({
-  filters,
+  areas,
   groups,
   counts,
-  onArea,
+  onAreas,
 }: {
-  filters: Filters;
+  areas: string[];
   groups: AreaGroups;
   counts: Map<string, number>;
-  onArea: (area: string | null) => void;
+  onAreas: (areas: string[]) => void;
 }) {
+  const [open, setOpen] = useState(false);
+  const listId = useId();
   const sections = [
     { label: "23区", names: groups.wards },
     { label: "市", names: groups.cities },
     { label: "県", names: groups.prefectures },
     { label: "その他", names: groups.other },
   ].filter((section) => section.names.length > 0);
+  const allSelected = areas.length === 0;
+
+  function clearAreas() {
+    if (!allSelected) onAreas([]);
+  }
 
   return (
     <fieldset className="mt-4">
       <legend className="text-[13px] text-secondary">エリア</legend>
-      <label className="mt-2 block lg:hidden">
-        <span className="sr-only">エリアを選択</span>
-        <select
-          aria-label="エリアを選択"
-          className="h-9 w-full rounded-md border border-border bg-card px-2 text-sm"
-          value={filters.area ?? ""}
-          onChange={(event) => onArea(event.target.value || null)}
+      <div className="mt-2 lg:hidden">
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-controls={listId}
+          className="flex h-9 w-full items-center justify-between gap-2 rounded-md border border-border bg-card px-2 text-left text-sm"
+          onClick={() => setOpen((current) => !current)}
         >
-          <option value="">すべて</option>
+          <span className="min-w-0 truncate">
+            <span className="sr-only">エリアを選択：</span>
+            {areaSummary(areas)}
+          </span>
+          <svg
+            viewBox="0 0 16 16"
+            className={cn("size-4 shrink-0 text-secondary", open && "-scale-y-100")}
+            aria-hidden="true"
+          >
+            <path
+              d="M3.5 6 8 10.5 12.5 6"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+        <div
+          id={listId}
+          hidden={!open}
+          className="mt-2 max-h-72 overflow-y-auto rounded-md border border-border p-2 contain-paint"
+        >
+          <AreaChip name="すべて" count={null} pressed={allSelected} onToggle={clearAreas} />
           {sections.map((section) => (
-            <optgroup key={section.label} label={section.label}>
-              {section.names.map((name) => (
-                <option key={name} value={name}>
-                  {name}（{counts.get(name) ?? 0}）
-                </option>
-              ))}
-            </optgroup>
+            <AreaChipGroup
+              key={section.label}
+              label={section.label}
+              names={section.names}
+              areas={areas}
+              counts={counts}
+              onToggle={(name) => onAreas(toggleArea(areas, name))}
+            />
           ))}
-        </select>
-      </label>
+        </div>
+      </div>
       <div className="mt-2 hidden h-80 overflow-y-auto contain-paint lg:block">
-        <AreaOption
-          name="すべて"
-          count={null}
-          checked={filters.area === null}
-          onSelect={() => onArea(null)}
-        />
+        <AreaOption name="すべて" count={null} checked={allSelected} onToggle={clearAreas} />
         {sections.map((section) => (
           <div key={section.label} className="mt-2">
             <p className="px-2 py-1 text-[12px] text-muted">{section.label}</p>
@@ -207,8 +241,8 @@ function AreaFilter({
                 key={name}
                 name={name}
                 count={counts.get(name) ?? 0}
-                checked={filters.area === name}
-                onSelect={() => onArea(name)}
+                checked={areas.includes(name)}
+                onToggle={() => onAreas(toggleArea(areas, name))}
               />
             ))}
           </div>
@@ -218,16 +252,80 @@ function AreaFilter({
   );
 }
 
+function AreaChipGroup({
+  label,
+  names,
+  areas,
+  counts,
+  onToggle,
+}: {
+  label: string;
+  names: string[];
+  areas: string[];
+  counts: Map<string, number>;
+  onToggle: (name: string) => void;
+}) {
+  const labelId = useId();
+
+  return (
+    <div role="group" aria-labelledby={labelId} className="mt-2">
+      <p id={labelId} className="py-1 text-[12px] text-muted">
+        {label}
+      </p>
+      <div className="flex flex-wrap gap-1">
+        {names.map((name) => (
+          <AreaChip
+            key={name}
+            name={name}
+            count={counts.get(name) ?? 0}
+            pressed={areas.includes(name)}
+            onToggle={() => onToggle(name)}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AreaChip({
+  name,
+  count,
+  pressed,
+  onToggle,
+}: {
+  name: string;
+  count: number | null;
+  pressed: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={pressed}
+      className={cn(
+        "rounded-md border px-2 py-1 text-[13px]",
+        pressed && "border-primary bg-primary text-white",
+        !pressed && count === 0 && "border-border bg-card text-muted hover:bg-surface",
+        !pressed && count !== 0 && "border-border bg-card text-foreground hover:bg-surface"
+      )}
+      onClick={onToggle}
+    >
+      {name}
+      {count !== null ? <span className="tabular-nums">（{count}）</span> : null}
+    </button>
+  );
+}
+
 function AreaOption({
   name,
   count,
   checked,
-  onSelect,
+  onToggle,
 }: {
   name: string;
   count: number | null;
   checked: boolean;
-  onSelect: () => void;
+  onToggle: () => void;
 }) {
   return (
     <label
@@ -240,13 +338,33 @@ function AreaOption({
     >
       <span className="flex items-center gap-2">
         <input
-          type="radio"
+          type="checkbox"
           name="area"
           className="sr-only"
           value={name}
           checked={checked}
-          onChange={onSelect}
+          onChange={onToggle}
         />
+        <span
+          aria-hidden="true"
+          className={cn(
+            "flex size-3.5 shrink-0 items-center justify-center rounded-sm border",
+            checked ? "border-primary bg-primary text-white" : "border-border bg-card"
+          )}
+        >
+          {checked ? (
+            <svg viewBox="0 0 16 16" className="size-3">
+              <path
+                d="M3.5 8.5 6.5 11.5 12.5 4.5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          ) : null}
+        </span>
         {name}
       </span>
       {count !== null ? <span className="text-[12px] text-muted tabular-nums">{count}</span> : null}

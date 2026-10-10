@@ -36,7 +36,7 @@ export function EventExplorer({ events, today: serverToday, now: serverNow }: Ev
   const visible = useMemo(() => filterEvents(events, filters), [events, filters]);
   const counts = useMemo(() => countByArea(events, filters), [events, filters]);
   const markedDates = useMemo(() => matchingDates(events, filters), [events, filters]);
-  const groups = useMemo(() => groupAreas(events, filters.area), [events, filters.area]);
+  const groups = useMemo(() => groupAreas(events, filters.areas), [events, filters.areas]);
 
   function navigate(next: Filters, mode: "push" | "replace") {
     setClientNow(new Date().toISOString());
@@ -49,7 +49,7 @@ export function EventExplorer({ events, today: serverToday, now: serverNow }: Ev
 
   function clearFilters() {
     setKeywordResetKey((key) => key + 1);
-    update({ area: null, format: "all", keyword: "" });
+    update({ areas: [], format: "all", keyword: "" });
   }
 
   const selected = parseDateKey(filters.date);
@@ -98,9 +98,7 @@ export function EventExplorer({ events, today: serverToday, now: serverNow }: Ev
             onFormat={(format) => {
               if (format !== filters.format) update({ format });
             }}
-            onArea={(area) => {
-              if (area !== filters.area) update({ area });
-            }}
+            onAreas={(areas) => update({ areas })}
             onKeyword={(keyword) => {
               if (keyword !== filters.keyword) update({ keyword }, "replace");
             }}

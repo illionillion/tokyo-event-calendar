@@ -40,15 +40,17 @@ export function EventList({
 
       {active ? (
         <ul className="mt-3 flex flex-wrap gap-2">
-          {filters.area ? (
-            <li>
+          {filters.areas.map((area) => (
+            <li key={`area-${area}`}>
               <FilterChip
-                label={filters.area}
-                onClear={() => onChangeFilters({ area: null })}
-                clearLabel={`${filters.area}の条件を解除`}
+                label={area}
+                onClear={() =>
+                  onChangeFilters({ areas: filters.areas.filter((name) => name !== area) })
+                }
+                clearLabel={`${area}の条件を解除`}
               />
             </li>
-          ) : null}
+          ))}
           {filters.format !== "all" ? (
             <li>
               <FilterChip

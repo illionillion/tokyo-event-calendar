@@ -82,7 +82,8 @@ export type EventSnapshot = Omit<ConnpassEventListResponse, "events"> & {
 
 export type Filters = {
   date: string;
-  area: string | null;
+  /** 選んだエリア（区・市・県）。空ならすべて。複数あるときはいずれかに当たるイベントを出す（OR）。 */
+  areas: string[];
   format: FormatFilter;
   keyword: string;
 };
