@@ -41,3 +41,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# promo（告知用スライド）の作業ファイル
+/promo/.venv/
+/promo/shots/
+/promo/node_modules/
+__pycache__/
+*.py[cod]
