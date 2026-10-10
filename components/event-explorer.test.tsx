@@ -56,7 +56,7 @@ describe("EventExplorer", () => {
     await user.click(screen.getByRole("button", { name: "次の日" }));
     expect(
       parseFilters(new URLSearchParams(lastHistoryUrl(pushState).split("?")[1]), "2026-09-24")
-    ).toMatchObject({ date: "2026-09-25", area: null, format: "all", keyword: "" });
+    ).toMatchObject({ date: "2026-09-25", areas: [], format: "all", keyword: "" });
 
     await user.selectOptions(screen.getByRole("combobox", { name: "月を選択" }), "2026-10");
     expect(
@@ -68,10 +68,10 @@ describe("EventExplorer", () => {
       parseFilters(new URLSearchParams(lastHistoryUrl(pushState).split("?")[1]), "2026-09-24")
     ).toMatchObject({ format: "online" });
 
-    await user.selectOptions(screen.getByRole("combobox", { name: "エリアを選択" }), "渋谷区");
+    await user.click(screen.getByRole("checkbox", { name: /^渋谷区/ }));
     expect(
       parseFilters(new URLSearchParams(lastHistoryUrl(pushState).split("?")[1]), "2026-09-24")
-    ).toMatchObject({ area: "渋谷区" });
+    ).toMatchObject({ areas: ["渋谷区"] });
   });
 
   it("キーワードは replaceState で URL を更新する", async () => {

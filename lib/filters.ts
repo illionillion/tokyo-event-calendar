@@ -20,9 +20,16 @@ export function joinKeywordTerms(terms: string[]): string {
 
 export const keywordPlaceholder = joinKeywordTerms(["React", "LT", "渋谷"]);
 
-export function matchesArea(event: Event, area: string | null): boolean {
-  if (!area) return true;
-  return event.area === area;
+/** エリアを 1 つも選んでいなければすべて、選んでいればいずれかに当たるか（OR）。 */
+export function matchesArea(event: Event, areas: readonly string[]): boolean {
+  if (areas.length === 0) return true;
+  return areas.includes(event.area);
+}
+
+/** 選択中なら外し、未選択なら末尾に足す。 */
+export function toggleArea(areas: readonly string[], area: string): string[] {
+  if (areas.includes(area)) return areas.filter((name) => name !== area);
+  return [...areas, area];
 }
 
 export function matchesFormat(event: Event, format: FormatFilter): boolean {
@@ -53,7 +60,7 @@ export function matchesKeyword(event: Event, keyword: string): boolean {
 }
 
 export function hasActiveFilters(filters: Filters): boolean {
-  return Boolean(filters.area || filters.format !== "all" || filters.keyword.trim());
+  return Boolean(filters.areas.length > 0 || filters.format !== "all" || filters.keyword.trim());
 }
 
 function compareEvents(left: Event, right: Event): number {
@@ -65,7 +72,7 @@ function compareEvents(left: Event, right: Event): number {
 export function filterEvents(events: Event[], filters: Filters): Event[] {
   return events
     .filter((event) => event.date === filters.date)
-    .filter((event) => matchesArea(event, filters.area))
+    .filter((event) => matchesArea(event, filters.areas))
     .filter((event) => matchesFormat(event, filters.format))
     .filter((event) => matchesKeyword(event, filters.keyword))
     .sort(compareEvents);
@@ -87,7 +94,7 @@ export function matchingDates(events: Event[], filters: Filters): Set<string> {
   const dates = new Set<string>();
 
   for (const event of events) {
-    if (!matchesArea(event, filters.area)) continue;
+    if (!matchesArea(event, filters.areas)) continue;
     if (!matchesFormat(event, filters.format)) continue;
     if (!matchesKeyword(event, filters.keyword)) continue;
     dates.add(event.date);

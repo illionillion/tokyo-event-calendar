@@ -27,7 +27,7 @@ function event(area: string): Event {
 
 describe("groupAreas", () => {
   it("神奈川県・埼玉県・千葉県はイベントがなくても県として選べる", () => {
-    const groups = groupAreas([event("渋谷区"), event("八王子市")], null);
+    const groups = groupAreas([event("渋谷区"), event("八王子市")], []);
 
     expect(groups.wards).toEqual(["渋谷区"]);
     expect(groups.cities).toEqual(["八王子市"]);
@@ -36,16 +36,23 @@ describe("groupAreas", () => {
   });
 
   it("東京都の市はどの市も「市」に並べ、その他には入れない", () => {
-    const groups = groupAreas([event("東大和市"), event("小金井市"), event("八王子市")], null);
+    const groups = groupAreas([event("東大和市"), event("小金井市"), event("八王子市")], []);
 
     expect(groups.cities).toEqual(["八王子市", "小金井市", "東大和市"]);
     expect(groups.other).toEqual([]);
   });
 
   it("県名は市町村に分けず、その他にも入れない", () => {
-    const groups = groupAreas([event("千葉県"), event("神奈川県")], "埼玉県");
+    const groups = groupAreas([event("千葉県"), event("神奈川県")], ["埼玉県"]);
 
     expect(groups.prefectures).toEqual(["神奈川県", "埼玉県", "千葉県"]);
     expect(groups.other).toEqual([]);
+  });
+
+  it("選択中のエリアはその日にイベントがなくても選択肢に残す", () => {
+    const groups = groupAreas([event("渋谷区")], ["北区", "港区", "どこか"]);
+
+    expect(groups.wards).toEqual(["港区", "渋谷区", "北区"]);
+    expect(groups.other).toEqual(["どこか"]);
   });
 });

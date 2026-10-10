@@ -239,14 +239,14 @@ export type AreaGroups = {
   other: string[];
 };
 
-export function groupAreas(events: Event[], selected: string | null): AreaGroups {
+export function groupAreas(events: Event[], selected: readonly string[]): AreaGroups {
   const present = new Set<string>();
 
   for (const event of events) {
     if (event.area) present.add(event.area);
   }
 
-  if (selected) present.add(selected);
+  for (const name of selected) present.add(name);
 
   const known = new Set<string>([...TOKYO_WARDS, ...TOKYO_CITIES, ...NEIGHBOR_PREFECTURES]);
   const other = [...present]

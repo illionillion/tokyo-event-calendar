@@ -6,8 +6,11 @@ import {
   joinKeywordTerms,
   keywordPlaceholder,
   matchesFormat,
+  matchesArea,
   matchesKeyword,
+  matchingDates,
   splitKeywordTerms,
+  toggleArea,
 } from "@/lib/filters";
 import type { Event, Filters } from "@/lib/types";
 
@@ -37,7 +40,7 @@ function event(overrides: Partial<Event> = {}): Event {
 
 const baseFilters: Filters = {
   date: "2026-09-24",
-  area: null,
+  areas: [],
   format: "all",
   keyword: "",
 };
@@ -68,7 +71,7 @@ describe("filters", () => {
     expect(
       filterEvents(events, {
         ...baseFilters,
-        area: "渋谷区",
+        areas: ["渋谷区"],
         format: "offline",
         keyword: "react lt",
       }).map((item) => item.id)
@@ -156,9 +159,37 @@ describe("filters", () => {
     ];
 
     expect(
-      filterEvents(events, { ...baseFilters, area: "神奈川県" }).map((item) => item.id)
+      filterEvents(events, { ...baseFilters, areas: ["神奈川県"] }).map((item) => item.id)
     ).toEqual(["2", "1"]);
     expect(countByArea(events, baseFilters).get("神奈川県")).toBe(2);
+  });
+
+  it("複数のエリアはいずれかに当たるイベントを出す（OR）", () => {
+    const events = [
+      event({ id: "1", area: "北区" }),
+      event({ id: "2", area: "港区", startedAt: "2026-09-24T18:00:00+09:00" }),
+      event({ id: "3", area: "渋谷区" }),
+      event({ id: "4", area: "千葉県", date: "2026-09-26" }),
+      event({ id: "5", area: "" }),
+    ];
+
+    expect(
+      filterEvents(events, { ...baseFilters, areas: ["北区", "港区"] }).map((item) => item.id)
+    ).toEqual(["2", "1"]);
+    expect(filterEvents(events, baseFilters).map((item) => item.id)).toEqual(["2", "1", "3", "5"]);
+    expect(matchesArea(event({ area: "" }), ["北区"])).toBe(false);
+    expect(matchesArea(event({ area: "" }), [])).toBe(true);
+    expect([...matchingDates(events, { ...baseFilters, areas: ["北区", "千葉県"] })]).toEqual([
+      "2026-09-24",
+      "2026-09-26",
+    ]);
+  });
+
+  it("エリアの切り替えは未選択なら足し、選択中なら外す", () => {
+    expect(toggleArea([], "北区")).toEqual(["北区"]);
+    expect(toggleArea(["北区"], "港区")).toEqual(["北区", "港区"]);
+    expect(toggleArea(["北区", "港区"], "北区")).toEqual(["港区"]);
+    expect(toggleArea(["神奈川県"], "神奈川県")).toEqual([]);
   });
 
   it("エリア件数は選択中のエリア以外の条件で数える", () => {
@@ -167,7 +198,7 @@ describe("filters", () => {
       event({ id: "2", area: "北区", title: "Python", tags: ["Python"] }),
       event({ id: "3", area: "渋谷区", format: "online", title: "Online React", tags: ["React"] }),
     ];
-    const counts = countByArea(events, { ...baseFilters, keyword: "React" });
+    const counts = countByArea(events, { ...baseFilters, areas: ["北区"], keyword: "React" });
     expect(counts.get("渋谷区")).toBe(2);
     expect(counts.get("北区")).toBeUndefined();
   });
