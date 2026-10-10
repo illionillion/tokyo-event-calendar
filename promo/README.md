@@ -43,6 +43,8 @@ python3 -m venv .venv
 . .venv/bin/activate
 pip install playwright
 CHROME_PATH=/usr/bin/google-chrome python tools/screenshot.py
+# エリア絞り込みの画面の日付（省略時は日本時間で次の土曜日）
+# SHOT_DATE=2026-10-17 python tools/screenshot.py
 ```
 
 `shots/` に撮った画像（作業用、コミットしない）から、必要な部分を切り出して `img/screenshot-pc.png` / `img/screenshot-mobile.png` を差し替えます。切り出しは手作業です。
