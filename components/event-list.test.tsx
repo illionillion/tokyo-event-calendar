@@ -80,4 +80,34 @@ describe("EventList", () => {
     await user.click(screen.getByRole("button", { name: "港区の条件を解除" }));
     expect(onChangeFilters).toHaveBeenCalledWith({ areas: ["北区", "千葉県"] });
   });
+
+  it("見出しの曜日に土日祝の色を付け、祝日名を出す。今日は今日の赤を優先する", () => {
+    const props = {
+      events: [],
+      now: "2026-09-24T00:00:00.000Z",
+      onSelectDate: vi.fn(),
+      onChangeFilters: vi.fn(),
+      onClearFilters: vi.fn(),
+    };
+    const { rerender } = render(
+      <EventList {...props} filters={{ ...filters, date: "2026-10-12" }} today="2026-10-10" />
+    );
+
+    expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent(
+      "10月12日（月）スポーツの日"
+    );
+    expect(screen.getByText("（月）")).toHaveClass("text-holiday");
+    expect(screen.getByText("スポーツの日")).toHaveClass("text-holiday");
+
+    rerender(
+      <EventList {...props} filters={{ ...filters, date: "2026-10-10" }} today="2026-10-10" />
+    );
+    expect(screen.getByText("（土）")).not.toHaveClass("text-saturday");
+    expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent("10月10日（土）今日");
+
+    rerender(
+      <EventList {...props} filters={{ ...filters, date: "2026-10-17" }} today="2026-10-10" />
+    );
+    expect(screen.getByText("（土）")).toHaveClass("text-saturday");
+  });
 });

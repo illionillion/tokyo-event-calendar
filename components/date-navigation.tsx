@@ -9,6 +9,7 @@ import {
   monthValue,
   weekdayLabel,
 } from "@/lib/dates";
+import { dayKind, dayKindTextClass, holidayName } from "@/lib/holidays";
 
 function DayChevron({ direction }: { direction: "previous" | "next" }) {
   return (
@@ -84,6 +85,8 @@ export function DateNavigation({ selectedDate, today, onSelectDate }: DateNaviga
               const selected = date === selectedDate;
               const isToday = date === today;
               const isPast = date < today;
+              const holiday = holidayName(date);
+              const kindClass = dayKindTextClass(dayKind(date));
 
               return (
                 <button
@@ -91,13 +94,16 @@ export function DateNavigation({ selectedDate, today, onSelectDate }: DateNaviga
                   type="button"
                   aria-pressed={selected}
                   aria-current={isToday ? "date" : undefined}
-                  aria-label={`${formatDayHeading(date)}${isToday ? " 今日" : ""}`}
+                  aria-label={`${formatDayHeading(date)}${holiday ? ` ${holiday}` : ""}${isToday ? " 今日" : ""}`}
+                  title={holiday ?? undefined}
                   onClick={() => onSelectDate(date)}
                   className={cn(
-                    "mx-auto flex h-[52px] w-full min-w-0 flex-col items-center justify-center rounded-md px-0.5 text-foreground lg:w-12",
+                    "mx-auto flex h-[52px] w-full min-w-0 flex-col items-center justify-center rounded-md px-0.5 lg:w-12",
                     selected && "bg-primary text-white",
                     !selected && isToday && "text-primary",
+                    // 選択中・今日・過去の日は、それぞれの見た目を優先して土日祝の色を付けない。
                     !selected && !isToday && isPast && "text-muted",
+                    !selected && !isToday && !isPast && (kindClass || "text-foreground"),
                     !selected && "hover:bg-surface"
                   )}
                 >

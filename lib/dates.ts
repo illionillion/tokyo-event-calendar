@@ -122,10 +122,17 @@ export function formatMonthLabel(dateKey: string): string {
   return `${parts.year}年${parts.month}月`;
 }
 
+/** 「10月14日」。 */
+export function formatMonthDay(dateKey: string): string {
+  const parts = parseDateKey(dateKey);
+  if (!parts) return dateKey;
+  return `${parts.month}月${parts.day}日`;
+}
+
 export function formatDayHeading(dateKey: string): string {
   const parts = parseDateKey(dateKey);
   if (!parts) return dateKey;
-  return `${parts.month}月${parts.day}日（${weekdayLabel(dateKey)}）`;
+  return `${formatMonthDay(dateKey)}（${weekdayLabel(dateKey)}）`;
 }
 
 export function dateWindow(center: string, radius = 3): string[] {
