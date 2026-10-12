@@ -8,6 +8,7 @@ describe("query", () => {
       areas: ["渋谷区"],
       format: "online" as const,
       keyword: "React",
+      view: "month" as const,
     };
 
     expect(parseFilters(new URLSearchParams(buildQuery(filters)), "2026-09-24")).toEqual(filters);
@@ -22,6 +23,7 @@ describe("query", () => {
       areas: [],
       format: "all" as const,
       keyword: "",
+      view: "month" as const,
     };
 
     syncFilterUrl(filters, "push");
@@ -44,6 +46,7 @@ describe("query", () => {
       areas: [],
       format: "all",
       keyword: "Go",
+      view: "month" as const,
     });
   });
 
@@ -53,6 +56,7 @@ describe("query", () => {
       areas: ["北区", "港区", "神奈川県"],
       format: "all" as const,
       keyword: "",
+      view: "month" as const,
     };
     const query = buildQuery(filters);
 
@@ -78,13 +82,20 @@ describe("query", () => {
       areas: ["渋谷区"],
       format: "all",
       keyword: "",
+      view: "month" as const,
     });
     expect(parseFilters({ date: "2026-09-26", area: "渋谷区" }, "2026-09-24").areas).toEqual([
       "渋谷区",
     ]);
-    expect(buildQuery({ date: "2026-09-26", areas: ["渋谷区"], format: "all", keyword: "" })).toBe(
-      legacy
-    );
+    expect(
+      buildQuery({
+        date: "2026-09-26",
+        areas: ["渋谷区"],
+        format: "all",
+        keyword: "",
+        view: "month",
+      })
+    ).toBe(legacy);
   });
 
   it("空のエリアと重複したエリアは捨てる", () => {
@@ -92,5 +103,23 @@ describe("query", () => {
       parseFilters(new URLSearchParams("area=&area=%20北区%20&area=北区&area=港区"), "2026-09-24")
         .areas
     ).toEqual(["北区", "港区"]);
+  });
+
+  it("週表示は view=week で表し、無い・不明な値は月表示（従来の URL）にする", () => {
+    const week = {
+      date: "2026-10-14",
+      areas: ["北区", "港区"],
+      format: "all" as const,
+      keyword: "",
+      view: "week" as const,
+    };
+    const query = buildQuery(week);
+
+    expect(new URLSearchParams(query).get("view")).toBe("week");
+    expect(parseFilters(new URLSearchParams(query), "2026-10-12")).toEqual(week);
+    expect(buildQuery({ ...week, view: "month" })).not.toContain("view=");
+    expect(parseFilters(new URLSearchParams("date=2026-10-14"), "2026-10-12").view).toBe("month");
+    expect(parseFilters(new URLSearchParams("view=day"), "2026-10-12").view).toBe("month");
+    expect(parseFilters({ view: ["week", "month"] }, "2026-10-12").view).toBe("week");
   });
 });

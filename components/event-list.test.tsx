@@ -9,6 +9,7 @@ const filters: Filters = {
   areas: ["渋谷区"],
   format: "all",
   keyword: "",
+  view: "month",
 };
 
 describe("EventList", () => {

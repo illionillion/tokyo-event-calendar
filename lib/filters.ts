@@ -78,11 +78,28 @@ export function filterEvents(events: Event[], filters: Filters): Event[] {
     .sort(compareEvents);
 }
 
-export function countByArea(events: Event[], filters: Filters): Map<string, number> {
+/** 日付以外の条件（エリア・開催形態・キーワード）に当たるか。 */
+export function matchesConditions(event: Event, filters: Filters): boolean {
+  return (
+    matchesArea(event, filters.areas) &&
+    matchesFormat(event, filters.format) &&
+    matchesKeyword(event, filters.keyword)
+  );
+}
+
+/**
+ * エリアごとの件数。エリア以外の条件で数える。
+ * inScope で数える日付の範囲を変えられる（既定は選択中の日に始まるイベント、週表示では週に重なるイベント）。
+ */
+export function countByArea(
+  events: Event[],
+  filters: Filters,
+  inScope: (event: Event) => boolean = (event) => event.date === filters.date
+): Map<string, number> {
   const counts = new Map<string, number>();
 
   for (const event of events) {
-    if (event.date !== filters.date || !event.area) continue;
+    if (!inScope(event) || !event.area) continue;
     if (!matchesFormat(event, filters.format) || !matchesKeyword(event, filters.keyword)) continue;
     counts.set(event.area, (counts.get(event.area) ?? 0) + 1);
   }

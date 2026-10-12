@@ -5,10 +5,9 @@ import { EventExplorer } from "@/components/event-explorer";
 import { parseFilters } from "@/lib/query";
 import type { Event } from "@/lib/types";
 
-vi.mock("next/navigation", () => {
-  const params = new URLSearchParams("date=2026-09-24");
-  return { useSearchParams: () => params };
-});
+const search = vi.hoisted(() => ({ params: new URLSearchParams("date=2026-09-24") }));
+
+vi.mock("next/navigation", () => ({ useSearchParams: () => search.params }));
 
 const event: Event = {
   id: "1",
@@ -44,6 +43,7 @@ function lastHistoryUrl(spy: ReturnType<typeof vi.spyOn>): string {
 
 describe("EventExplorer", () => {
   afterEach(() => {
+    search.params = new URLSearchParams("date=2026-09-24");
     window.history.replaceState(null, "", "/");
     vi.restoreAllMocks();
   });
@@ -154,5 +154,43 @@ describe("EventExplorer", () => {
     }
 
     expect(screen.getByText("この日のイベントはすべて終了しています")).toBeInTheDocument();
+  });
+
+  it("月と週の切り替えは pushState で view=week を付け外しする", async () => {
+    const user = userEvent.setup();
+    const pushState = vi.spyOn(window.history, "pushState");
+    renderExplorer();
+
+    await user.click(screen.getByRole("radio", { name: "週" }));
+    expect(lastHistoryUrl(pushState)).toBe("/?date=2026-09-24&view=week");
+  });
+
+  it("週表示では前の週・次の週・今日で日付を動かし、日付の見出しでその日の一覧に戻る", async () => {
+    const user = userEvent.setup();
+    const pushState = vi.spyOn(window.history, "pushState");
+    search.params = new URLSearchParams("date=2026-09-24&view=week&area=渋谷区");
+    renderExplorer();
+
+    expect(screen.getByRole("radio", { name: "週" })).toBeChecked();
+    expect(
+      screen.getByRole("heading", { level: 2, name: /2026年9月20日〜26日/ })
+    ).toBeInTheDocument();
+    // エリアの絞り込みは週表示でも効く
+    const grid = screen.getByRole("group", { name: "週の時間割" });
+    expect(within(grid).getByRole("link", { name: /^React LT Night/ })).toHaveTextContent("渋谷区");
+
+    await user.click(screen.getByRole("button", { name: "次の週" }));
+    expect(lastHistoryUrl(pushState)).toBe(
+      `/?date=2026-10-01&area=${encodeURIComponent("渋谷区")}&view=week`
+    );
+    await user.click(screen.getByRole("button", { name: "前の週" }));
+    expect(lastHistoryUrl(pushState)).toBe(
+      `/?date=2026-09-17&area=${encodeURIComponent("渋谷区")}&view=week`
+    );
+
+    await user.click(within(grid).getByRole("button", { name: /^9月25日（金）/ }));
+    expect(lastHistoryUrl(pushState)).toBe(
+      `/?date=2026-09-25&area=${encodeURIComponent("渋谷区")}`
+    );
   });
 });

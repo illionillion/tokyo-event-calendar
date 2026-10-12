@@ -43,6 +43,7 @@ const baseFilters: Filters = {
   areas: [],
   format: "all",
   keyword: "",
+  view: "month",
 };
 
 describe("filters", () => {
