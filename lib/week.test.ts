@@ -151,6 +151,31 @@ describe("week", () => {
     expect(limitColumns(two, 2)).toEqual({ visible: two, overflow: [] });
   });
 
+  it("「+N件」は同時に 3 件以上重なる時間帯だけにし、2 件までの時間帯のイベントは出す", () => {
+    // A=9–12、B/C=9–10、D=10–11。D は A としか重ならない
+    const segments = assignColumns(
+      [
+        event("A", at("2026-10-14", "09:00"), at("2026-10-14", "12:00")),
+        event("B", at("2026-10-14", "09:00"), at("2026-10-14", "10:00")),
+        event("C", at("2026-10-14", "09:00"), at("2026-10-14", "10:00")),
+        event("D", at("2026-10-14", "10:00"), at("2026-10-14", "11:00")),
+      ].flatMap(splitByDay)
+    );
+    const { visible, overflow } = limitColumns(segments, 2);
+
+    expect(
+      visible
+        .map((segment) => [segment.event.id, segment.column, segment.columns])
+        .sort(([left], [right]) => String(left).localeCompare(String(right)))
+    ).toEqual([
+      ["A", 0, 2],
+      ["D", 1, 2],
+    ]);
+    expect(overflow).toEqual([
+      { date: "2026-10-14", start: 9 * 60, end: 10 * 60, count: 2, column: 1, columns: 2 },
+    ]);
+  });
+
   it("24 時間以上のイベントは終日・複数日の帯にし、週の範囲で切り詰める", () => {
     const conference = event("conf", at("2026-10-15", "10:00"), at("2026-10-16", "18:00"));
     const fromLastWeek = event("long", at("2026-10-08", "09:00"), at("2026-10-12", "17:00"));

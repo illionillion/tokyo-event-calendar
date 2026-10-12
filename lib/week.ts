@@ -268,15 +268,19 @@ function layoutAllDay(events: Event[], dates: string[]): { bars: AllDayBar[]; la
 }
 
 /**
- * 横並びを max 列までに抑える。max 列を超えるまとまりは、左から max - 1 列のイベントを出し、
- * 残りを最後の枠の「+N件」にまとめる。返すイベントの columns は表示する列数に直す。
+ * 横並びを max 列までに抑える。max 列を超えるまとまりでは、左から max - 1 列のイベントはそのまま出し、
+ * 残り（max 列目以降）は最後の枠に入れる。最後の枠のイベントは、ほかの最後の枠のイベントと重ならなければ
+ * そのまま出し、重なるものだけを重なりごとの「+N件」にまとめる（同時に max 件を超える時間帯だけをまとめる）。
+ * 返すイベントの columns は表示する列数に直す。
  */
 export function limitColumns(
   segments: TimedSegment[],
   max = MAX_VISIBLE_COLUMNS
 ): { visible: TimedSegment[]; overflow: OverflowSlot[] } {
+  const visualEnd = (segment: TimedSegment) =>
+    Math.max(segment.end, segment.start + MIN_BLOCK_MINUTES);
   const visible: TimedSegment[] = [];
-  const hidden = new Map<number, TimedSegment[]>();
+  const lastColumn = new Map<number, TimedSegment[]>();
 
   for (const segment of segments) {
     if (segment.columns <= max) {
@@ -284,20 +288,39 @@ export function limitColumns(
     } else if (segment.column < max - 1) {
       visible.push({ ...segment, columns: max });
     } else {
-      hidden.set(segment.cluster, [...(hidden.get(segment.cluster) ?? []), segment]);
+      lastColumn.set(segment.cluster, [...(lastColumn.get(segment.cluster) ?? []), segment]);
     }
   }
 
-  const overflow = [...hidden.values()].map((group) => ({
-    date: group[0]!.date,
-    start: Math.min(...group.map((segment) => segment.start)),
-    end: Math.max(
-      ...group.map((segment) => Math.max(segment.end, segment.start + MIN_BLOCK_MINUTES))
-    ),
-    count: group.length,
-    column: max - 1,
-    columns: max,
-  }));
+  const overflow: OverflowSlot[] = [];
+  for (const group of lastColumn.values()) {
+    const sorted = [...group].sort((left, right) => left.start - right.start);
+    // 重なりがつながっている区間ごとに分ける
+    let chain: TimedSegment[] = [];
+    let chainEnd = -1;
+    const close = () => {
+      if (chain.length === 1) {
+        visible.push({ ...chain[0]!, column: max - 1, columns: max });
+      } else if (chain.length > 1) {
+        overflow.push({
+          date: chain[0]!.date,
+          start: chain[0]!.start,
+          end: chainEnd,
+          count: chain.length,
+          column: max - 1,
+          columns: max,
+        });
+      }
+      chain = [];
+      chainEnd = -1;
+    };
+    for (const segment of sorted) {
+      if (chain.length > 0 && segment.start >= chainEnd) close();
+      chain.push(segment);
+      chainEnd = Math.max(chainEnd, visualEnd(segment));
+    }
+    close();
+  }
 
   return { visible, overflow };
 }

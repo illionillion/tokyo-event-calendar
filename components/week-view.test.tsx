@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { ViewToggle, WeekNavigation, WeekView } from "@/components/week-view";
@@ -150,6 +150,23 @@ describe("WeekView", () => {
     await user.click(within(friday).getByRole("button", { name: "ほか3件（その日の一覧を開く）" }));
     expect(onOpenDay).toHaveBeenCalledWith("2026-10-16");
     expect(screen.getByTestId("day-count-2026-10-16")).toHaveTextContent("4件");
+  });
+
+  it("今の時刻の線は 1 分ごとに動く", () => {
+    vi.useFakeTimers({ toFake: ["Date", "setInterval", "clearInterval"] });
+    try {
+      vi.setSystemTime(new Date("2026-10-12T03:00:00.000Z"));
+      renderWeek();
+      // 12:00（日本時間）→ 56px × 12
+      expect(screen.getByTestId("now-line")).toHaveStyle({ top: `${56 * 12}px` });
+
+      act(() => {
+        vi.advanceTimersByTime(30 * 60_000);
+      });
+      expect(screen.getByTestId("now-line")).toHaveStyle({ top: `${56 * 12.5}px` });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("SP 用の日ごとの一覧にも 7 日分を出し、日付を押すとその日の一覧を開く", async () => {

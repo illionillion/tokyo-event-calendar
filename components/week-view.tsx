@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ActiveFilterChips } from "@/components/event-list";
 import { cn } from "@/lib/cn";
 import { addDays, dayNumber, formatDayHeading, hasEnded, weekdayLabel } from "@/lib/dates";
@@ -214,7 +214,13 @@ function WeekGrid({ layout, filters, today, now, onOpenDay }: LayoutProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const scrollHour = initialScrollHour(layout);
   const weekKey = layout.dates[0];
-  const nowMinutes = minutesOfDay(now);
+  // 今の時刻の線はページを開いたままでも動くよう、1 分ごとに時刻を取り直す
+  const [tick, setTick] = useState<string | null>(null);
+  useEffect(() => {
+    const timer = setInterval(() => setTick(new Date().toISOString()), 60_000);
+    return () => clearInterval(timer);
+  }, []);
+  const nowMinutes = minutesOfDay(tick !== null && tick > now ? tick : now);
   const columns = "grid-cols-[3rem_repeat(7,minmax(0,1fr))]";
 
   useEffect(() => {
