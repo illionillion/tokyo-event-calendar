@@ -69,7 +69,7 @@ function durationMinutes(event: Event): number {
 /** 終了日（日本時間）。ちょうど 0:00 に終わるイベントは前の日までとする。 */
 export function lastDate(event: Event): string {
   if (durationMinutes(event) === 0) return tokyoPosition(event.startedAt).date;
-  return tokyoPosition(new Date(Date.parse(event.endedAt) - MINUTE_MS).toISOString()).date;
+  return tokyoPosition(new Date(Date.parse(event.endedAt) - 1).toISOString()).date;
 }
 
 /** `from`〜`to`（両端を含む）のどこかで開催しているか。 */

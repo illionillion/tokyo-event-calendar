@@ -40,6 +40,13 @@ const at = (date: string, time: string) => `${date}T${time}:00+09:00`;
 const week = weekDates("2026-10-14");
 
 describe("week", () => {
+  it("ちょうど 0:00 終了だけを前日扱いにし、0:00:30 終了は翌日にも含める", () => {
+    const exact = event("x", "2026-10-17T13:00:00Z", "2026-10-17T15:00:00Z");
+    const late = event("y", "2026-10-17T13:00:00Z", "2026-10-17T15:00:30Z");
+    expect(overlapsDates(exact, "2026-10-18", "2026-10-24")).toBe(false);
+    expect(overlapsDates(late, "2026-10-18", "2026-10-24")).toBe(true);
+  });
+
   it("週は日曜始まりで、範囲の表記は月・年をまたぐと補う", () => {
     expect(week).toEqual([
       "2026-10-11",
