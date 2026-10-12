@@ -72,10 +72,13 @@ function placeLabel(event: Event): string {
 export function EventThumbnail({
   event,
   initialClassName = "text-3xl",
+  lazy = false,
 }: {
   event: Event;
   /** 頭文字サムネの文字サイズ。小さい枠で使うときに指定する。 */
   initialClassName?: string;
+  /** 遅延読み込みにする。CSS で隠れている側（display: none）の画像を取りに行かないために使う。 */
+  lazy?: boolean;
 }) {
   const imageRef = useRef<HTMLImageElement>(null);
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
@@ -97,6 +100,7 @@ export function EventThumbnail({
         ref={imageRef}
         src={event.imageUrl}
         alt=""
+        loading={lazy ? "lazy" : undefined}
         className="absolute inset-0 size-full object-cover"
         onError={() => setFailedUrl(event.imageUrl)}
       />

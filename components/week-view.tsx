@@ -432,7 +432,7 @@ function TimedBlock({ segment, now }: { segment: TimedSegment; now: string }) {
     >
       {showThumbnail ? (
         <span className="relative float-right mt-0.5 ml-1 block aspect-[16/9] w-14 overflow-hidden rounded-sm">
-          <EventThumbnail event={event} initialClassName="text-sm" />
+          <EventThumbnail event={event} initialClassName="text-sm" lazy />
         </span>
       ) : null}
       <span className="block text-[10px] font-semibold tabular-nums">
@@ -581,7 +581,7 @@ function AgendaRow({ event, time, now }: { event: Event; time: string; now: stri
         className="flex items-start gap-3 px-3 py-2 hover:bg-primary-soft"
       >
         <span className="relative block aspect-[16/9] w-16 shrink-0 overflow-hidden rounded-md">
-          <EventThumbnail event={event} initialClassName="text-base" />
+          <EventThumbnail event={event} initialClassName="text-base" lazy />
         </span>
         <span
           className={cn(
