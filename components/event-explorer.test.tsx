@@ -193,4 +193,33 @@ describe("EventExplorer", () => {
       `/?date=2026-09-25&area=${encodeURIComponent("渋谷区")}`
     );
   });
+
+  it("週表示を開いたままでも 1 分ごとに今の時刻を取り直し、日付が変わると今日の列も移る", () => {
+    search.params = new URLSearchParams("date=2026-09-24&view=week");
+    vi.useFakeTimers({ toFake: ["Date", "setInterval", "clearInterval"] });
+    try {
+      // 日本時間 9/24 23:30
+      vi.setSystemTime(new Date("2026-09-24T14:30:00.000Z"));
+      render(<EventExplorer events={[event]} today="2026-09-24" now="2026-09-24T14:30:00.000Z" />);
+      const grid = screen.getByRole("group", { name: "週の時間割" });
+      const thursday = within(grid).getByRole("group", { name: "9月24日（木）" });
+      expect(within(thursday).getByTestId("now-line")).toHaveStyle({ top: `${56 * 23.5}px` });
+      expect(within(thursday).getByRole("link", { name: /^React LT Night/ })).toHaveClass(
+        "bg-surface"
+      );
+
+      act(() => {
+        vi.advanceTimersByTime(60 * 60_000);
+      });
+      // 日本時間 9/25 0:30 → 線は金曜の列へ
+      const friday = within(grid).getByRole("group", { name: "9月25日（金）" });
+      expect(within(thursday).queryByTestId("now-line")).not.toBeInTheDocument();
+      expect(within(friday).getByTestId("now-line")).toHaveStyle({ top: `${56 * 0.5}px` });
+      expect(
+        within(grid).getByRole("button", { name: /^9月25日（金） 今日 0件の一覧を開く$/ })
+      ).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

@@ -35,6 +35,13 @@ export function EventExplorer({ events, today: serverToday, now: serverNow }: Ev
     window.addEventListener("popstate", refreshNow);
     return () => window.removeEventListener("popstate", refreshNow);
   }, []);
+  const weekMode = searchParams.get("view") === "week";
+  useEffect(() => {
+    // 週表示は今の時刻の線・今日の列・終了済みの表示を、開いたままでも 1 分ごとに更新する
+    if (!weekMode) return;
+    const timer = setInterval(() => setClientNow(new Date().toISOString()), 60_000);
+    return () => clearInterval(timer);
+  }, [weekMode]);
   const filters = useMemo(() => parseFilters(searchParams, today), [searchParams, today]);
   const isWeek = filters.view === "week";
   const week = useMemo(() => weekDates(filters.date), [filters.date]);
