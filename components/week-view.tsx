@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { type CSSProperties, useEffect, useMemo, useRef } from "react";
+import { EventThumbnail } from "@/components/event-card";
 import { ActiveFilterChips } from "@/components/event-list";
 import { cn } from "@/lib/cn";
 import { addDays, dayNumber, formatDayHeading, hasEnded, weekdayLabel } from "@/lib/dates";
@@ -23,6 +24,10 @@ import {
 
 /** 時間軸の 1 時間の高さ（px）。 */
 const HOUR_PX = 56;
+/** PC の日の列の最低幅。2 列並んでも 1 行に 5〜6 文字は入り、1440px 幅の画面では横スクロールなしで 7 日が収まる幅にする。 */
+export const WEEK_COLUMN_MIN_PX = 148;
+/** サムネイルを出すブロックの最低の長さ（分）。短いブロックでは文字を優先する。 */
+export const THUMBNAIL_MIN_MINUTES = 90;
 const HOURS = Array.from({ length: 24 }, (_, hour) => hour);
 
 function Chevron({ direction }: { direction: "previous" | "next" }) {
@@ -216,7 +221,7 @@ function WeekGrid({ layout, filters, today, now, onOpenDay }: LayoutProps) {
   const weekKey = layout.dates[0];
   // now / today は EventExplorer が週表示の間 1 分ごとに取り直す
   const nowMinutes = minutesOfDay(now);
-  const columns = "grid-cols-[3rem_repeat(7,minmax(0,1fr))]";
+  const columns = "grid-cols-[3rem_repeat(7,minmax(var(--week-col-min),1fr))]";
 
   useEffect(() => {
     // 週を移動したときは、その週の最初に見せる時刻までスクロールし直す
@@ -228,108 +233,119 @@ function WeekGrid({ layout, filters, today, now, onOpenDay }: LayoutProps) {
     <div
       role="group"
       aria-label="週の時間割"
-      className="mt-3 overflow-hidden rounded-lg border border-border bg-card"
+      className="mt-3 overflow-x-auto rounded-lg border border-border bg-card"
     >
-      <div className={cn("grid border-b border-border", columns)}>
-        <span aria-hidden="true" />
-        {layout.dates.map((date) => {
-          const holiday = holidayName(date);
-          const count = countOnDate(layout, date);
-          return (
-            <div key={date} className="px-1 py-2 text-center">
-              <button
-                type="button"
-                onClick={() => onOpenDay(date)}
-                aria-label={`${formatDayHeading(date)}${holiday ? ` ${holiday}` : ""}${date === today ? " 今日" : ""} ${count}件の一覧を開く`}
-                title={holiday ?? undefined}
-                className={cn(
-                  "mx-auto flex w-12 flex-col items-center rounded-md py-1 hover:bg-surface",
-                  dayHeaderClass(date, today, filters.date),
-                  date === filters.date && "hover:bg-primary-hover"
-                )}
-              >
-                <span className="text-[11px] leading-none">{weekdayLabel(date)}</span>
-                <span className="mt-1 text-lg leading-none font-semibold tabular-nums">
-                  {dayNumber(date)}
-                </span>
-              </button>
-              <span
-                aria-hidden="true"
-                data-testid={`day-count-${date}`}
-                className="mt-1 block text-[11px] text-secondary tabular-nums"
-              >
-                {count}件
-              </span>
-              {holiday ? (
-                <span
+      {/* 日の列は最低 WEEK_COLUMN_MIN_PX。足りない幅では時間割ごと横スクロールする */}
+      <div
+        data-testid="week-grid-inner"
+        style={
+          {
+            "--week-col-min": `${WEEK_COLUMN_MIN_PX}px`,
+            minWidth: 48 + WEEK_COLUMN_MIN_PX * 7,
+          } as CSSProperties
+        }
+      >
+        <div className={cn("grid border-b border-border", columns)}>
+          <span aria-hidden="true" />
+          {layout.dates.map((date) => {
+            const holiday = holidayName(date);
+            const count = countOnDate(layout, date);
+            return (
+              <div key={date} className="px-1 py-2 text-center">
+                <button
+                  type="button"
+                  onClick={() => onOpenDay(date)}
+                  aria-label={`${formatDayHeading(date)}${holiday ? ` ${holiday}` : ""}${date === today ? " 今日" : ""} ${count}件の一覧を開く`}
+                  title={holiday ?? undefined}
                   className={cn(
-                    "mt-1 block truncate text-[11px]",
-                    date === today || date === filters.date ? "text-secondary" : "text-holiday"
+                    "mx-auto flex w-12 flex-col items-center rounded-md py-1 hover:bg-surface",
+                    dayHeaderClass(date, today, filters.date),
+                    date === filters.date && "hover:bg-primary-hover"
                   )}
                 >
-                  {holiday}
-                </span>
-              ) : null}
-            </div>
-          );
-        })}
-      </div>
-
-      {layout.allDayLanes > 0 ? (
-        <div
-          className={cn("grid gap-y-1 border-b border-border py-1", columns)}
-          style={{ gridTemplateRows: `repeat(${layout.allDayLanes}, minmax(0, auto))` }}
-        >
-          <span className="row-span-full self-center px-1 text-center text-[10px] leading-tight text-muted">
-            終日
-            <br />
-            複数日
-          </span>
-          {layout.allDay.map((bar) => (
-            <AllDayBlock key={bar.event.id} bar={bar} now={now} />
-          ))}
-        </div>
-      ) : null}
-
-      <div ref={scrollRef} className="relative h-[600px] overflow-y-auto">
-        <div className={cn("relative grid", columns)} style={{ height: 24 * HOUR_PX }}>
-          <div className="relative" aria-hidden="true">
-            {HOURS.map((hour) => (
-              <span
-                key={hour}
-                aria-hidden="true"
-                className="absolute right-1 -translate-y-1/2 text-[10px] text-muted tabular-nums"
-                style={{ top: hour * HOUR_PX }}
-              >
-                {hour === 0 ? "" : `${hour}:00`}
-              </span>
-            ))}
-          </div>
-          {layout.dates.map((date) => (
-            <div
-              key={date}
-              role="group"
-              aria-label={formatDayHeading(date)}
-              className="relative border-l border-border"
-              style={{
-                backgroundImage: `repeating-linear-gradient(to bottom, var(--border) 0 1px, transparent 1px ${HOUR_PX}px)`,
-              }}
-            >
-              <DayColumn
-                segments={layout.timed.get(date) ?? []}
-                now={now}
-                onOverflow={() => onOpenDay(date)}
-              />
-              {date === today ? (
+                  <span className="text-[11px] leading-none">{weekdayLabel(date)}</span>
+                  <span className="mt-1 text-lg leading-none font-semibold tabular-nums">
+                    {dayNumber(date)}
+                  </span>
+                </button>
                 <span
                   aria-hidden="true"
-                  data-testid="now-line"
-                  className="pointer-events-none absolute right-0 left-0 z-10 h-0.5 bg-primary"
-                  style={{ top: (nowMinutes / 60) * HOUR_PX }}
-                />
-              ) : null}
+                  data-testid={`day-count-${date}`}
+                  className="mt-1 block text-[11px] text-secondary tabular-nums"
+                >
+                  {count}件
+                </span>
+                {holiday ? (
+                  <span
+                    className={cn(
+                      "mt-1 block truncate text-[11px]",
+                      date === today || date === filters.date ? "text-secondary" : "text-holiday"
+                    )}
+                  >
+                    {holiday}
+                  </span>
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
+
+        {layout.allDayLanes > 0 ? (
+          <div
+            className={cn("grid gap-y-1 border-b border-border py-1", columns)}
+            style={{ gridTemplateRows: `repeat(${layout.allDayLanes}, minmax(0, auto))` }}
+          >
+            <span className="row-span-full self-center px-1 text-center text-[10px] leading-tight text-muted">
+              終日
+              <br />
+              複数日
+            </span>
+            {layout.allDay.map((bar) => (
+              <AllDayBlock key={bar.event.id} bar={bar} now={now} />
+            ))}
+          </div>
+        ) : null}
+
+        <div ref={scrollRef} className="relative h-[600px] overflow-y-auto">
+          <div className={cn("relative grid", columns)} style={{ height: 24 * HOUR_PX }}>
+            <div className="relative" aria-hidden="true">
+              {HOURS.map((hour) => (
+                <span
+                  key={hour}
+                  aria-hidden="true"
+                  className="absolute right-1 -translate-y-1/2 text-[10px] text-muted tabular-nums"
+                  style={{ top: hour * HOUR_PX }}
+                >
+                  {hour === 0 ? "" : `${hour}:00`}
+                </span>
+              ))}
             </div>
-          ))}
+            {layout.dates.map((date) => (
+              <div
+                key={date}
+                role="group"
+                aria-label={formatDayHeading(date)}
+                className="relative border-l border-border"
+                style={{
+                  backgroundImage: `repeating-linear-gradient(to bottom, var(--border) 0 1px, transparent 1px ${HOUR_PX}px)`,
+                }}
+              >
+                <DayColumn
+                  segments={layout.timed.get(date) ?? []}
+                  now={now}
+                  onOverflow={() => onOpenDay(date)}
+                />
+                {date === today ? (
+                  <span
+                    aria-hidden="true"
+                    data-testid="now-line"
+                    className="pointer-events-none absolute right-0 left-0 z-10 h-0.5 bg-primary"
+                    style={{ top: (nowMinutes / 60) * HOUR_PX }}
+                  />
+                ) : null}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -392,6 +408,9 @@ function OverflowBlock({ slot, onClick }: { slot: OverflowSlot; onClick: () => v
 function TimedBlock({ segment, now }: { segment: TimedSegment; now: string }) {
   const { event } = segment;
   const ended = hasEnded(event.endedAt, now);
+  // 列を 1 本で使えて十分な長さがあるブロックだけ小さなサムネを出す
+  const showThumbnail =
+    segment.columns === 1 && segment.end - segment.start >= THUMBNAIL_MIN_MINUTES;
 
   return (
     <a
@@ -399,20 +418,27 @@ function TimedBlock({ segment, now }: { segment: TimedSegment; now: string }) {
       target="_blank"
       rel="noopener noreferrer"
       aria-label={eventLabel(event)}
+      data-thumbnail={showThumbnail ? "true" : undefined}
       title={`${event.start}–${event.end} ${formatPlace(event)}\n${event.title}`}
       data-column={segment.column}
       data-columns={segment.columns}
       className={cn(
-        "absolute overflow-hidden rounded-md border-l-4 px-1.5 py-0.5 text-[11px] leading-tight hover:z-20 hover:shadow-sm",
+        "absolute overflow-hidden rounded-md border-l-4 px-1 py-0.5 text-[11px] leading-tight hover:z-20 hover:shadow-sm",
         ended
           ? "border-border bg-surface text-secondary"
           : "border-primary bg-primary-soft text-foreground hover:bg-card"
       )}
       style={blockStyle(segment.start, segment.end, segment.column, segment.columns)}
     >
-      <span className="block font-semibold tabular-nums">
+      {showThumbnail ? (
+        <span className="relative float-right mt-0.5 ml-1 block aspect-[16/9] w-14 overflow-hidden rounded-sm">
+          <EventThumbnail event={event} initialClassName="text-sm" />
+        </span>
+      ) : null}
+      <span className="block text-[10px] font-semibold tabular-nums">
         {segment.continuesBefore ? "↑ " : ""}
-        {event.start}–{event.end}
+        {/* 横に並ぶ細いブロックでは開始時刻だけにして 1 行に収める（終了は title と aria-label に残る） */}
+        {segment.columns > 1 ? `${event.start}〜` : `${event.start}–${event.end}`}
         {segment.continuesAfter ? " ↓" : ""}
       </span>
       <span
@@ -423,7 +449,7 @@ function TimedBlock({ segment, now }: { segment: TimedSegment; now: string }) {
       >
         {formatPlace(event)}
       </span>
-      <span className="block font-medium break-words">{event.title}</span>
+      <span className="block font-medium [overflow-wrap:anywhere]">{event.title}</span>
     </a>
   );
 }
@@ -552,11 +578,14 @@ function AgendaRow({ event, time, now }: { event: Event; time: string; now: stri
         target="_blank"
         rel="noopener noreferrer"
         aria-label={eventLabel(event)}
-        className="flex gap-3 px-3 py-2 hover:bg-primary-soft"
+        className="flex items-start gap-3 px-3 py-2 hover:bg-primary-soft"
       >
+        <span className="relative block aspect-[16/9] w-16 shrink-0 overflow-hidden rounded-md">
+          <EventThumbnail event={event} initialClassName="text-base" />
+        </span>
         <span
           className={cn(
-            "w-24 shrink-0 text-[12px] font-semibold tabular-nums",
+            "w-20 shrink-0 text-[12px] font-semibold tabular-nums",
             ended ? "text-secondary" : "text-foreground"
           )}
         >

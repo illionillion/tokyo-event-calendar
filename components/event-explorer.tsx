@@ -83,7 +83,7 @@ export function EventExplorer({ events, today: serverToday, now: serverNow }: Ev
       className={cn(
         "mx-auto w-full min-w-0 px-4 py-4",
         // 週表示は 7 列を読める幅にするため広げる
-        isWeek ? "max-w-[1440px]" : "max-w-[1080px]"
+        isWeek ? "max-w-[1600px]" : "max-w-[1080px]"
       )}
     >
       {/* top-12 = サイトヘッダー h-12 */}

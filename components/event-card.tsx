@@ -69,7 +69,14 @@ function placeLabel(event: Event): string {
  * イベント画像。connpass の image_url は期限付きなので、読み込めなかったら頭文字のサムネに切り替える。
  * ハイドレーション前に失敗した画像は onError が届かないため、マウント時にも読み込み結果を確かめる。
  */
-function EventThumbnail({ event }: { event: Event }) {
+export function EventThumbnail({
+  event,
+  initialClassName = "text-3xl",
+}: {
+  event: Event;
+  /** 頭文字サムネの文字サイズ。小さい枠で使うときに指定する。 */
+  initialClassName?: string;
+}) {
   const imageRef = useRef<HTMLImageElement>(null);
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
   const thumb = thumbnailStyle(event.id);
@@ -99,7 +106,10 @@ function EventThumbnail({ event }: { event: Event }) {
   return (
     <span
       aria-hidden="true"
-      className="absolute inset-0 flex items-center justify-center text-3xl font-semibold"
+      className={cn(
+        "absolute inset-0 flex items-center justify-center font-semibold",
+        initialClassName
+      )}
       style={{ backgroundColor: thumb.background, color: thumb.foreground }}
     >
       {initial}

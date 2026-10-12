@@ -76,13 +76,59 @@ function renderWeek(overrides: Partial<Parameters<typeof WeekView>[0]> = {}) {
 }
 
 describe("WeekView", () => {
+  it("サムネイルは列を 1 本で使う 90 分以上のブロックと SP の一覧に出し、画像がなければ頭文字にする", () => {
+    const solo = event({
+      id: "9",
+      title: "Rust 勉強会",
+      imageUrl: "https://media.connpass.com/thumbs/9.png",
+      startedAt: "2026-10-13T10:00:00+09:00",
+      endedAt: "2026-10-13T12:00:00+09:00",
+    });
+    const { container } = render(
+      <WeekView
+        filters={filters}
+        dates={dates}
+        events={[...events, solo]}
+        today="2026-10-12"
+        now="2026-10-12T03:00:00.000Z"
+        onOpenDay={vi.fn()}
+        onChangeFilters={vi.fn()}
+      />
+    );
+    const grid = screen.getByRole("group", { name: "週の時間割" });
+    const rust = within(grid).getByRole("link", { name: /^Rust 勉強会/ });
+    expect(rust).toHaveAttribute("data-thumbnail", "true");
+    expect(rust.querySelector("img")).toHaveAttribute(
+      "src",
+      "https://media.connpass.com/thumbs/9.png"
+    );
+    // 横に 2 本並ぶブロックは文字を優先してサムネを出さない
+    expect(within(grid).getByRole("link", { name: /^React LT Night/ })).not.toHaveAttribute(
+      "data-thumbnail"
+    );
+    // SP の一覧は全件サムネ付き。画像のないイベントは頭文字
+    const agendaLinks = container.querySelectorAll(".lg\\:hidden a[href]");
+    expect(agendaLinks.length).toBeGreaterThan(0);
+    const reactRow = Array.from(agendaLinks).find((a) => a.textContent?.includes("React LT Night"));
+    expect(reactRow?.textContent).toContain("R");
+    expect(reactRow?.querySelector("span[aria-hidden='true']")).toHaveTextContent("R");
+  });
+
+  it("PC の時間割は日の列に最低幅を持たせ、狭い画面では横スクロールにする", () => {
+    renderWeek();
+    expect(screen.getByTestId("week-grid-inner")).toHaveStyle({ minWidth: `${48 + 148 * 7}px` });
+    expect(screen.getByRole("group", { name: "週の時間割" })).toHaveClass("overflow-x-auto");
+  });
+
   it("PC の時間割で、イベントは時刻・エリア・タイトルを出し、connpass を開くリンクにする", () => {
     renderWeek();
     const grid = screen.getByRole("group", { name: "週の時間割" });
     const wednesday = within(grid).getByRole("group", { name: "10月14日（水）" });
 
     const react = within(wednesday).getByRole("link", { name: /^React LT Night/ });
-    expect(react).toHaveTextContent("19:00–21:00");
+    // 横に 2 本並ぶブロックは開始時刻だけ。終了時刻は読み上げ名に残す
+    expect(react).toHaveTextContent("19:00〜");
+    expect(react).toHaveAccessibleName(/19:00〜21:00/);
     expect(react).toHaveTextContent("北区");
     expect(react).toHaveTextContent("React LT Night");
     expect(react).toHaveAttribute("href", "https://connpass.com/event/1/");
