@@ -60,7 +60,6 @@ const events = [
 
 function renderWeek(overrides: Partial<Parameters<typeof WeekView>[0]> = {}) {
   const onOpenDay = vi.fn();
-  const onNextWeek = vi.fn();
   render(
     <WeekView
       filters={filters}
@@ -69,12 +68,11 @@ function renderWeek(overrides: Partial<Parameters<typeof WeekView>[0]> = {}) {
       today="2026-10-12"
       now="2026-10-12T03:00:00.000Z"
       onOpenDay={onOpenDay}
-      onNextWeek={onNextWeek}
       onChangeFilters={vi.fn()}
       {...overrides}
     />
   );
-  return { onOpenDay, onNextWeek };
+  return { onOpenDay };
 }
 
 describe("WeekView", () => {
@@ -171,21 +169,25 @@ describe("WeekView", () => {
     }
   });
 
-  it("SP の横スクロールの末尾に「次の週」を置き、土曜が今日でも土曜の列を左端に合わせられる", async () => {
-    const user = userEvent.setup();
+  it("SP の横スクロールの末尾に見えない余白を置き、土曜が今日でも土曜の列を左端に合わせられる", () => {
     const offset = vi
       .spyOn(HTMLElement.prototype, "offsetLeft", "get")
       .mockImplementation(function (this: HTMLElement) {
         return Array.from(this.parentElement?.children ?? []).indexOf(this) * 150;
       });
     try {
-      const { onNextWeek } = renderWeek({ today: "2026-10-17" });
-      const columns = screen.getByTestId("week-columns");
-      // 7 日 + 末尾の「次の週」
-      expect(columns.children).toHaveLength(8);
+      renderWeek({ today: "2026-10-17" });
+      // 7 日 + 末尾の余白（見出しの行にも同じ余白）
+      const spacer = screen.getByTestId("week-end-spacer");
+      expect(spacer).toHaveAttribute("aria-hidden", "true");
+      expect(spacer).toHaveClass("lg:hidden");
+      expect(spacer).toBeEmptyDOMElement();
+      expect(screen.getByTestId("week-columns").children).toHaveLength(8);
+      expect(screen.getByTestId("week-header-row").firstElementChild?.children).toHaveLength(8);
       expect(screen.getByTestId("week-scroller").scrollLeft).toBe(6 * 150);
-      await user.click(screen.getByRole("button", { name: "次の週へ" }));
-      expect(onNextWeek).toHaveBeenCalled();
+      expect(screen.getByTestId("week-header-row").scrollLeft).toBe(6 * 150);
+      // ボタンは置かない（前の週・次の週は上の操作で）
+      expect(screen.queryByRole("button", { name: /次の週へ/ })).not.toBeInTheDocument();
     } finally {
       offset.mockRestore();
     }

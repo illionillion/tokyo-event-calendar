@@ -8,7 +8,7 @@ import { EventList } from "@/components/event-list";
 import { FiltersPanel } from "@/components/filters-panel";
 import { ViewToggle, WeekNavigation, WeekView } from "@/components/week-view";
 import { groupAreas } from "@/lib/areas";
-import { addDays, parseDateKey, todayKey } from "@/lib/dates";
+import { parseDateKey, todayKey } from "@/lib/dates";
 import {
   compareEvents,
   countByArea,
@@ -176,7 +176,6 @@ export function EventExplorer({ events, today: serverToday, now: serverNow }: Ev
             today={today}
             now={now}
             onOpenDay={(date) => update({ date, view: "month" })}
-            onNextWeek={() => update({ date: addDays(filters.date, 7) })}
             onChangeFilters={(partial) => update(partial)}
           />
         ) : (

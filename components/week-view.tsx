@@ -135,14 +135,12 @@ type WeekViewProps = {
   now: string;
   /** 日付の見出しを押したとき（その日の一覧を開く） */
   onOpenDay: (date: string) => void;
-  /** SP の横スクロールの終わりに置く「次の週」 */
-  onNextWeek: () => void;
   onChangeFilters: (partial: Partial<Filters>) => void;
 };
 
 /**
  * 7 列の並び。見出しの行と本体の行で同じものを使い、列の位置を揃える。
- * lg 未満の末尾の列（「次の週へ」）は「枠の幅 − 1 列 − 間隔」にして、土曜の列も左端まで動かせるようにする。
+ * lg 未満の末尾の見えない余白の列は「枠の幅 − 1 列 − 間隔」にして、土曜の列も左端まで動かせるようにする。
  */
 const COLUMNS =
   "grid grid-flow-col grid-cols-[repeat(7,48%)_calc(52%-0.375rem)] gap-1.5 lg:grid-flow-row lg:grid-cols-[repeat(7,minmax(0,1fr))] lg:gap-1";
@@ -151,7 +149,7 @@ const COLUMNS =
  * 週表示。日曜〜土曜の 7 列に、その日のイベントを小さなカードで縦に積む（時間軸は持たない）。
  * - PC（lg = 1024px 以上）: 7 列を等幅（minmax(0, 1fr)）で並べ、横スクロールせず必ず収める
  * - lg 未満: 1 列を 48%（1 画面に約 2 列）にして、週の部分だけ横スクロールする（列ごとにスナップ）。
- *   最初は今日の列（今日を含む週のとき）を左端に合わせる。末尾に 1 列分の「次の週」を置き、
+ *   最初は今日の列（今日を含む週のとき）を左端に合わせる。末尾に見えない余白の列を置き、
  *   金曜・土曜の列も左端まで動かせるようにする
  * - 日付の見出しの行は本体と分け、ページに対して sticky にする（top はページ上部の固定帯の下端
  *   = --page-bar-bottom）。横スクロールする枠の中に置くと sticky がページ基準にならないため、
@@ -166,7 +164,6 @@ export function WeekView({
   today,
   now,
   onOpenDay,
-  onNextWeek,
   onChangeFilters,
 }: WeekViewProps) {
   const range = formatWeekRange(dates);
@@ -220,7 +217,7 @@ export function WeekView({
               onOpenDay={onOpenDay}
             />
           ))}
-          {/* 本体の末尾の列と幅を揃える（lg 未満だけ） */}
+          {/* 本体の末尾の余白の列と幅を揃える（lg 未満だけ） */}
           <span aria-hidden="true" className="lg:hidden" />
         </div>
       </div>
@@ -238,19 +235,10 @@ export function WeekView({
             <DayColumn key={date} date={date} events={byDate.get(date) ?? []} now={now} />
           ))}
           {/*
-            lg 未満は末尾に 1 列分の「次の週」を置く。金曜・土曜が今日のときもその列を左端に合わせられ、
-            週の終わりからそのまま次の週へ進める
+            lg 未満は末尾に見えない余白の列（幅 = 枠 − 1 列 − 間隔）を置き、金曜・土曜の列も左端に合わせられるようにする。
+            見出しの行にも同じ幅の余白があるので、横スクロールの同期はずれない
           */}
-          <div className="snap-start pt-1 lg:hidden">
-            <button
-              type="button"
-              onClick={onNextWeek}
-              className="flex h-24 w-full flex-col items-center justify-center gap-1 rounded-md border border-dashed border-border text-sm text-secondary hover:bg-surface"
-            >
-              次の週へ
-              <Chevron direction="next" />
-            </button>
-          </div>
+          <div aria-hidden="true" data-testid="week-end-spacer" className="lg:hidden" />
         </div>
       </div>
     </section>
