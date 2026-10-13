@@ -195,4 +195,26 @@ describe("EventExplorer", () => {
       `/?date=2026-09-25&area=${encodeURIComponent("渋谷区")}`
     );
   });
+
+  it("週表示の日ごとのカードは日の一覧と同じく開始時刻順に並べる", () => {
+    search.params = new URLSearchParams("date=2026-09-24&view=week");
+    const early = {
+      ...event,
+      id: "2",
+      title: "朝もくもく会",
+      start: "08:00",
+      end: "09:00",
+      startedAt: "2026-09-24T08:00:00+09:00",
+      endedAt: "2026-09-24T09:00:00+09:00",
+      url: "https://connpass.com/event/2/",
+    };
+    render(
+      <EventExplorer events={[event, early]} today="2026-09-24" now="2026-09-24T08:00:00.000Z" />
+    );
+    const thursday = screen.getByRole("region", { name: /^9月24日（木）/ });
+    const titles = within(thursday)
+      .getAllByRole("link")
+      .map((link) => link.getAttribute("href"));
+    expect(titles).toEqual(["https://connpass.com/event/2/", "https://connpass.com/event/1/"]);
+  });
 });

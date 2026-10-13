@@ -9,7 +9,13 @@ import { FiltersPanel } from "@/components/filters-panel";
 import { ViewToggle, WeekNavigation, WeekView } from "@/components/week-view";
 import { groupAreas } from "@/lib/areas";
 import { parseDateKey, todayKey } from "@/lib/dates";
-import { countByArea, filterEvents, matchesConditions, matchingDates } from "@/lib/filters";
+import {
+  compareEvents,
+  countByArea,
+  filterEvents,
+  matchesConditions,
+  matchingDates,
+} from "@/lib/filters";
 import { parseFilters, syncFilterUrl } from "@/lib/query";
 import type { Event, Filters } from "@/lib/types";
 import { formatWeekRange, weekDates } from "@/lib/week";
@@ -46,7 +52,11 @@ export function EventExplorer({ events, today: serverToday, now: serverNow }: Ev
     [weekFirst, weekLast]
   );
   const weekEvents = useMemo(
-    () => events.filter((event) => inWeek(event) && matchesConditions(event, filters)),
+    () =>
+      // 日の一覧と同じ並び（開始時刻 → タイトル）
+      events
+        .filter((event) => inWeek(event) && matchesConditions(event, filters))
+        .sort(compareEvents),
     [events, filters, inWeek]
   );
   // 週表示ではエリアの件数も週のイベントで数える

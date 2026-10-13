@@ -63,7 +63,7 @@ export function hasActiveFilters(filters: Filters): boolean {
   return Boolean(filters.areas.length > 0 || filters.format !== "all" || filters.keyword.trim());
 }
 
-function compareEvents(left: Event, right: Event): number {
+export function compareEvents(left: Event, right: Event): number {
   const byTime = left.startedAt.localeCompare(right.startedAt);
   if (byTime !== 0) return byTime;
   return left.title.localeCompare(right.title, "ja");
