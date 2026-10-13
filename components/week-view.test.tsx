@@ -92,6 +92,7 @@ describe("WeekView", () => {
     const wednesday = screen.getByRole("region", { name: /^10月14日（水）/ });
     const react = within(wednesday).getByRole("link", { name: /React LT Night/ });
     expect(react).toHaveAttribute("href", "https://connpass.com/event/1/");
+    expect(react).toHaveAccessibleName(/（connpassで開く）/);
     expect(react).toHaveTextContent("北区");
     expect(within(wednesday).getByRole("link", { name: /Go もくもく会/ })).toBeInTheDocument();
     // 小さなカードは時刻・タイトル・場所を出す（頭文字のサムネ付き）

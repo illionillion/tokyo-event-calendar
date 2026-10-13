@@ -336,6 +336,7 @@ export function CompactEventCard({ event, now }: { event: Event; now: string }) 
           )}
         >
           {event.title}
+          <span className="sr-only">（connpassで開く）</span>
         </span>
         <span
           className={cn(
