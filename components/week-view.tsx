@@ -270,7 +270,7 @@ function DayColumn({
 
 /**
  * 週表示用の小さなイベントカード。サムネイル・時刻・タイトル・場所（またはオンライン）だけを出す。
- * PC の細い列ではサムネイルを列幅いっぱいの低い画像にして上に、SP では左に置く。
+ * サムネイルはカードの上・左右の端までいっぱいに広げ（PC の細い列では低い 2:1、SP では 16:9）、文字はその下に余白付きで置く。
  */
 export function CompactEventCard({ event, now }: { event: Event; now: string }) {
   const ended = hasEnded(event.endedAt, now);
@@ -280,12 +280,16 @@ export function CompactEventCard({ event, now }: { event: Event; now: string }) 
       href={event.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex min-w-0 gap-2 overflow-hidden rounded-md border border-border bg-card p-2 hover:border-primary hover:bg-primary-soft lg:flex-col lg:gap-1 lg:p-1"
+      className="flex min-w-0 flex-col overflow-hidden rounded-md border border-border bg-card hover:border-primary hover:bg-primary-soft"
     >
-      <span className="relative block aspect-[16/9] w-24 shrink-0 overflow-hidden rounded-sm lg:aspect-[2/1] lg:w-full">
+      {/* 画像はカードの上・左右の端まで広げる（角はカードの overflow-hidden で丸める） */}
+      <span
+        data-testid="compact-thumbnail"
+        className="relative block aspect-[16/9] w-full shrink-0 overflow-hidden lg:aspect-[2/1]"
+      >
         <EventThumbnail event={event} />
       </span>
-      <span className="flex min-w-0 flex-col gap-0.5">
+      <span className="flex min-w-0 flex-col gap-0.5 px-2.5 py-2 lg:px-1.5 lg:py-1">
         <span
           className={cn(
             "text-xs font-semibold tabular-nums lg:text-[10px]",

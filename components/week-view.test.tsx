@@ -100,6 +100,10 @@ describe("WeekView", () => {
     expect(within(wednesday).getByRole("link", { name: /Go もくもく会/ })).toHaveTextContent(
       "オンライン"
     );
+    // サムネイルは余白なしでカードの端まで広げる
+    const thumb = within(react).getByTestId("compact-thumbnail");
+    expect(thumb).toHaveClass("w-full");
+    expect(react).not.toHaveClass("p-2");
     // 時間割・「+N件」・終日の帯は出さない
     expect(screen.queryByRole("group", { name: "週の時間割" })).not.toBeInTheDocument();
     expect(screen.queryByText(/^\+\d+件$/)).not.toBeInTheDocument();
