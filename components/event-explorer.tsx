@@ -1,19 +1,18 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { CollapsibleCalendar } from "@/components/collapsible-calendar";
 import { DateNavigation } from "@/components/date-navigation";
 import { EventList } from "@/components/event-list";
 import { FiltersPanel } from "@/components/filters-panel";
 import { ViewToggle, WeekNavigation, WeekView } from "@/components/week-view";
 import { groupAreas } from "@/lib/areas";
-import { cn } from "@/lib/cn";
 import { parseDateKey, todayKey } from "@/lib/dates";
 import { countByArea, filterEvents, matchesConditions, matchingDates } from "@/lib/filters";
 import { parseFilters, syncFilterUrl } from "@/lib/query";
 import type { Event, Filters } from "@/lib/types";
-import { formatWeekRange, overlapsDates, weekDates } from "@/lib/week";
+import { formatWeekRange, weekDates } from "@/lib/week";
 
 type EventExplorerProps = {
   events: Event[];
@@ -35,29 +34,26 @@ export function EventExplorer({ events, today: serverToday, now: serverNow }: Ev
     window.addEventListener("popstate", refreshNow);
     return () => window.removeEventListener("popstate", refreshNow);
   }, []);
-  const weekMode = searchParams.get("view") === "week";
-  useEffect(() => {
-    // 週表示は今の時刻の線・今日の列・終了済みの表示を、開いたままでも 1 分ごとに更新する
-    if (!weekMode) return;
-    const timer = setInterval(() => setClientNow(new Date().toISOString()), 60_000);
-    return () => clearInterval(timer);
-  }, [weekMode]);
   const filters = useMemo(() => parseFilters(searchParams, today), [searchParams, today]);
   const isWeek = filters.view === "week";
   const week = useMemo(() => weekDates(filters.date), [filters.date]);
   const weekFirst = week[0] ?? filters.date;
   const weekLast = week.at(-1) ?? filters.date;
   const visible = useMemo(() => filterEvents(events, filters), [events, filters]);
-  const weekEvents = useMemo(() => {
-    return events.filter(
-      (event) => overlapsDates(event, weekFirst, weekLast) && matchesConditions(event, filters)
-    );
-  }, [events, filters, weekFirst, weekLast]);
-  // 週表示ではエリアの件数も週に重なるイベントで数える
+  // 週表示は日の一覧と同じく開始日で数える（複数日のイベントは開始日にだけ出す）
+  const inWeek = useCallback(
+    (event: Event) => event.date >= weekFirst && event.date <= weekLast,
+    [weekFirst, weekLast]
+  );
+  const weekEvents = useMemo(
+    () => events.filter((event) => inWeek(event) && matchesConditions(event, filters)),
+    [events, filters, inWeek]
+  );
+  // 週表示ではエリアの件数も週のイベントで数える
   const counts = useMemo(() => {
     if (!isWeek) return countByArea(events, filters);
-    return countByArea(events, filters, (event) => overlapsDates(event, weekFirst, weekLast));
-  }, [events, filters, isWeek, weekFirst, weekLast]);
+    return countByArea(events, filters, inWeek);
+  }, [events, filters, isWeek, inWeek]);
   const markedDates = useMemo(() => matchingDates(events, filters), [events, filters]);
   const groups = useMemo(() => groupAreas(events, filters.areas), [events, filters.areas]);
 
@@ -79,13 +75,7 @@ export function EventExplorer({ events, today: serverToday, now: serverNow }: Ev
   const selectedLabel = selected ? `${selected.month}月${selected.day}日` : filters.date;
 
   return (
-    <div
-      className={cn(
-        "mx-auto w-full min-w-0 px-4 py-4",
-        // 週表示は 7 列を読める幅にするため広げる
-        isWeek ? "max-w-[1600px]" : "max-w-[1080px]"
-      )}
-    >
+    <div className="mx-auto w-full min-w-0 max-w-[1080px] px-4 py-4">
       {/* top-12 = サイトヘッダー h-12 */}
       <div className="sticky top-12 z-10 -mx-4 min-w-0 bg-background px-4 py-2">
         <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between lg:gap-6">

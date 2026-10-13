@@ -76,139 +76,66 @@ function renderWeek(overrides: Partial<Parameters<typeof WeekView>[0]> = {}) {
 }
 
 describe("WeekView", () => {
-  it("サムネイルは列を 1 本で使う 90 分以上のブロックと SP の一覧に出し、画像がなければ頭文字にする", () => {
-    const solo = event({
-      id: "9",
-      title: "Rust 勉強会",
-      imageUrl: "https://media.connpass.com/thumbs/9.png",
-      startedAt: "2026-10-13T10:00:00+09:00",
-      endedAt: "2026-10-13T12:00:00+09:00",
-    });
-    const { container } = render(
-      <WeekView
-        filters={filters}
-        dates={dates}
-        events={[...events, solo]}
-        today="2026-10-12"
-        now="2026-10-12T03:00:00.000Z"
-        onOpenDay={vi.fn()}
-        onChangeFilters={vi.fn()}
-      />
-    );
-    const grid = screen.getByRole("group", { name: "週の時間割" });
-    const rust = within(grid).getByRole("link", { name: /^Rust 勉強会/ });
-    expect(rust).toHaveAttribute("data-thumbnail", "true");
-    expect(rust.querySelector("img")).toHaveAttribute(
-      "src",
-      "https://media.connpass.com/thumbs/9.png"
-    );
-    // 横に 2 本並ぶブロックは文字を優先してサムネを出さない
-    expect(within(grid).getByRole("link", { name: /^React LT Night/ })).not.toHaveAttribute(
-      "data-thumbnail"
-    );
-    // SP の一覧は全件サムネ付き。画像のないイベントは頭文字
-    const agendaLinks = container.querySelectorAll(".lg\\:hidden a[href]");
-    expect(agendaLinks.length).toBeGreaterThan(0);
-    const reactRow = Array.from(agendaLinks).find((a) => a.textContent?.includes("React LT Night"));
-    expect(reactRow?.textContent).toContain("R");
-    expect(reactRow?.querySelector("span[aria-hidden='true']")).toHaveTextContent("R");
-  });
-
-  it("PC の時間割は日の列に最低幅を持たせ、狭い画面では横スクロールにする", () => {
+  it("日曜〜土曜の日ごとに見出しと、日の一覧と同じイベントカードを並べる", () => {
     renderWeek();
-    expect(screen.getByTestId("week-grid-inner")).toHaveStyle({ minWidth: `${48 + 148 * 7}px` });
-    expect(screen.getByRole("group", { name: "週の時間割" })).toHaveClass("overflow-x-auto");
-  });
+    const headings = screen.getAllByRole("heading", { level: 3 });
+    expect(headings.map((heading) => heading.textContent)).toEqual([
+      "10月11日（日）0件",
+      "10月12日（月）スポーツの日今日0件",
+      "10月13日（火）0件",
+      "10月14日（水）2件",
+      "10月15日（木）1件",
+      "10月16日（金）0件",
+      "10月17日（土）0件",
+    ]);
 
-  it("PC の時間割で、イベントは時刻・エリア・タイトルを出し、connpass を開くリンクにする", () => {
-    renderWeek();
-    const grid = screen.getByRole("group", { name: "週の時間割" });
-    const wednesday = within(grid).getByRole("group", { name: "10月14日（水）" });
-
-    const react = within(wednesday).getByRole("link", { name: /^React LT Night/ });
-    // 横に 2 本並ぶブロックは開始時刻だけ。終了時刻は読み上げ名に残す
-    expect(react).toHaveTextContent("19:00〜");
-    expect(react).toHaveAccessibleName(/19:00〜21:00/);
-    expect(react).toHaveTextContent("北区");
-    expect(react).toHaveTextContent("React LT Night");
+    const wednesday = screen.getByRole("region", { name: /^10月14日（水）/ });
+    const react = within(wednesday).getByRole("link", { name: /React LT Night/ });
     expect(react).toHaveAttribute("href", "https://connpass.com/event/1/");
-    expect(react).toHaveAttribute("target", "_blank");
+    expect(react).toHaveTextContent("北区");
+    expect(within(wednesday).getByRole("link", { name: /Go もくもく会/ })).toBeInTheDocument();
+    // 時間割・「+N件」・終日の帯は出さない
+    expect(screen.queryByRole("group", { name: "週の時間割" })).not.toBeInTheDocument();
+    expect(screen.queryByText(/^\+\d+件$/)).not.toBeInTheDocument();
+  });
 
-    const go = within(wednesday).getByRole("link", { name: /^Go もくもく会/ });
-    expect(go).toHaveTextContent("オンライン");
-    // 重なる 2 件は横に並べる
-    expect(react).toHaveAttribute("data-columns", "2");
-    expect(go).toHaveAttribute("data-column", "1");
-    // 19:00 → 56px × 19
-    expect(react).toHaveStyle({ top: `${56 * 19}px` });
+  it("複数日のイベントは日の一覧と同じく開始日にだけ出す", () => {
+    renderWeek();
+    const thursday = screen.getByRole("region", { name: /^10月15日（木）/ });
+    const friday = screen.getByRole("region", { name: /^10月16日（金）/ });
+    expect(within(thursday).getByRole("link", { name: /CloudNative Days/ })).toBeInTheDocument();
+    expect(
+      within(friday).queryByRole("link", { name: /CloudNative Days/ })
+    ).not.toBeInTheDocument();
+  });
 
-    // 24 時間以上のイベントは上の帯
-    expect(within(grid).getByRole("link", { name: /^CloudNative Days/ })).toHaveTextContent(
-      "10:00 CloudNative Days"
-    );
+  it("イベントのない日は短い案内を出す", () => {
+    renderWeek();
+    const sunday = screen.getByRole("region", { name: /^10月11日（日）/ });
+    expect(within(sunday).getByText("この日のイベントはありません")).toBeInTheDocument();
   });
 
   it("日付の見出しに件数を出し、押すとその日の一覧を開く", async () => {
     const user = userEvent.setup();
     const { onOpenDay } = renderWeek();
-    const grid = screen.getByRole("group", { name: "週の時間割" });
-
     expect(screen.getByTestId("day-count-2026-10-14")).toHaveTextContent("2件");
-    expect(screen.getByTestId("day-count-2026-10-16")).toHaveTextContent("1件");
-    expect(screen.getByTestId("day-count-2026-10-11")).toHaveTextContent("0件");
 
-    await user.click(within(grid).getByRole("button", { name: "10月14日（水） 2件の一覧を開く" }));
+    await user.click(screen.getByRole("button", { name: "10月14日（水） 2件の一覧を開く" }));
     expect(onOpenDay).toHaveBeenCalledWith("2026-10-14");
   });
 
-  it("見出しは土曜を青、日曜・祝日を赤にし、今日・選択中の日はその強調を優先する", () => {
+  it("見出しは土曜を青、日曜・祝日を赤にし、今日はその強調を優先する", () => {
     renderWeek();
-    const grid = screen.getByRole("group", { name: "週の時間割" });
+    const dayText = (name: RegExp) =>
+      within(screen.getByRole("button", { name })).getByText(/^\d+月\d+日（.）$/);
 
-    expect(within(grid).getByRole("button", { name: /^10月11日（日）/ })).toHaveClass(
-      "text-holiday"
-    );
-    expect(within(grid).getByRole("button", { name: /^10月17日（土）/ })).toHaveClass(
-      "text-saturday"
-    );
-    // 10/12 はスポーツの日だが今日なので今日の赤枠
-    const today = within(grid).getByRole("button", { name: /^10月12日（月） スポーツの日 今日/ });
+    expect(dayText(/^10月11日（日）/)).toHaveClass("text-holiday");
+    expect(dayText(/^10月17日（土）/)).toHaveClass("text-saturday");
+    // 10/12 はスポーツの日だが今日なので今日の赤
+    const today = dayText(/^10月12日（月） スポーツの日 今日/);
     expect(today).toHaveClass("text-primary");
     expect(today).not.toHaveClass("text-holiday");
-    const selected = within(grid).getByRole("button", { name: /^10月14日（水）/ });
-    expect(selected).toHaveClass("bg-primary", "text-white");
-  });
-
-  it("3 件以上重なると「+N件」にまとめ、押すとその日の一覧を開く", async () => {
-    const user = userEvent.setup();
-    const crowded = ["a", "b", "c", "d"].map((id) =>
-      event({
-        id,
-        startedAt: "2026-10-16T19:00:00+09:00",
-        endedAt: "2026-10-16T21:00:00+09:00",
-      })
-    );
-    const { onOpenDay } = renderWeek({ events: crowded });
-    const grid = screen.getByRole("group", { name: "週の時間割" });
-    const friday = within(grid).getByRole("group", { name: "10月16日（金）" });
-
-    expect(within(friday).getAllByRole("link")).toHaveLength(1);
-    await user.click(within(friday).getByRole("button", { name: "ほか3件（その日の一覧を開く）" }));
-    expect(onOpenDay).toHaveBeenCalledWith("2026-10-16");
-    expect(screen.getByTestId("day-count-2026-10-16")).toHaveTextContent("4件");
-  });
-
-  it("SP 用の日ごとの一覧にも 7 日分を出し、日付を押すとその日の一覧を開く", async () => {
-    const user = userEvent.setup();
-    const { onOpenDay } = renderWeek();
-    const agenda = screen.getByRole("list", { name: "週の日ごとの一覧" });
-
-    expect(within(agenda).getAllByRole("heading", { level: 3 })).toHaveLength(7);
-    expect(within(agenda).getAllByText("イベントはありません")).toHaveLength(4);
-    expect(within(agenda).getAllByRole("link", { name: /^CloudNative Days/ })).toHaveLength(2);
-
-    await user.click(within(agenda).getByRole("button", { name: /^10月15日（木）/ }));
-    expect(onOpenDay).toHaveBeenCalledWith("2026-10-15");
+    expect(screen.getByText("スポーツの日")).toHaveClass("text-secondary");
   });
 });
 

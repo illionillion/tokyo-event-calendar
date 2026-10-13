@@ -1,34 +1,12 @@
 "use client";
 
-import { type CSSProperties, useEffect, useMemo, useRef } from "react";
-import { EventThumbnail } from "@/components/event-card";
+import { EventCard } from "@/components/event-card";
 import { ActiveFilterChips } from "@/components/event-list";
 import { cn } from "@/lib/cn";
-import { addDays, dayNumber, formatDayHeading, hasEnded, weekdayLabel } from "@/lib/dates";
-import { formatPlace } from "@/lib/filters";
+import { addDays, formatDayHeading } from "@/lib/dates";
 import { dayKind, dayKindTextClass, holidayName } from "@/lib/holidays";
 import type { Event, Filters, ViewMode } from "@/lib/types";
-import {
-  countOnDate,
-  formatWeekRange,
-  initialScrollHour,
-  limitColumns,
-  MIN_BLOCK_MINUTES,
-  type OverflowSlot,
-  lastDate,
-  layoutWeek,
-  minutesOfDay,
-  type AllDayBar,
-  type TimedSegment,
-} from "@/lib/week";
-
-/** 時間軸の 1 時間の高さ（px）。 */
-const HOUR_PX = 56;
-/** PC の日の列の最低幅。2 列並んでも 1 行に 5〜6 文字は入り、1440px 幅の画面では横スクロールなしで 7 日が収まる幅にする。 */
-export const WEEK_COLUMN_MIN_PX = 148;
-/** サムネイルを出すブロックの最低の長さ（分）。短いブロックでは文字を優先する。 */
-export const THUMBNAIL_MIN_MINUTES = 90;
-const HOURS = Array.from({ length: 24 }, (_, hour) => hour);
+import { formatWeekRange } from "@/lib/week";
 
 function Chevron({ direction }: { direction: "previous" | "next" }) {
   return (
@@ -49,7 +27,7 @@ function Chevron({ direction }: { direction: "previous" | "next" }) {
   );
 }
 
-/** 月（月のカレンダー + 1 日分の一覧）と週（時間割）の切り替え。 */
+/** 月（月のカレンダー + 1 日分の一覧）と週（7 日分の一覧）の切り替え。 */
 export function ViewToggle({
   view,
   onChange,
@@ -146,7 +124,7 @@ export function WeekNavigation({
 type WeekViewProps = {
   filters: Filters;
   dates: string[];
-  /** 週に重なり、条件に当たるイベント */
+  /** 週のうちに始まり、条件に当たるイベント */
   events: Event[];
   today: string;
   now: string;
@@ -155,17 +133,10 @@ type WeekViewProps = {
   onChangeFilters: (partial: Partial<Filters>) => void;
 };
 
-function eventLabel(event: Event): string {
-  return `${event.title} ${formatDayHeading(event.date)} ${event.start}〜${event.end} ${formatPlace(event)}`;
-}
-
-/** 日付の見出しの文字色。今日・選択中の日はその強調を優先し、土日祝の色を付けない。 */
-function dayHeaderClass(date: string, today: string, selectedDate: string): string {
-  if (date === selectedDate) return "bg-primary text-white";
-  if (date === today) return "text-primary ring-1 ring-primary ring-inset";
-  return dayKindTextClass(dayKind(date)) || "text-foreground";
-}
-
+/**
+ * 週表示。日曜〜土曜の日ごとに、日の一覧と同じイベントカードを並べる。
+ * 複数日のイベントは日の一覧と同じく開始日にだけ出す（件数も日の一覧と揃える）。
+ */
 export function WeekView({
   filters,
   dates,
@@ -175,7 +146,6 @@ export function WeekView({
   onOpenDay,
   onChangeFilters,
 }: WeekViewProps) {
-  const layout = useMemo(() => layoutWeek(events, dates), [events, dates]);
   const range = formatWeekRange(dates);
 
   return (
@@ -190,419 +160,84 @@ export function WeekView({
         </p>
       </div>
       <ActiveFilterChips filters={filters} onChangeFilters={onChangeFilters} />
-      <div className="hidden lg:block">
-        <WeekGrid layout={layout} filters={filters} today={today} now={now} onOpenDay={onOpenDay} />
-      </div>
-      <div className="lg:hidden">
-        <WeekAgenda
-          layout={layout}
-          filters={filters}
-          today={today}
-          now={now}
-          onOpenDay={onOpenDay}
-        />
+      <div className="mt-3 min-w-0 space-y-6">
+        {dates.map((date) => (
+          <DaySection
+            key={date}
+            date={date}
+            events={events.filter((event) => event.date === date)}
+            today={today}
+            now={now}
+            onOpenDay={onOpenDay}
+          />
+        ))}
       </div>
     </section>
   );
 }
 
-type LayoutProps = {
-  layout: ReturnType<typeof layoutWeek>;
-  filters: Filters;
+function DaySection({
+  date,
+  events,
+  today,
+  now,
+  onOpenDay,
+}: {
+  date: string;
+  events: Event[];
   today: string;
   now: string;
   onOpenDay: (date: string) => void;
-};
-
-/** PC: 7 日の列と時間軸（Google カレンダーの週表示に近い形）。 */
-function WeekGrid({ layout, filters, today, now, onOpenDay }: LayoutProps) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const scrollHour = initialScrollHour(layout);
-  const weekKey = layout.dates[0];
-  // now / today は EventExplorer が週表示の間 1 分ごとに取り直す
-  const nowMinutes = minutesOfDay(now);
-  const columns = "grid-cols-[3rem_repeat(7,minmax(var(--week-col-min),1fr))]";
-
-  useEffect(() => {
-    // 週を移動したときは、その週の最初に見せる時刻までスクロールし直す
-    if (scrollRef.current) scrollRef.current.scrollTop = scrollHour * HOUR_PX;
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- 週が変わったときだけ合わせる
-  }, [weekKey]);
-
-  return (
-    <div
-      role="group"
-      aria-label="週の時間割"
-      className="mt-3 overflow-x-auto rounded-lg border border-border bg-card"
-    >
-      {/* 日の列は最低 WEEK_COLUMN_MIN_PX。足りない幅では時間割ごと横スクロールする */}
-      <div
-        data-testid="week-grid-inner"
-        style={
-          {
-            "--week-col-min": `${WEEK_COLUMN_MIN_PX}px`,
-            minWidth: 48 + WEEK_COLUMN_MIN_PX * 7,
-          } as CSSProperties
-        }
-      >
-        <div className={cn("grid border-b border-border", columns)}>
-          <span aria-hidden="true" />
-          {layout.dates.map((date) => {
-            const holiday = holidayName(date);
-            const count = countOnDate(layout, date);
-            return (
-              <div key={date} className="px-1 py-2 text-center">
-                <button
-                  type="button"
-                  onClick={() => onOpenDay(date)}
-                  aria-label={`${formatDayHeading(date)}${holiday ? ` ${holiday}` : ""}${date === today ? " 今日" : ""} ${count}件の一覧を開く`}
-                  title={holiday ?? undefined}
-                  className={cn(
-                    "mx-auto flex w-12 flex-col items-center rounded-md py-1 hover:bg-surface",
-                    dayHeaderClass(date, today, filters.date),
-                    date === filters.date && "hover:bg-primary-hover"
-                  )}
-                >
-                  <span className="text-[11px] leading-none">{weekdayLabel(date)}</span>
-                  <span className="mt-1 text-lg leading-none font-semibold tabular-nums">
-                    {dayNumber(date)}
-                  </span>
-                </button>
-                <span
-                  aria-hidden="true"
-                  data-testid={`day-count-${date}`}
-                  className="mt-1 block text-[11px] text-secondary tabular-nums"
-                >
-                  {count}件
-                </span>
-                {holiday ? (
-                  <span
-                    className={cn(
-                      "mt-1 block truncate text-[11px]",
-                      date === today || date === filters.date ? "text-secondary" : "text-holiday"
-                    )}
-                  >
-                    {holiday}
-                  </span>
-                ) : null}
-              </div>
-            );
-          })}
-        </div>
-
-        {layout.allDayLanes > 0 ? (
-          <div
-            className={cn("grid gap-y-1 border-b border-border py-1", columns)}
-            style={{ gridTemplateRows: `repeat(${layout.allDayLanes}, minmax(0, auto))` }}
-          >
-            <span className="row-span-full self-center px-1 text-center text-[10px] leading-tight text-muted">
-              終日
-              <br />
-              複数日
-            </span>
-            {layout.allDay.map((bar) => (
-              <AllDayBlock key={bar.event.id} bar={bar} now={now} />
-            ))}
-          </div>
-        ) : null}
-
-        <div ref={scrollRef} className="relative h-[600px] overflow-y-auto">
-          <div className={cn("relative grid", columns)} style={{ height: 24 * HOUR_PX }}>
-            <div className="relative" aria-hidden="true">
-              {HOURS.map((hour) => (
-                <span
-                  key={hour}
-                  aria-hidden="true"
-                  className="absolute right-1 -translate-y-1/2 text-[10px] text-muted tabular-nums"
-                  style={{ top: hour * HOUR_PX }}
-                >
-                  {hour === 0 ? "" : `${hour}:00`}
-                </span>
-              ))}
-            </div>
-            {layout.dates.map((date) => (
-              <div
-                key={date}
-                role="group"
-                aria-label={formatDayHeading(date)}
-                className="relative border-l border-border"
-                style={{
-                  backgroundImage: `repeating-linear-gradient(to bottom, var(--border) 0 1px, transparent 1px ${HOUR_PX}px)`,
-                }}
-              >
-                <DayColumn
-                  segments={layout.timed.get(date) ?? []}
-                  now={now}
-                  onOverflow={() => onOpenDay(date)}
-                />
-                {date === today ? (
-                  <span
-                    aria-hidden="true"
-                    data-testid="now-line"
-                    className="pointer-events-none absolute right-0 left-0 z-10 h-0.5 bg-primary"
-                    style={{ top: (nowMinutes / 60) * HOUR_PX }}
-                  />
-                ) : null}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function DayColumn({
-  segments,
-  now,
-  onOverflow,
-}: {
-  segments: TimedSegment[];
-  now: string;
-  onOverflow: () => void;
 }) {
-  const { visible, overflow } = limitColumns(segments);
+  const holiday = holidayName(date);
+  const isToday = date === today;
+  const headingId = `week-day-${date}`;
 
   return (
-    <>
-      {visible.map((segment) => (
-        <TimedBlock key={`${segment.event.id}-${segment.date}`} segment={segment} now={now} />
-      ))}
-      {overflow.map((slot) => (
-        <OverflowBlock key={`${slot.date}-${slot.start}`} slot={slot} onClick={onOverflow} />
-      ))}
-    </>
-  );
-}
-
-/** ブロックの位置（top / height / left / width）。最低の高さは MIN_BLOCK_MINUTES 分。 */
-function blockStyle(start: number, end: number, column: number, columns: number) {
-  const top = (start / 60) * HOUR_PX;
-  const height = Math.min(
-    (Math.max(end - start, MIN_BLOCK_MINUTES) / 60) * HOUR_PX,
-    24 * HOUR_PX - top
-  );
-  const width = 100 / columns;
-  return {
-    top,
-    height,
-    left: `calc(${column * width}% + 1px)`,
-    width: `calc(${width}% - 2px)`,
-  };
-}
-
-function OverflowBlock({ slot, onClick }: { slot: OverflowSlot; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={`ほか${slot.count}件（その日の一覧を開く）`}
-      className="absolute flex items-start justify-center rounded-md border border-dashed border-primary bg-card px-1 py-1 text-[12px] font-semibold text-primary hover:bg-primary-soft"
-      style={blockStyle(slot.start, slot.end, slot.column, slot.columns)}
-    >
-      +{slot.count}件
-    </button>
-  );
-}
-
-function TimedBlock({ segment, now }: { segment: TimedSegment; now: string }) {
-  const { event } = segment;
-  const ended = hasEnded(event.endedAt, now);
-  // 列を 1 本で使えて十分な長さがあるブロックだけ小さなサムネを出す
-  const showThumbnail =
-    segment.columns === 1 && segment.end - segment.start >= THUMBNAIL_MIN_MINUTES;
-
-  return (
-    <a
-      href={event.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label={eventLabel(event)}
-      data-thumbnail={showThumbnail ? "true" : undefined}
-      title={`${event.start}–${event.end} ${formatPlace(event)}\n${event.title}`}
-      data-column={segment.column}
-      data-columns={segment.columns}
-      className={cn(
-        "absolute overflow-hidden rounded-md border-l-4 px-1 py-0.5 text-[11px] leading-tight hover:z-20 hover:shadow-sm",
-        ended
-          ? "border-border bg-surface text-secondary"
-          : "border-primary bg-primary-soft text-foreground hover:bg-card"
-      )}
-      style={blockStyle(segment.start, segment.end, segment.column, segment.columns)}
-    >
-      {showThumbnail ? (
-        <span className="relative float-right mt-0.5 ml-1 block aspect-[16/9] w-14 overflow-hidden rounded-sm">
-          <EventThumbnail event={event} initialClassName="text-sm" lazy />
-        </span>
-      ) : null}
-      <span className="block text-[10px] font-semibold tabular-nums">
-        {segment.continuesBefore ? "↑ " : ""}
-        {/* 横に並ぶ細いブロックでは開始時刻だけにして 1 行に収める（終了は title と aria-label に残る） */}
-        {segment.columns > 1 ? `${event.start}〜` : `${event.start}–${event.end}`}
-        {segment.continuesAfter ? " ↓" : ""}
-      </span>
-      <span
-        className={cn(
-          "block truncate text-[10px]",
-          ended ? "text-secondary" : "text-primary-hover"
-        )}
-      >
-        {formatPlace(event)}
-      </span>
-      <span className="block font-medium [overflow-wrap:anywhere]">{event.title}</span>
-    </a>
-  );
-}
-
-function AllDayBlock({ bar, now }: { bar: AllDayBar; now: string }) {
-  const { event } = bar;
-  const ended = hasEnded(event.endedAt, now);
-
-  return (
-    <a
-      href={event.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label={`${eventLabel(event)}（${formatDayHeading(lastDate(event))}まで）`}
-      title={event.title}
-      className={cn(
-        "mx-0.5 truncate rounded-md px-1.5 py-0.5 text-[11px] leading-tight hover:shadow-sm",
-        ended ? "bg-surface text-secondary" : "bg-primary text-white hover:bg-primary-hover",
-        bar.continuesBefore && "rounded-l-none",
-        bar.continuesAfter && "rounded-r-none"
-      )}
-      style={{
-        gridColumn: `${bar.startIndex + 2} / ${bar.endIndex + 3}`,
-        gridRow: bar.lane + 1,
-      }}
-    >
-      {bar.continuesBefore ? "← " : ""}
-      {event.start} {event.title}
-      {bar.continuesAfter ? " →" : ""}
-    </a>
-  );
-}
-
-/** SP: 週の 7 日を縦に並べた日ごとの一覧（時間軸は狭い画面では読みにくいため）。 */
-function WeekAgenda({ layout, filters, today, now, onOpenDay }: LayoutProps) {
-  return (
-    <ol className="mt-3 space-y-2" aria-label="週の日ごとの一覧">
-      {layout.dates.map((date) => {
-        const allDay = layout.allDay.filter(
-          (bar) =>
-            layout.dates.indexOf(date) >= bar.startIndex &&
-            layout.dates.indexOf(date) <= bar.endIndex
-        );
-        const timed = [...(layout.timed.get(date) ?? [])].sort(
-          (left, right) => left.start - right.start || left.end - right.end
-        );
-        const holiday = holidayName(date);
-        const isToday = date === today;
-        const emphasized = isToday || date === filters.date;
-        const count = allDay.length + timed.length;
-
-        return (
-          <li key={date} className="rounded-lg border border-border bg-card">
-            <h3>
-              <button
-                type="button"
-                onClick={() => onOpenDay(date)}
-                aria-label={`${formatDayHeading(date)}${holiday ? ` ${holiday}` : ""}${isToday ? " 今日" : ""}の一覧を開く`}
-                className="flex w-full items-center justify-between gap-2 rounded-t-lg px-3 py-2 text-left hover:bg-surface"
-              >
-                <span className="flex items-baseline gap-2">
-                  <span
-                    className={cn(
-                      "text-sm font-semibold tabular-nums",
-                      isToday
-                        ? "text-primary"
-                        : emphasized
-                          ? "text-foreground"
-                          : dayKindTextClass(dayKind(date)) || "text-foreground"
-                    )}
-                  >
-                    {formatDayHeading(date)}
-                  </span>
-                  {holiday ? (
-                    <span
-                      className={cn("text-[12px]", emphasized ? "text-secondary" : "text-holiday")}
-                    >
-                      {holiday}
-                    </span>
-                  ) : null}
-                  {isToday ? (
-                    <span className="text-[12px] font-medium text-primary">今日</span>
-                  ) : null}
-                </span>
-                <span className="text-[12px] text-secondary tabular-nums">{count}件</span>
-              </button>
-            </h3>
-            {count === 0 ? (
-              <p className="border-t border-border px-3 py-2 text-[13px] text-muted">
-                イベントはありません
-              </p>
-            ) : (
-              <ul className="divide-y divide-border border-t border-border">
-                {allDay.map((bar) => (
-                  <AgendaRow
-                    key={`all-${bar.event.id}`}
-                    event={bar.event}
-                    time="終日・複数日"
-                    now={now}
-                  />
-                ))}
-                {timed.map((segment) => (
-                  <AgendaRow
-                    key={`${segment.event.id}-${segment.date}`}
-                    event={segment.event}
-                    time={`${segment.continuesBefore ? "（前日から）" : ""}${segment.event.start}–${segment.event.end}`}
-                    now={now}
-                  />
-                ))}
-              </ul>
-            )}
-          </li>
-        );
-      })}
-    </ol>
-  );
-}
-
-function AgendaRow({ event, time, now }: { event: Event; time: string; now: string }) {
-  const ended = hasEnded(event.endedAt, now);
-
-  return (
-    <li>
-      <a
-        href={event.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label={eventLabel(event)}
-        className="flex items-start gap-3 px-3 py-2 hover:bg-primary-soft"
-      >
-        <span className="relative block aspect-[16/9] w-16 shrink-0 overflow-hidden rounded-md">
-          <EventThumbnail event={event} initialClassName="text-base" lazy />
-        </span>
-        <span
-          className={cn(
-            "w-20 shrink-0 text-[12px] font-semibold tabular-nums",
-            ended ? "text-secondary" : "text-foreground"
-          )}
+    <section aria-labelledby={headingId} className="min-w-0">
+      <h3 id={headingId} className="min-w-0">
+        <button
+          type="button"
+          onClick={() => onOpenDay(date)}
+          aria-label={`${formatDayHeading(date)}${holiday ? ` ${holiday}` : ""}${isToday ? " 今日" : ""} ${events.length}件の一覧を開く`}
+          className="flex w-full min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1 rounded-md border-b border-border px-1 py-1.5 text-left hover:bg-surface"
         >
-          {time}
-        </span>
-        <span className="min-w-0">
+          {/* 今日は「今日」の赤を優先し、土日祝の色を付けない（日の一覧と同じ） */}
           <span
             className={cn(
-              "block text-[13px] font-medium",
-              ended ? "text-secondary" : "text-foreground"
+              "text-base font-semibold",
+              isToday ? "text-primary" : dayKindTextClass(dayKind(date))
             )}
           >
-            {event.title}
+            {formatDayHeading(date)}
           </span>
-          <span className="block truncate text-[12px] text-secondary">{formatPlace(event)}</span>
-        </span>
-      </a>
-    </li>
+          {holiday ? (
+            <span
+              className={cn("text-sm font-medium", isToday ? "text-secondary" : "text-holiday")}
+            >
+              {holiday}
+            </span>
+          ) : null}
+          {isToday ? <span className="text-sm font-medium text-primary">今日</span> : null}
+          <span
+            className="ml-auto text-sm text-secondary tabular-nums"
+            data-testid={`day-count-${date}`}
+          >
+            {events.length}件
+          </span>
+        </button>
+      </h3>
+      {events.length === 0 ? (
+        <p className="mt-2 px-1 text-sm text-muted">この日のイベントはありません</p>
+      ) : (
+        <ul className="mt-2 min-w-0 space-y-2">
+          {events.map((event) => (
+            <li key={event.id} className="min-w-0">
+              <EventCard event={event} now={now} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }

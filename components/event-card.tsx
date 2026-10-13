@@ -69,17 +69,7 @@ function placeLabel(event: Event): string {
  * イベント画像。connpass の image_url は期限付きなので、読み込めなかったら頭文字のサムネに切り替える。
  * ハイドレーション前に失敗した画像は onError が届かないため、マウント時にも読み込み結果を確かめる。
  */
-export function EventThumbnail({
-  event,
-  initialClassName = "text-3xl",
-  lazy = false,
-}: {
-  event: Event;
-  /** 頭文字サムネの文字サイズ。小さい枠で使うときに指定する。 */
-  initialClassName?: string;
-  /** 遅延読み込みにする。CSS で隠れている側（display: none）の画像を取りに行かないために使う。 */
-  lazy?: boolean;
-}) {
+function EventThumbnail({ event }: { event: Event }) {
   const imageRef = useRef<HTMLImageElement>(null);
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
   const thumb = thumbnailStyle(event.id);
@@ -100,7 +90,6 @@ export function EventThumbnail({
         ref={imageRef}
         src={event.imageUrl}
         alt=""
-        loading={lazy ? "lazy" : undefined}
         className="absolute inset-0 size-full object-cover"
         onError={() => setFailedUrl(event.imageUrl)}
       />
@@ -110,10 +99,7 @@ export function EventThumbnail({
   return (
     <span
       aria-hidden="true"
-      className={cn(
-        "absolute inset-0 flex items-center justify-center font-semibold",
-        initialClassName
-      )}
+      className="absolute inset-0 flex items-center justify-center text-3xl font-semibold"
       style={{ backgroundColor: thumb.background, color: thumb.foreground }}
     >
       {initial}
