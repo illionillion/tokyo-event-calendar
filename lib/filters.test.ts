@@ -204,6 +204,25 @@ describe("filters", () => {
     expect(counts.get("北区")).toBeUndefined();
   });
 
+  it("エリアの件数は inScope で数える範囲を変えられる（週表示は週のうちに始まるイベント）", () => {
+    const events = [
+      event({ id: "1", area: "渋谷区", date: "2026-09-20" }),
+      event({ id: "2", area: "渋谷区", date: "2026-09-26" }),
+      event({ id: "3", area: "港区", date: "2026-09-24" }),
+      // 週の前後
+      event({ id: "4", area: "渋谷区", date: "2026-09-19" }),
+      event({ id: "5", area: "港区", date: "2026-09-27" }),
+    ];
+    const inWeek = (item: Event) => item.date >= "2026-09-20" && item.date <= "2026-09-26";
+
+    const counts = countByArea(events, baseFilters, inWeek);
+    expect(counts.get("渋谷区")).toBe(2);
+    expect(counts.get("港区")).toBe(1);
+    // 既定は選択中の日（2026-09-24）だけ
+    expect(countByArea(events, baseFilters).get("渋谷区")).toBeUndefined();
+    expect(countByArea(events, baseFilters).get("港区")).toBe(1);
+  });
+
   it("開催場所の表示は住所の区を優先する", () => {
     expect(formatPlace(event())).toBe("渋谷区");
     expect(formatPlace(event({ format: "online", area: "" }))).toBe("オンライン");
