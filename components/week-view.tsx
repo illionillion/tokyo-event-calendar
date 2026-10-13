@@ -1,9 +1,10 @@
 "use client";
 
-import { EventCard } from "@/components/event-card";
+import { EventThumbnail } from "@/components/event-card";
 import { ActiveFilterChips } from "@/components/event-list";
 import { cn } from "@/lib/cn";
-import { addDays, formatDayHeading } from "@/lib/dates";
+import { addDays, formatDayHeading, hasEnded } from "@/lib/dates";
+import { formatPlace } from "@/lib/filters";
 import { dayKind, dayKindTextClass, holidayName } from "@/lib/holidays";
 import type { Event, Filters, ViewMode } from "@/lib/types";
 import { formatWeekRange } from "@/lib/week";
@@ -133,8 +134,12 @@ type WeekViewProps = {
   onChangeFilters: (partial: Partial<Filters>) => void;
 };
 
+/** PC で 7 日の列を並べるときの 1 列の最低幅（px）。足りない幅では週の枠の中だけ横スクロールする。 */
+export const WEEK_COLUMN_MIN_PX = 136;
+
 /**
- * 週表示。日曜〜土曜の日ごとに、日の一覧と同じイベントカードを並べる。
+ * 週表示。PC は日曜〜土曜の 7 列を横に並べ、各列にその日のイベントを小さなカードで縦に積む（時間軸は持たない）。
+ * SP は 7 列が入らないため、日ごとの見出しと小さなカードを縦に並べる。
  * 複数日のイベントは日の一覧と同じく開始日にだけ出す（件数も日の一覧と揃える）。
  */
 export function WeekView({
@@ -160,23 +165,30 @@ export function WeekView({
         </p>
       </div>
       <ActiveFilterChips filters={filters} onChangeFilters={onChangeFilters} />
-      <div className="mt-3 min-w-0 space-y-6">
-        {dates.map((date) => (
-          <DaySection
-            key={date}
-            date={date}
-            events={events.filter((event) => event.date === date)}
-            today={today}
-            now={now}
-            onOpenDay={onOpenDay}
-          />
-        ))}
+      {/* ページ自体は広げず、列が収まらないときはこの枠の中だけ横スクロールする */}
+      <div data-testid="week-scroller" className="mt-3 min-w-0 lg:overflow-x-auto lg:pb-2">
+        <div
+          data-testid="week-columns"
+          className="space-y-5 lg:grid lg:grid-cols-[repeat(7,minmax(var(--week-col-min),1fr))] lg:gap-2 lg:space-y-0"
+          style={{ ["--week-col-min" as string]: `${WEEK_COLUMN_MIN_PX}px` }}
+        >
+          {dates.map((date) => (
+            <DayColumn
+              key={date}
+              date={date}
+              events={events.filter((event) => event.date === date)}
+              today={today}
+              now={now}
+              onOpenDay={onOpenDay}
+            />
+          ))}
+        </div>
       </div>
     </section>
   );
 }
 
-function DaySection({
+function DayColumn({
   date,
   events,
   today,
@@ -200,12 +212,16 @@ function DaySection({
           type="button"
           onClick={() => onOpenDay(date)}
           aria-label={`${formatDayHeading(date)}${holiday ? ` ${holiday}` : ""}${isToday ? " 今日" : ""} ${events.length}件の一覧を開く`}
-          className="flex w-full min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1 rounded-md border-b border-border px-1 py-1.5 text-left hover:bg-surface"
+          className={cn(
+            "flex w-full min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5 rounded-md border-b border-border px-1 py-1.5 text-left hover:bg-surface",
+            "lg:flex-col lg:items-center lg:border lg:bg-card lg:text-center",
+            isToday && "lg:border-primary"
+          )}
         >
           {/* 今日は「今日」の赤を優先し、土日祝の色を付けない（日の一覧と同じ） */}
           <span
             className={cn(
-              "text-base font-semibold",
+              "text-base font-semibold lg:text-sm",
               isToday ? "text-primary" : dayKindTextClass(dayKind(date))
             )}
           >
@@ -213,14 +229,19 @@ function DaySection({
           </span>
           {holiday ? (
             <span
-              className={cn("text-sm font-medium", isToday ? "text-secondary" : "text-holiday")}
+              className={cn(
+                "text-sm font-medium lg:text-[11px]",
+                isToday ? "text-secondary" : "text-holiday"
+              )}
             >
               {holiday}
             </span>
           ) : null}
-          {isToday ? <span className="text-sm font-medium text-primary">今日</span> : null}
+          {isToday ? (
+            <span className="text-sm font-medium text-primary lg:text-[11px]">今日</span>
+          ) : null}
           <span
-            className="ml-auto text-sm text-secondary tabular-nums"
+            className="ml-auto text-sm text-secondary tabular-nums lg:ml-0 lg:text-xs"
             data-testid={`day-count-${date}`}
           >
             {events.length}件
@@ -228,16 +249,66 @@ function DaySection({
         </button>
       </h3>
       {events.length === 0 ? (
-        <p className="mt-2 px-1 text-sm text-muted">この日のイベントはありません</p>
+        <p className="mt-2 px-1 text-sm text-muted lg:text-center lg:text-xs">
+          イベントはありません
+        </p>
       ) : (
         <ul className="mt-2 min-w-0 space-y-2">
           {events.map((event) => (
             <li key={event.id} className="min-w-0">
-              <EventCard event={event} now={now} />
+              <CompactEventCard event={event} now={now} />
             </li>
           ))}
         </ul>
       )}
     </section>
+  );
+}
+
+/**
+ * 週表示用の小さなイベントカード。サムネイル・時刻・タイトル・場所（またはオンライン）だけを出す。
+ * PC の列ではサムネイルを上に、SP では左に置く。
+ */
+export function CompactEventCard({ event, now }: { event: Event; now: string }) {
+  const ended = hasEnded(event.endedAt, now);
+
+  return (
+    <a
+      href={event.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex min-w-0 gap-2 overflow-hidden rounded-md border border-border bg-card p-2 hover:border-primary hover:bg-primary-soft lg:flex-col lg:gap-1.5 lg:p-1.5"
+    >
+      <span className="relative block aspect-[16/9] w-24 shrink-0 overflow-hidden rounded-sm lg:w-full">
+        <EventThumbnail event={event} />
+      </span>
+      <span className="flex min-w-0 flex-col gap-0.5">
+        <span
+          className={cn(
+            "text-xs font-semibold tabular-nums",
+            ended ? "text-secondary" : "text-foreground"
+          )}
+        >
+          {event.start}–{event.end}
+          {ended ? <span className="ml-1 font-normal text-muted">終了</span> : null}
+        </span>
+        <span
+          className={cn(
+            "text-sm leading-snug font-medium [overflow-wrap:anywhere] lg:text-[13px]",
+            ended ? "text-secondary" : "text-foreground"
+          )}
+        >
+          {event.title}
+        </span>
+        <span
+          className={cn(
+            "truncate text-xs",
+            event.format === "online" ? "text-primary" : "text-secondary"
+          )}
+        >
+          {formatPlace(event)}
+        </span>
+      </span>
+    </a>
   );
 }

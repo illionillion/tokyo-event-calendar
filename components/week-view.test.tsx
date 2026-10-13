@@ -94,6 +94,12 @@ describe("WeekView", () => {
     expect(react).toHaveAttribute("href", "https://connpass.com/event/1/");
     expect(react).toHaveTextContent("北区");
     expect(within(wednesday).getByRole("link", { name: /Go もくもく会/ })).toBeInTheDocument();
+    // 小さなカードは時刻・タイトル・場所を出す（頭文字のサムネ付き）
+    expect(react).toHaveTextContent("19:00–21:00");
+    expect(react).toHaveTextContent("React LT Night");
+    expect(within(wednesday).getByRole("link", { name: /Go もくもく会/ })).toHaveTextContent(
+      "オンライン"
+    );
     // 時間割・「+N件」・終日の帯は出さない
     expect(screen.queryByRole("group", { name: "週の時間割" })).not.toBeInTheDocument();
     expect(screen.queryByText(/^\+\d+件$/)).not.toBeInTheDocument();
@@ -109,10 +115,19 @@ describe("WeekView", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("PC は 7 列を並べ、狭いときは週の枠の中だけ横スクロールする", () => {
+    renderWeek();
+    expect(screen.getByTestId("week-columns")).toHaveClass(
+      "lg:grid-cols-[repeat(7,minmax(var(--week-col-min),1fr))]"
+    );
+    expect(screen.getByTestId("week-columns")).toHaveStyle({ "--week-col-min": "136px" });
+    expect(screen.getByTestId("week-scroller")).toHaveClass("lg:overflow-x-auto");
+  });
+
   it("イベントのない日は短い案内を出す", () => {
     renderWeek();
     const sunday = screen.getByRole("region", { name: /^10月11日（日）/ });
-    expect(within(sunday).getByText("この日のイベントはありません")).toBeInTheDocument();
+    expect(within(sunday).getByText("イベントはありません")).toBeInTheDocument();
   });
 
   it("日付の見出しに件数を出し、押すとその日の一覧を開く", async () => {
