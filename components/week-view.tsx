@@ -187,7 +187,7 @@ export function WeekView({
   );
 
   return (
-    <section aria-labelledby="week-heading" className="min-w-0">
+    <section id="events" aria-labelledby="week-heading" className="min-w-0">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <h2 id="week-heading" className="text-lg font-semibold text-balance lg:text-base">
           {range}

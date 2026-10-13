@@ -166,6 +166,11 @@ describe("WeekView", () => {
     }
   });
 
+  it("サイトヘッダーのスキップリンク先（#events）を週表示にも置く", () => {
+    renderWeek();
+    expect(document.getElementById("events")).toHaveAccessibleName(/2026年10月11日〜17日/);
+  });
+
   it("イベントのない日は短い案内を出す", () => {
     renderWeek();
     const sunday = screen.getByRole("region", { name: /^10月11日（日）/ });
