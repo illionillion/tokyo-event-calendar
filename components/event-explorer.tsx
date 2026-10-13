@@ -8,6 +8,7 @@ import { EventList } from "@/components/event-list";
 import { FiltersPanel } from "@/components/filters-panel";
 import { ViewToggle, WeekNavigation, WeekView } from "@/components/week-view";
 import { groupAreas } from "@/lib/areas";
+import { cn } from "@/lib/cn";
 import { parseDateKey, todayKey } from "@/lib/dates";
 import {
   compareEvents,
@@ -128,7 +129,15 @@ export function EventExplorer({ events, today: serverToday, now: serverNow }: Ev
           </div>
         </div>
       </div>
-      <div className="mt-4 grid min-w-0 grid-cols-[minmax(0,1fr)] items-start gap-4 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-6">
+      <div
+        className={cn(
+          "mt-4 grid min-w-0 grid-cols-[minmax(0,1fr)] items-start gap-4 lg:gap-6",
+          // 週表示は 7 列が収まるよう、左の欄を少しだけ狭める
+          isWeek
+            ? "lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-4"
+            : "lg:grid-cols-[280px_minmax(0,1fr)]"
+        )}
+      >
         <aside className="min-h-0 min-w-0 space-y-4">
           <CollapsibleCalendar
             selectedDate={filters.date}

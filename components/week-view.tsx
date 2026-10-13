@@ -134,12 +134,10 @@ type WeekViewProps = {
   onChangeFilters: (partial: Partial<Filters>) => void;
 };
 
-/** PC で 7 日の列を並べるときの 1 列の最低幅（px）。足りない幅では週の枠の中だけ横スクロールする。 */
-export const WEEK_COLUMN_MIN_PX = 136;
-
 /**
- * 週表示。PC は日曜〜土曜の 7 列を横に並べ、各列にその日のイベントを小さなカードで縦に積む（時間軸は持たない）。
- * SP は 7 列が入らないため、日ごとの見出しと小さなカードを縦に並べる。
+ * 週表示。PC（lg 以上）は日曜〜土曜の 7 列を等幅で並べ、各列にその日のイベントを小さなカードで縦に積む
+ * （時間軸は持たない。列は minmax(0, 1fr) なので横スクロールせず必ず 7 列が収まる）。
+ * lg 未満は 7 列が読める幅にならないため、日ごとの見出しと小さなカードを縦に並べる。
  * 複数日のイベントは日の一覧と同じく開始日にだけ出す（件数も日の一覧と揃える）。
  */
 export function WeekView({
@@ -165,24 +163,20 @@ export function WeekView({
         </p>
       </div>
       <ActiveFilterChips filters={filters} onChangeFilters={onChangeFilters} />
-      {/* ページ自体は広げず、列が収まらないときはこの枠の中だけ横スクロールする */}
-      <div data-testid="week-scroller" className="mt-3 min-w-0 lg:overflow-x-auto lg:pb-2">
-        <div
-          data-testid="week-columns"
-          className="space-y-5 lg:grid lg:grid-cols-[repeat(7,minmax(var(--week-col-min),1fr))] lg:gap-2 lg:space-y-0"
-          style={{ ["--week-col-min" as string]: `${WEEK_COLUMN_MIN_PX}px` }}
-        >
-          {dates.map((date) => (
-            <DayColumn
-              key={date}
-              date={date}
-              events={events.filter((event) => event.date === date)}
-              today={today}
-              now={now}
-              onOpenDay={onOpenDay}
-            />
-          ))}
-        </div>
+      <div
+        data-testid="week-columns"
+        className="mt-3 min-w-0 space-y-5 lg:grid lg:grid-cols-[repeat(7,minmax(0,1fr))] lg:gap-1.5 lg:space-y-0"
+      >
+        {dates.map((date) => (
+          <DayColumn
+            key={date}
+            date={date}
+            events={events.filter((event) => event.date === date)}
+            today={today}
+            now={now}
+            onOpenDay={onOpenDay}
+          />
+        ))}
       </div>
     </section>
   );
@@ -208,52 +202,61 @@ function DayColumn({
   return (
     <section aria-labelledby={headingId} className="min-w-0">
       <h3 id={headingId} className="min-w-0">
+        {/*
+          PC の見出しは「日付」「祝日名」「件数・今日」の 3 段を常に確保して高さを揃える。
+          祝日名は 1 行で切り詰め、全文はツールチップに出す。
+        */}
         <button
           type="button"
           onClick={() => onOpenDay(date)}
           aria-label={`${formatDayHeading(date)}${holiday ? ` ${holiday}` : ""}${isToday ? " 今日" : ""} ${events.length}件の一覧を開く`}
+          title={holiday ?? undefined}
+          data-testid={`day-header-${date}`}
           className={cn(
             "flex w-full min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5 rounded-md border-b border-border px-1 py-1.5 text-left hover:bg-surface",
-            "lg:flex-col lg:items-center lg:border lg:bg-card lg:text-center",
+            "lg:grid lg:grid-rows-[1rem_0.875rem_1rem] lg:justify-items-center lg:gap-0.5 lg:border lg:bg-card lg:px-0.5 lg:text-center",
             isToday && "lg:border-primary"
           )}
         >
           {/* 今日は「今日」の赤を優先し、土日祝の色を付けない（日の一覧と同じ） */}
           <span
             className={cn(
-              "text-base font-semibold lg:text-sm",
+              "text-base font-semibold lg:max-w-full lg:truncate lg:text-xs lg:leading-4",
               isToday ? "text-primary" : dayKindTextClass(dayKind(date))
             )}
           >
             {formatDayHeading(date)}
           </span>
-          {holiday ? (
-            <span
-              className={cn(
-                "text-sm font-medium lg:text-[11px]",
-                isToday ? "text-secondary" : "text-holiday"
-              )}
-            >
-              {holiday}
-            </span>
-          ) : null}
-          {isToday ? (
-            <span className="text-sm font-medium text-primary lg:text-[11px]">今日</span>
-          ) : null}
           <span
-            className="ml-auto text-sm text-secondary tabular-nums lg:ml-0 lg:text-xs"
-            data-testid={`day-count-${date}`}
+            className={cn(
+              "text-sm font-medium lg:block lg:max-w-full lg:truncate lg:text-[10px] lg:leading-[0.875rem]",
+              isToday ? "text-secondary" : "text-holiday",
+              !holiday && "hidden"
+            )}
           >
-            {events.length}件
+            {holiday}
+          </span>
+          <span className="ml-auto flex items-center gap-1 lg:ml-0 lg:leading-4">
+            {isToday ? (
+              <span className="rounded-sm bg-primary px-1 text-[11px] leading-4 font-medium text-white lg:text-[10px]">
+                今日
+              </span>
+            ) : null}
+            <span
+              className="text-sm text-secondary tabular-nums lg:text-[11px]"
+              data-testid={`day-count-${date}`}
+            >
+              {events.length}件
+            </span>
           </span>
         </button>
       </h3>
       {events.length === 0 ? (
-        <p className="mt-2 px-1 text-sm text-muted lg:text-center lg:text-xs">
+        <p className="mt-2 px-1 text-sm text-muted lg:text-center lg:text-[11px]">
           イベントはありません
         </p>
       ) : (
-        <ul className="mt-2 min-w-0 space-y-2">
+        <ul className="mt-2 min-w-0 space-y-2 lg:mt-1.5 lg:space-y-1.5">
           {events.map((event) => (
             <li key={event.id} className="min-w-0">
               <CompactEventCard event={event} now={now} />
@@ -267,7 +270,7 @@ function DayColumn({
 
 /**
  * 週表示用の小さなイベントカード。サムネイル・時刻・タイトル・場所（またはオンライン）だけを出す。
- * PC の列ではサムネイルを上に、SP では左に置く。
+ * PC の細い列ではサムネイルを列幅いっぱいの低い画像にして上に、SP では左に置く。
  */
 export function CompactEventCard({ event, now }: { event: Event; now: string }) {
   const ended = hasEnded(event.endedAt, now);
@@ -277,15 +280,15 @@ export function CompactEventCard({ event, now }: { event: Event; now: string }) 
       href={event.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex min-w-0 gap-2 overflow-hidden rounded-md border border-border bg-card p-2 hover:border-primary hover:bg-primary-soft lg:flex-col lg:gap-1.5 lg:p-1.5"
+      className="flex min-w-0 gap-2 overflow-hidden rounded-md border border-border bg-card p-2 hover:border-primary hover:bg-primary-soft lg:flex-col lg:gap-1 lg:p-1"
     >
-      <span className="relative block aspect-[16/9] w-24 shrink-0 overflow-hidden rounded-sm lg:w-full">
+      <span className="relative block aspect-[16/9] w-24 shrink-0 overflow-hidden rounded-sm lg:aspect-[2/1] lg:w-full">
         <EventThumbnail event={event} />
       </span>
       <span className="flex min-w-0 flex-col gap-0.5">
         <span
           className={cn(
-            "text-xs font-semibold tabular-nums",
+            "text-xs font-semibold tabular-nums lg:text-[10px]",
             ended ? "text-secondary" : "text-foreground"
           )}
         >
@@ -294,7 +297,7 @@ export function CompactEventCard({ event, now }: { event: Event; now: string }) 
         </span>
         <span
           className={cn(
-            "text-sm leading-snug font-medium [overflow-wrap:anywhere] lg:text-[13px]",
+            "text-sm leading-snug font-medium [overflow-wrap:anywhere] lg:text-xs lg:leading-tight",
             ended ? "text-secondary" : "text-foreground"
           )}
         >
@@ -302,7 +305,7 @@ export function CompactEventCard({ event, now }: { event: Event; now: string }) 
         </span>
         <span
           className={cn(
-            "truncate text-xs",
+            "truncate text-xs lg:text-[10px]",
             event.format === "online" ? "text-primary" : "text-secondary"
           )}
         >

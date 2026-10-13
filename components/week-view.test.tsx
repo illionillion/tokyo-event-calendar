@@ -115,13 +115,19 @@ describe("WeekView", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("PC は 7 列を並べ、狭いときは週の枠の中だけ横スクロールする", () => {
+  it("PC は 7 列を等幅で並べて必ず収め、見出しは 3 段を確保して高さを揃える", () => {
     renderWeek();
     expect(screen.getByTestId("week-columns")).toHaveClass(
-      "lg:grid-cols-[repeat(7,minmax(var(--week-col-min),1fr))]"
+      "lg:grid-cols-[repeat(7,minmax(0,1fr))]"
     );
-    expect(screen.getByTestId("week-columns")).toHaveStyle({ "--week-col-min": "136px" });
-    expect(screen.getByTestId("week-scroller")).toHaveClass("lg:overflow-x-auto");
+    expect(screen.queryByTestId("week-scroller")).not.toBeInTheDocument();
+    for (const date of dates) {
+      expect(screen.getByTestId(`day-header-${date}`)).toHaveClass(
+        "lg:grid-rows-[1rem_0.875rem_1rem]"
+      );
+    }
+    // 祝日名は切り詰め、全文はツールチップ
+    expect(screen.getByTestId("day-header-2026-10-12")).toHaveAttribute("title", "スポーツの日");
   });
 
   it("イベントのない日は短い案内を出す", () => {
