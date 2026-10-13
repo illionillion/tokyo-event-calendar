@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CollapsibleCalendar } from "@/components/collapsible-calendar";
 import { DateNavigation } from "@/components/date-navigation";
 import { EventList } from "@/components/event-list";
@@ -81,13 +81,27 @@ export function EventExplorer({ events, today: serverToday, now: serverNow }: Ev
     update({ areas: [], format: "all", keyword: "" });
   }
 
+  // 上に固定される帯（サイトヘッダー + 日付バー）の下端を CSS 変数にし、週表示の枠の高さに使う
+  const rootRef = useRef<HTMLDivElement>(null);
+  const barRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const root = rootRef.current;
+    const bar = barRef.current;
+    if (!root || !bar || typeof ResizeObserver === "undefined") return;
+    const sync = () => root.style.setProperty("--page-bar-bottom", `${48 + bar.offsetHeight}px`);
+    sync();
+    const observer = new ResizeObserver(sync);
+    observer.observe(bar);
+    return () => observer.disconnect();
+  }, []);
+
   const selected = parseDateKey(filters.date);
   const selectedLabel = selected ? `${selected.month}月${selected.day}日` : filters.date;
 
   return (
-    <div className="mx-auto w-full min-w-0 max-w-[1080px] px-4 py-4">
+    <div ref={rootRef} className="mx-auto w-full min-w-0 max-w-[1080px] px-4 py-4">
       {/* top-12 = サイトヘッダー h-12 */}
-      <div className="sticky top-12 z-10 -mx-4 min-w-0 bg-background px-4 py-2">
+      <div ref={barRef} className="sticky top-12 z-10 -mx-4 min-w-0 bg-background px-4 py-2">
         <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between lg:gap-6">
           <div className="flex min-w-0 flex-col gap-2 lg:flex-row lg:items-center lg:gap-3">
             <ViewToggle

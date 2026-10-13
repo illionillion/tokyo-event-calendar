@@ -138,12 +138,19 @@ type WeekViewProps = {
   onChangeFilters: (partial: Partial<Filters>) => void;
 };
 
+/** 7 列の並び。見出しの行と本体の行で同じものを使い、列の位置を揃える。 */
+const COLUMNS =
+  "grid auto-cols-[48%] grid-flow-col gap-1.5 lg:grid-flow-row lg:grid-cols-[repeat(7,minmax(0,1fr))] lg:gap-1";
+
 /**
  * 週表示。日曜〜土曜の 7 列に、その日のイベントを小さなカードで縦に積む（時間軸は持たない）。
  * - PC（lg = 1024px 以上）: 7 列を等幅（minmax(0, 1fr)）で並べ、横スクロールせず必ず収める
- * - lg 未満: 1 列を枠の約 40%（1 画面に約 2.5 列）にして、週の枠の中だけ横スクロールする。
- *   列ごとにスナップし、枠の中で縦にもスクロールして日付の見出しを上に固定する。
+ * - lg 未満: 1 列を 48%（1 画面に約 2 列）にして、週の部分だけ横スクロールする（列ごとにスナップ）。
  *   最初は今日の列（今日を含む週のとき）を左端に合わせる
+ * - 日付の見出しの行は本体と分け、ページに対して sticky にする（top はページ上部の固定帯の下端
+ *   = --page-bar-bottom）。横スクロールする枠の中に置くと sticky がページ基準にならないため、
+ *   見出しの行は overflow-x: hidden にして、本体の横スクロールに scrollLeft を合わせる。
+ *   z-index はページの固定帯（z-10）より下なので、帯の上に見出しが重ならない
  * 複数日のイベントは日の一覧と同じく開始日にだけ出す（件数も日の一覧と揃える）。
  */
 export function WeekView({
@@ -156,6 +163,7 @@ export function WeekView({
   onChangeFilters,
 }: WeekViewProps) {
   const range = formatWeekRange(dates);
+  const headerRef = useRef<HTMLDivElement>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
   const weekKey = dates[0];
   const todayIndex = dates.indexOf(today);
@@ -170,8 +178,13 @@ export function WeekView({
         ? (scroller.firstElementChild?.children[todayIndex] as HTMLElement | undefined)
         : undefined;
     scroller.scrollLeft = column ? column.offsetLeft : 0;
+    if (headerRef.current) headerRef.current.scrollLeft = scroller.scrollLeft;
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 週が変わったときだけ合わせる
   }, [weekKey]);
+
+  const byDate = new Map(
+    dates.map((date) => [date, events.filter((event) => event.date === date)])
+  );
 
   return (
     <section aria-labelledby="week-heading" className="min-w-0">
@@ -185,25 +198,35 @@ export function WeekView({
         </p>
       </div>
       <ActiveFilterChips filters={filters} onChangeFilters={onChangeFilters} />
-      {/* lg 未満はこの枠の中だけ縦横にスクロールする（ページ自体は横にはみ出さない） */}
+      <div
+        ref={headerRef}
+        data-testid="week-header-row"
+        className="sticky top-[var(--page-bar-bottom,0px)] z-[5] mt-3 min-w-0 overflow-x-hidden bg-background pb-1.5"
+      >
+        <div className={COLUMNS}>
+          {dates.map((date) => (
+            <DayHeader
+              key={date}
+              date={date}
+              count={byDate.get(date)?.length ?? 0}
+              today={today}
+              onOpenDay={onOpenDay}
+            />
+          ))}
+        </div>
+      </div>
+      {/* lg 未満は週の部分だけ横スクロールする（ページ自体は横にはみ出さない） */}
       <div
         ref={scrollerRef}
         data-testid="week-scroller"
-        className="relative mt-3 max-h-[75dvh] min-w-0 snap-x snap-mandatory overflow-auto overscroll-x-contain rounded-lg lg:max-h-none lg:snap-none lg:overflow-visible lg:rounded-none"
+        onScroll={(event) => {
+          if (headerRef.current) headerRef.current.scrollLeft = event.currentTarget.scrollLeft;
+        }}
+        className="relative min-w-0 snap-x snap-mandatory overflow-x-auto overscroll-x-contain pb-1 lg:snap-none lg:overflow-visible lg:pb-0"
       >
-        <div
-          data-testid="week-columns"
-          className="grid auto-cols-[40%] grid-flow-col gap-1.5 lg:grid-flow-row lg:grid-cols-[repeat(7,minmax(0,1fr))]"
-        >
+        <div data-testid="week-columns" className={COLUMNS}>
           {dates.map((date) => (
-            <DayColumn
-              key={date}
-              date={date}
-              events={events.filter((event) => event.date === date)}
-              today={today}
-              now={now}
-              onOpenDay={onOpenDay}
-            />
+            <DayColumn key={date} date={date} events={byDate.get(date) ?? []} now={now} />
           ))}
         </div>
       </div>
@@ -211,82 +234,80 @@ export function WeekView({
   );
 }
 
-function DayColumn({
+function DayHeader({
   date,
-  events,
+  count,
   today,
-  now,
   onOpenDay,
 }: {
   date: string;
-  events: Event[];
+  count: number;
   today: string;
-  now: string;
   onOpenDay: (date: string) => void;
 }) {
   const holiday = holidayName(date);
   const isToday = date === today;
-  const headingId = `week-day-${date}`;
 
   return (
-    <section aria-label={formatDayHeading(date)} className="min-w-0 snap-start">
-      {/* lg 未満は枠の中で縦にスクロールするので、日付の見出しを上に固定する */}
-      <h3
-        id={headingId}
-        className="sticky top-0 z-10 min-w-0 bg-background pb-1.5 lg:static lg:pb-0"
+    <h3 className="min-w-0">
+      {/*
+        見出しは「日付」「祝日名」「今日のバッジ・件数」の 3 段を常に確保して高さを揃える。
+        祝日名は 1 行で切り詰め、全文はツールチップに出す。
+      */}
+      <button
+        type="button"
+        onClick={() => onOpenDay(date)}
+        aria-label={`${formatDayHeading(date)}${holiday ? ` ${holiday}` : ""}${isToday ? " 今日" : ""} ${count}件の一覧を開く`}
+        title={holiday ?? undefined}
+        data-testid={`day-header-${date}`}
+        className={cn(
+          "grid w-full min-w-0 grid-rows-[1rem_0.875rem_1rem] justify-items-center gap-0.5 rounded-md border border-border bg-card px-0.5 py-1.5 text-center hover:bg-surface",
+          isToday && "border-primary"
+        )}
       >
-        {/*
-          見出しは「日付」「祝日名」「今日のバッジ・件数」の 3 段を常に確保して高さを揃える。
-          祝日名は 1 行で切り詰め、全文はツールチップに出す。
-        */}
-        <button
-          type="button"
-          onClick={() => onOpenDay(date)}
-          aria-label={`${formatDayHeading(date)}${holiday ? ` ${holiday}` : ""}${isToday ? " 今日" : ""} ${events.length}件の一覧を開く`}
-          title={holiday ?? undefined}
-          data-testid={`day-header-${date}`}
+        {/* 今日は「今日」の赤を優先し、土日祝の色を付けない（日の一覧と同じ） */}
+        <span
           className={cn(
-            "grid w-full min-w-0 grid-rows-[1rem_0.875rem_1rem] justify-items-center gap-0.5 rounded-md border border-border bg-card px-0.5 py-1.5 text-center hover:bg-surface",
-            isToday && "border-primary"
+            "max-w-full truncate text-xs leading-4 font-semibold",
+            isToday ? "text-primary" : dayKindTextClass(dayKind(date))
           )}
         >
-          {/* 今日は「今日」の赤を優先し、土日祝の色を付けない（日の一覧と同じ） */}
-          <span
-            className={cn(
-              "max-w-full truncate text-xs leading-4 font-semibold",
-              isToday ? "text-primary" : dayKindTextClass(dayKind(date))
-            )}
-          >
-            {/* 細い列でも切れないよう月は省く（月は週の範囲の見出しにある。読み上げ名は月から） */}
-            {dayNumber(date)}日（{weekdayLabel(date)}）
-          </span>
-          <span
-            className={cn(
-              "block max-w-full truncate text-[10px] leading-[0.875rem] font-medium",
-              isToday ? "text-secondary" : "text-holiday"
-            )}
-          >
-            {holiday}
-          </span>
-          <span className="flex items-center gap-1 leading-4">
-            {isToday ? (
-              <span className="rounded-sm bg-primary px-1 text-[10px] leading-4 font-medium text-white">
-                今日
-              </span>
-            ) : null}
-            <span
-              className="text-[11px] text-secondary tabular-nums"
-              data-testid={`day-count-${date}`}
-            >
-              {events.length}件
+          {/* 細い列でも切れないよう月は省く（月は週の範囲の見出しにある。読み上げ名は月から） */}
+          {dayNumber(date)}日（{weekdayLabel(date)}）
+        </span>
+        <span
+          className={cn(
+            "block max-w-full truncate text-[10px] leading-[0.875rem] font-medium",
+            isToday ? "text-secondary" : "text-holiday"
+          )}
+        >
+          {holiday}
+        </span>
+        <span className="flex items-center gap-1 leading-4">
+          {isToday ? (
+            <span className="rounded-sm bg-primary px-1 text-[10px] leading-4 font-medium text-white">
+              今日
             </span>
+          ) : null}
+          <span
+            className="text-[11px] text-secondary tabular-nums"
+            data-testid={`day-count-${date}`}
+          >
+            {count}件
           </span>
-        </button>
-      </h3>
+        </span>
+      </button>
+    </h3>
+  );
+}
+
+function DayColumn({ date, events, now }: { date: string; events: Event[]; now: string }) {
+  return (
+    <section aria-label={formatDayHeading(date)} className="min-w-0 snap-start">
       {events.length === 0 ? (
-        <p className="mt-1.5 px-1 text-center text-[11px] text-muted">イベントはありません</p>
+        <p className="px-1 pt-1 text-center text-[11px] text-muted">イベントはありません</p>
       ) : (
-        <ul className="mt-1.5 min-w-0 space-y-1.5">
+        <ul className="min-w-0 space-y-1.5 lg:space-y-1">
           {events.map((event) => (
             <li key={event.id} className="min-w-0">
               <CompactEventCard event={event} now={now} />
@@ -300,7 +321,7 @@ function DayColumn({
 
 /**
  * 週表示用の小さなイベントカード。サムネイル・時刻・タイトル・場所（またはオンライン）だけを出す。
- * サムネイルは余白なしでカードの上・左右の端まで広げ（2:1）、文字はその下に余白付きで置く。
+ * サムネイルは余白なしでカードの上・左右の端まで広げ、connpass の画像に多い 16:9 で切り抜きを減らす、文字はその下に余白付きで置く。
  */
 export function CompactEventCard({ event, now }: { event: Event; now: string }) {
   const ended = hasEnded(event.endedAt, now);
@@ -315,11 +336,11 @@ export function CompactEventCard({ event, now }: { event: Event; now: string }) 
       {/* 画像はカードの上・左右の端まで広げる（角はカードの overflow-hidden で丸める） */}
       <span
         data-testid="compact-thumbnail"
-        className="relative block aspect-[2/1] w-full shrink-0 overflow-hidden"
+        className="relative block aspect-[16/9] w-full shrink-0 overflow-hidden bg-surface"
       >
         <EventThumbnail event={event} />
       </span>
-      <span className="flex min-w-0 flex-col gap-0.5 px-1.5 py-1">
+      <span className="flex min-w-0 flex-col gap-0.5 px-1.5 py-1 lg:px-1">
         <span
           className={cn(
             "text-[10px] font-semibold tabular-nums",

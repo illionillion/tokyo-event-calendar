@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { ViewToggle, WeekNavigation, WeekView } from "@/components/week-view";
@@ -125,13 +125,21 @@ describe("WeekView", () => {
     expect(screen.getByTestId("week-columns")).toHaveClass(
       "lg:grid-cols-[repeat(7,minmax(0,1fr))]"
     );
-    // SP（lg 未満）は 1 画面に約 2.5 列で、週の枠の中だけ列ごとにスナップして横スクロールする
-    expect(screen.getByTestId("week-columns")).toHaveClass("auto-cols-[40%]", "grid-flow-col");
+    // SP（lg 未満）は 1 画面に約 2 列で、週の枠の中だけ列ごとにスナップして横スクロールする
+    expect(screen.getByTestId("week-columns")).toHaveClass("auto-cols-[48%]", "grid-flow-col");
     expect(screen.getByTestId("week-scroller")).toHaveClass(
-      "overflow-auto",
+      "overflow-x-auto",
       "snap-x",
       "lg:overflow-visible"
     );
+    // 日付の見出しの行はページ上部の固定帯の下に sticky（帯の z-10 より下に描く）
+    const headerRow = screen.getByTestId("week-header-row");
+    expect(headerRow).toHaveClass("sticky", "top-[var(--page-bar-bottom,0px)]", "z-[5]");
+    // 本体を横スクロールすると見出しの行も同じだけずれる
+    const scroller = screen.getByTestId("week-scroller");
+    scroller.scrollLeft = 120;
+    fireEvent.scroll(scroller);
+    expect(headerRow.scrollLeft).toBe(120);
     for (const date of dates) {
       expect(screen.getByTestId(`day-header-${date}`)).toHaveClass(
         "grid-rows-[1rem_0.875rem_1rem]"
@@ -142,18 +150,17 @@ describe("WeekView", () => {
   });
 
   it("最初は今日の列を週の枠の左端に合わせる", () => {
-    // jsdom はレイアウトしないので、列の位置を見出しの日付から作る
+    // jsdom はレイアウトしないので、列の位置を並び順から作る
     const offset = vi
       .spyOn(HTMLElement.prototype, "offsetLeft", "get")
       .mockImplementation(function (this: HTMLElement) {
-        const index = dates.findIndex((date) =>
-          this.querySelector(`[data-testid="day-header-${date}"]`)
-        );
+        const index = Array.from(this.parentElement?.children ?? []).indexOf(this);
         return this.matches("section.snap-start") ? index * 150 : 0;
       });
     try {
       renderWeek({ today: "2026-10-14" });
       expect(screen.getByTestId("week-scroller").scrollLeft).toBe(3 * 150);
+      expect(screen.getByTestId("week-header-row").scrollLeft).toBe(3 * 150);
     } finally {
       offset.mockRestore();
     }
