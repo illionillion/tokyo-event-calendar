@@ -60,6 +60,7 @@ const events = [
 
 function renderWeek(overrides: Partial<Parameters<typeof WeekView>[0]> = {}) {
   const onOpenDay = vi.fn();
+  const onNextWeek = vi.fn();
   render(
     <WeekView
       filters={filters}
@@ -68,11 +69,12 @@ function renderWeek(overrides: Partial<Parameters<typeof WeekView>[0]> = {}) {
       today="2026-10-12"
       now="2026-10-12T03:00:00.000Z"
       onOpenDay={onOpenDay}
+      onNextWeek={onNextWeek}
       onChangeFilters={vi.fn()}
       {...overrides}
     />
   );
-  return { onOpenDay };
+  return { onOpenDay, onNextWeek };
 }
 
 describe("WeekView", () => {
@@ -126,7 +128,10 @@ describe("WeekView", () => {
       "lg:grid-cols-[repeat(7,minmax(0,1fr))]"
     );
     // SP（lg 未満）は 1 画面に約 2 列で、週の枠の中だけ列ごとにスナップして横スクロールする
-    expect(screen.getByTestId("week-columns")).toHaveClass("auto-cols-[48%]", "grid-flow-col");
+    expect(screen.getByTestId("week-columns")).toHaveClass(
+      "grid-cols-[repeat(7,48%)_calc(52%-0.375rem)]",
+      "grid-flow-col"
+    );
     expect(screen.getByTestId("week-scroller")).toHaveClass(
       "overflow-x-auto",
       "snap-x",
@@ -161,6 +166,26 @@ describe("WeekView", () => {
       renderWeek({ today: "2026-10-14" });
       expect(screen.getByTestId("week-scroller").scrollLeft).toBe(3 * 150);
       expect(screen.getByTestId("week-header-row").scrollLeft).toBe(3 * 150);
+    } finally {
+      offset.mockRestore();
+    }
+  });
+
+  it("SP の横スクロールの末尾に「次の週」を置き、土曜が今日でも土曜の列を左端に合わせられる", async () => {
+    const user = userEvent.setup();
+    const offset = vi
+      .spyOn(HTMLElement.prototype, "offsetLeft", "get")
+      .mockImplementation(function (this: HTMLElement) {
+        return Array.from(this.parentElement?.children ?? []).indexOf(this) * 150;
+      });
+    try {
+      const { onNextWeek } = renderWeek({ today: "2026-10-17" });
+      const columns = screen.getByTestId("week-columns");
+      // 7 日 + 末尾の「次の週」
+      expect(columns.children).toHaveLength(8);
+      expect(screen.getByTestId("week-scroller").scrollLeft).toBe(6 * 150);
+      await user.click(screen.getByRole("button", { name: "次の週へ" }));
+      expect(onNextWeek).toHaveBeenCalled();
     } finally {
       offset.mockRestore();
     }
