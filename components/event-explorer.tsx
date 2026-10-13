@@ -8,7 +8,6 @@ import { EventList } from "@/components/event-list";
 import { FiltersPanel } from "@/components/filters-panel";
 import { ViewToggle, WeekNavigation, WeekView } from "@/components/week-view";
 import { groupAreas } from "@/lib/areas";
-import { cn } from "@/lib/cn";
 import { parseDateKey, todayKey } from "@/lib/dates";
 import {
   compareEvents,
@@ -116,7 +115,8 @@ export function EventExplorer({ events, today: serverToday, now: serverNow }: Ev
               />
             )}
           </div>
-          <div className="hidden shrink-0 text-right lg:block" aria-hidden="true">
+          {/* 月・週で高さが変わらないよう、3 行分（日付・今日・件数）の高さを確保する */}
+          <div className="hidden h-[54px] shrink-0 text-right lg:block" aria-hidden="true">
             <p className="text-lg leading-none font-semibold tabular-nums">
               {isWeek ? formatWeekRange(week) : selectedLabel}
             </p>
@@ -129,15 +129,7 @@ export function EventExplorer({ events, today: serverToday, now: serverNow }: Ev
           </div>
         </div>
       </div>
-      <div
-        className={cn(
-          "mt-4 grid min-w-0 grid-cols-[minmax(0,1fr)] items-start gap-4 lg:gap-6",
-          // 週表示は 7 列が収まるよう、左の欄を少しだけ狭める
-          isWeek
-            ? "lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-4"
-            : "lg:grid-cols-[280px_minmax(0,1fr)]"
-        )}
-      >
+      <div className="mt-4 grid min-w-0 grid-cols-[minmax(0,1fr)] items-start gap-4 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-6">
         <aside className="min-h-0 min-w-0 space-y-4">
           <CollapsibleCalendar
             selectedDate={filters.date}

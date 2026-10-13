@@ -1,9 +1,10 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { EventThumbnail } from "@/components/event-card";
 import { ActiveFilterChips } from "@/components/event-list";
 import { cn } from "@/lib/cn";
-import { addDays, formatDayHeading, hasEnded } from "@/lib/dates";
+import { addDays, dayNumber, formatDayHeading, hasEnded, weekdayLabel } from "@/lib/dates";
 import { formatPlace } from "@/lib/filters";
 import { dayKind, dayKindTextClass, holidayName } from "@/lib/holidays";
 import type { Event, Filters, ViewMode } from "@/lib/types";
@@ -72,7 +73,10 @@ export function ViewToggle({
   );
 }
 
-/** 週表示の「前の週」「今日」「次の週」。 */
+/**
+ * 週表示の「前の週」「今日」「次の週」。PC では月表示の DateNavigation と同じ大きさ（649 × 74px）にして、
+ * 月 ⇔ 週の切り替えで上の帯の高さや位置が動かないようにする。
+ */
 export function WeekNavigation({
   dates,
   today,
@@ -89,7 +93,7 @@ export function WeekNavigation({
   return (
     <nav
       aria-label="週"
-      className="flex w-full min-w-0 items-center gap-2 rounded-lg border border-border bg-card p-2 lg:w-fit lg:p-2.5"
+      className="flex w-full min-w-0 items-center gap-2 rounded-lg border border-border bg-card p-2 lg:h-[74px] lg:w-[649px] lg:p-2.5"
     >
       <button
         type="button"
@@ -135,9 +139,11 @@ type WeekViewProps = {
 };
 
 /**
- * 週表示。PC（lg 以上）は日曜〜土曜の 7 列を等幅で並べ、各列にその日のイベントを小さなカードで縦に積む
- * （時間軸は持たない。列は minmax(0, 1fr) なので横スクロールせず必ず 7 列が収まる）。
- * lg 未満は 7 列が読める幅にならないため、日ごとの見出しと小さなカードを縦に並べる。
+ * 週表示。日曜〜土曜の 7 列に、その日のイベントを小さなカードで縦に積む（時間軸は持たない）。
+ * - PC（lg = 1024px 以上）: 7 列を等幅（minmax(0, 1fr)）で並べ、横スクロールせず必ず収める
+ * - lg 未満: 1 列を枠の約 40%（1 画面に約 2.5 列）にして、週の枠の中だけ横スクロールする。
+ *   列ごとにスナップし、枠の中で縦にもスクロールして日付の見出しを上に固定する。
+ *   最初は今日の列（今日を含む週のとき）を左端に合わせる
  * 複数日のイベントは日の一覧と同じく開始日にだけ出す（件数も日の一覧と揃える）。
  */
 export function WeekView({
@@ -150,6 +156,22 @@ export function WeekView({
   onChangeFilters,
 }: WeekViewProps) {
   const range = formatWeekRange(dates);
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const weekKey = dates[0];
+  const todayIndex = dates.indexOf(today);
+
+  useEffect(() => {
+    // 週を開いたとき・週を移動したときは、今日の列（なければ先頭）を左端に合わせる
+    // （枠は position: relative なので、列の offsetLeft は枠の左端からの距離）
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+    const column =
+      todayIndex > 0
+        ? (scroller.firstElementChild?.children[todayIndex] as HTMLElement | undefined)
+        : undefined;
+    scroller.scrollLeft = column ? column.offsetLeft : 0;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 週が変わったときだけ合わせる
+  }, [weekKey]);
 
   return (
     <section aria-labelledby="week-heading" className="min-w-0">
@@ -163,20 +185,27 @@ export function WeekView({
         </p>
       </div>
       <ActiveFilterChips filters={filters} onChangeFilters={onChangeFilters} />
+      {/* lg 未満はこの枠の中だけ縦横にスクロールする（ページ自体は横にはみ出さない） */}
       <div
-        data-testid="week-columns"
-        className="mt-3 min-w-0 space-y-5 lg:grid lg:grid-cols-[repeat(7,minmax(0,1fr))] lg:gap-1.5 lg:space-y-0"
+        ref={scrollerRef}
+        data-testid="week-scroller"
+        className="relative mt-3 max-h-[75dvh] min-w-0 snap-x snap-mandatory overflow-auto overscroll-x-contain rounded-lg lg:max-h-none lg:snap-none lg:overflow-visible lg:rounded-none"
       >
-        {dates.map((date) => (
-          <DayColumn
-            key={date}
-            date={date}
-            events={events.filter((event) => event.date === date)}
-            today={today}
-            now={now}
-            onOpenDay={onOpenDay}
-          />
-        ))}
+        <div
+          data-testid="week-columns"
+          className="grid auto-cols-[40%] grid-flow-col gap-1.5 lg:grid-flow-row lg:grid-cols-[repeat(7,minmax(0,1fr))]"
+        >
+          {dates.map((date) => (
+            <DayColumn
+              key={date}
+              date={date}
+              events={events.filter((event) => event.date === date)}
+              today={today}
+              now={now}
+              onOpenDay={onOpenDay}
+            />
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -200,10 +229,14 @@ function DayColumn({
   const headingId = `week-day-${date}`;
 
   return (
-    <section aria-labelledby={headingId} className="min-w-0">
-      <h3 id={headingId} className="min-w-0">
+    <section aria-label={formatDayHeading(date)} className="min-w-0 snap-start">
+      {/* lg 未満は枠の中で縦にスクロールするので、日付の見出しを上に固定する */}
+      <h3
+        id={headingId}
+        className="sticky top-0 z-10 min-w-0 bg-background pb-1.5 lg:static lg:pb-0"
+      >
         {/*
-          PC の見出しは「日付」「祝日名」「件数・今日」の 3 段を常に確保して高さを揃える。
+          見出しは「日付」「祝日名」「今日のバッジ・件数」の 3 段を常に確保して高さを揃える。
           祝日名は 1 行で切り詰め、全文はツールチップに出す。
         */}
         <button
@@ -213,37 +246,36 @@ function DayColumn({
           title={holiday ?? undefined}
           data-testid={`day-header-${date}`}
           className={cn(
-            "flex w-full min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5 rounded-md border-b border-border px-1 py-1.5 text-left hover:bg-surface",
-            "lg:grid lg:grid-rows-[1rem_0.875rem_1rem] lg:justify-items-center lg:gap-0.5 lg:border lg:bg-card lg:px-0.5 lg:text-center",
-            isToday && "lg:border-primary"
+            "grid w-full min-w-0 grid-rows-[1rem_0.875rem_1rem] justify-items-center gap-0.5 rounded-md border border-border bg-card px-0.5 py-1.5 text-center hover:bg-surface",
+            isToday && "border-primary"
           )}
         >
           {/* 今日は「今日」の赤を優先し、土日祝の色を付けない（日の一覧と同じ） */}
           <span
             className={cn(
-              "text-base font-semibold lg:max-w-full lg:truncate lg:text-xs lg:leading-4",
+              "max-w-full truncate text-xs leading-4 font-semibold",
               isToday ? "text-primary" : dayKindTextClass(dayKind(date))
             )}
           >
-            {formatDayHeading(date)}
+            {/* 細い列でも切れないよう月は省く（月は週の範囲の見出しにある。読み上げ名は月から） */}
+            {dayNumber(date)}日（{weekdayLabel(date)}）
           </span>
           <span
             className={cn(
-              "text-sm font-medium lg:block lg:max-w-full lg:truncate lg:text-[10px] lg:leading-[0.875rem]",
-              isToday ? "text-secondary" : "text-holiday",
-              !holiday && "hidden"
+              "block max-w-full truncate text-[10px] leading-[0.875rem] font-medium",
+              isToday ? "text-secondary" : "text-holiday"
             )}
           >
             {holiday}
           </span>
-          <span className="ml-auto flex items-center gap-1 lg:ml-0 lg:leading-4">
+          <span className="flex items-center gap-1 leading-4">
             {isToday ? (
-              <span className="rounded-sm bg-primary px-1 text-[11px] leading-4 font-medium text-white lg:text-[10px]">
+              <span className="rounded-sm bg-primary px-1 text-[10px] leading-4 font-medium text-white">
                 今日
               </span>
             ) : null}
             <span
-              className="text-sm text-secondary tabular-nums lg:text-[11px]"
+              className="text-[11px] text-secondary tabular-nums"
               data-testid={`day-count-${date}`}
             >
               {events.length}件
@@ -252,11 +284,9 @@ function DayColumn({
         </button>
       </h3>
       {events.length === 0 ? (
-        <p className="mt-2 px-1 text-sm text-muted lg:text-center lg:text-[11px]">
-          イベントはありません
-        </p>
+        <p className="mt-1.5 px-1 text-center text-[11px] text-muted">イベントはありません</p>
       ) : (
-        <ul className="mt-2 min-w-0 space-y-2 lg:mt-1.5 lg:space-y-1.5">
+        <ul className="mt-1.5 min-w-0 space-y-1.5">
           {events.map((event) => (
             <li key={event.id} className="min-w-0">
               <CompactEventCard event={event} now={now} />
@@ -270,7 +300,7 @@ function DayColumn({
 
 /**
  * 週表示用の小さなイベントカード。サムネイル・時刻・タイトル・場所（またはオンライン）だけを出す。
- * サムネイルはカードの上・左右の端までいっぱいに広げ（PC の細い列では低い 2:1、SP では 16:9）、文字はその下に余白付きで置く。
+ * サムネイルは余白なしでカードの上・左右の端まで広げ（2:1）、文字はその下に余白付きで置く。
  */
 export function CompactEventCard({ event, now }: { event: Event; now: string }) {
   const ended = hasEnded(event.endedAt, now);
@@ -285,14 +315,14 @@ export function CompactEventCard({ event, now }: { event: Event; now: string }) 
       {/* 画像はカードの上・左右の端まで広げる（角はカードの overflow-hidden で丸める） */}
       <span
         data-testid="compact-thumbnail"
-        className="relative block aspect-[16/9] w-full shrink-0 overflow-hidden lg:aspect-[2/1]"
+        className="relative block aspect-[2/1] w-full shrink-0 overflow-hidden"
       >
         <EventThumbnail event={event} />
       </span>
-      <span className="flex min-w-0 flex-col gap-0.5 px-2.5 py-2 lg:px-1.5 lg:py-1">
+      <span className="flex min-w-0 flex-col gap-0.5 px-1.5 py-1">
         <span
           className={cn(
-            "text-xs font-semibold tabular-nums lg:text-[10px]",
+            "text-[10px] font-semibold tabular-nums",
             ended ? "text-secondary" : "text-foreground"
           )}
         >
@@ -301,7 +331,7 @@ export function CompactEventCard({ event, now }: { event: Event; now: string }) 
         </span>
         <span
           className={cn(
-            "text-sm leading-snug font-medium [overflow-wrap:anywhere] lg:text-xs lg:leading-tight",
+            "text-xs leading-tight font-medium [overflow-wrap:anywhere]",
             ended ? "text-secondary" : "text-foreground"
           )}
         >
@@ -309,7 +339,7 @@ export function CompactEventCard({ event, now }: { event: Event; now: string }) 
         </span>
         <span
           className={cn(
-            "truncate text-xs lg:text-[10px]",
+            "truncate text-[10px]",
             event.format === "online" ? "text-primary" : "text-secondary"
           )}
         >

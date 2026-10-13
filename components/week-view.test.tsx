@@ -80,13 +80,13 @@ describe("WeekView", () => {
     renderWeek();
     const headings = screen.getAllByRole("heading", { level: 3 });
     expect(headings.map((heading) => heading.textContent)).toEqual([
-      "10月11日（日）0件",
-      "10月12日（月）スポーツの日今日0件",
-      "10月13日（火）0件",
-      "10月14日（水）2件",
-      "10月15日（木）1件",
-      "10月16日（金）0件",
-      "10月17日（土）0件",
+      "11日（日）0件",
+      "12日（月）スポーツの日今日0件",
+      "13日（火）0件",
+      "14日（水）2件",
+      "15日（木）1件",
+      "16日（金）0件",
+      "17日（土）0件",
     ]);
 
     const wednesday = screen.getByRole("region", { name: /^10月14日（水）/ });
@@ -124,14 +124,38 @@ describe("WeekView", () => {
     expect(screen.getByTestId("week-columns")).toHaveClass(
       "lg:grid-cols-[repeat(7,minmax(0,1fr))]"
     );
-    expect(screen.queryByTestId("week-scroller")).not.toBeInTheDocument();
+    // SP（lg 未満）は 1 画面に約 2.5 列で、週の枠の中だけ列ごとにスナップして横スクロールする
+    expect(screen.getByTestId("week-columns")).toHaveClass("auto-cols-[40%]", "grid-flow-col");
+    expect(screen.getByTestId("week-scroller")).toHaveClass(
+      "overflow-auto",
+      "snap-x",
+      "lg:overflow-visible"
+    );
     for (const date of dates) {
       expect(screen.getByTestId(`day-header-${date}`)).toHaveClass(
-        "lg:grid-rows-[1rem_0.875rem_1rem]"
+        "grid-rows-[1rem_0.875rem_1rem]"
       );
     }
     // 祝日名は切り詰め、全文はツールチップ
     expect(screen.getByTestId("day-header-2026-10-12")).toHaveAttribute("title", "スポーツの日");
+  });
+
+  it("最初は今日の列を週の枠の左端に合わせる", () => {
+    // jsdom はレイアウトしないので、列の位置を見出しの日付から作る
+    const offset = vi
+      .spyOn(HTMLElement.prototype, "offsetLeft", "get")
+      .mockImplementation(function (this: HTMLElement) {
+        const index = dates.findIndex((date) =>
+          this.querySelector(`[data-testid="day-header-${date}"]`)
+        );
+        return this.matches("section.snap-start") ? index * 150 : 0;
+      });
+    try {
+      renderWeek({ today: "2026-10-14" });
+      expect(screen.getByTestId("week-scroller").scrollLeft).toBe(3 * 150);
+    } finally {
+      offset.mockRestore();
+    }
   });
 
   it("イベントのない日は短い案内を出す", () => {
@@ -152,7 +176,7 @@ describe("WeekView", () => {
   it("見出しは土曜を青、日曜・祝日を赤にし、今日はその強調を優先する", () => {
     renderWeek();
     const dayText = (name: RegExp) =>
-      within(screen.getByRole("button", { name })).getByText(/^\d+月\d+日（.）$/);
+      within(screen.getByRole("button", { name })).getByText(/^\d+日（.）$/);
 
     expect(dayText(/^10月11日（日）/)).toHaveClass("text-holiday");
     expect(dayText(/^10月17日（土）/)).toHaveClass("text-saturday");
