@@ -169,7 +169,7 @@ describe("EventExplorer", () => {
     const user = userEvent.setup();
     const pushState = vi.spyOn(window.history, "pushState");
     search.params = new URLSearchParams("date=2026-09-24&view=week&area=渋谷区");
-    renderExplorer();
+    const { rerender } = renderExplorer();
 
     expect(screen.getByRole("radio", { name: "週" })).toBeChecked();
     expect(
@@ -185,10 +185,18 @@ describe("EventExplorer", () => {
     expect(lastHistoryUrl(pushState)).toBe(
       `/?date=2026-10-01&area=${encodeURIComponent("渋谷区")}&view=week`
     );
+    // URL の更新を useSearchParams に反映して描き直し、そこから前の週に戻る
+    search.params = new URLSearchParams(lastHistoryUrl(pushState).split("?")[1]);
+    rerender(<EventExplorer events={[event]} today="2026-09-24" now="2026-09-24T08:00:00.000Z" />);
+    expect(
+      screen.getByRole("heading", { level: 2, name: /2026年9月27日〜10月3日/ })
+    ).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "前の週" }));
     expect(lastHistoryUrl(pushState)).toBe(
-      `/?date=2026-09-17&area=${encodeURIComponent("渋谷区")}&view=week`
+      `/?date=2026-09-24&area=${encodeURIComponent("渋谷区")}&view=week`
     );
+    search.params = new URLSearchParams(lastHistoryUrl(pushState).split("?")[1]);
+    rerender(<EventExplorer events={[event]} today="2026-09-24" now="2026-09-24T08:00:00.000Z" />);
 
     await user.click(screen.getByRole("button", { name: /^9月25日（金）/ }));
     expect(lastHistoryUrl(pushState)).toBe(
