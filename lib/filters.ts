@@ -89,7 +89,7 @@ export function matchesConditions(event: Event, filters: Filters): boolean {
 
 /**
  * エリアごとの件数。エリア以外の条件で数える。
- * inScope で数える日付の範囲を変えられる（既定は選択中の日に始まるイベント、週表示では週に重なるイベント）。
+ * inScope で数える日付の範囲を変えられる（既定は選択中の日に始まるイベント、週表示では週のうちに始まるイベント）。
  */
 export function countByArea(
   events: Event[],
