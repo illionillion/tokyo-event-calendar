@@ -80,10 +80,14 @@ export type EventSnapshot = Omit<ConnpassEventListResponse, "events"> & {
   events: SnapshotEvent[];
 };
 
+/** 表示の切り替え。`month` は月のカレンダーと 1 日分の一覧（従来の表示）、`week` は日ごとのイベントカードを 7 日分並べた一覧。 */
+export type ViewMode = "month" | "week";
+
 export type Filters = {
   date: string;
   /** 選んだエリア（区・市・県）。空ならすべて。複数あるときはいずれかに当たるイベントを出す（OR）。 */
   areas: string[];
   format: FormatFilter;
   keyword: string;
+  view: ViewMode;
 };

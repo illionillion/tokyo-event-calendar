@@ -1,16 +1,24 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CollapsibleCalendar } from "@/components/collapsible-calendar";
 import { DateNavigation } from "@/components/date-navigation";
 import { EventList } from "@/components/event-list";
 import { FiltersPanel } from "@/components/filters-panel";
+import { ViewToggle, WeekNavigation, WeekView } from "@/components/week-view";
 import { groupAreas } from "@/lib/areas";
 import { parseDateKey, todayKey } from "@/lib/dates";
-import { countByArea, filterEvents, matchingDates } from "@/lib/filters";
+import {
+  compareEvents,
+  countByArea,
+  filterEvents,
+  matchesConditions,
+  matchingDates,
+} from "@/lib/filters";
 import { parseFilters, syncFilterUrl } from "@/lib/query";
 import type { Event, Filters } from "@/lib/types";
+import { formatWeekRange, weekDates } from "@/lib/week";
 
 type EventExplorerProps = {
   events: Event[];
@@ -33,8 +41,29 @@ export function EventExplorer({ events, today: serverToday, now: serverNow }: Ev
     return () => window.removeEventListener("popstate", refreshNow);
   }, []);
   const filters = useMemo(() => parseFilters(searchParams, today), [searchParams, today]);
+  const isWeek = filters.view === "week";
+  const week = useMemo(() => weekDates(filters.date), [filters.date]);
+  const weekFirst = week[0] ?? filters.date;
+  const weekLast = week.at(-1) ?? filters.date;
   const visible = useMemo(() => filterEvents(events, filters), [events, filters]);
-  const counts = useMemo(() => countByArea(events, filters), [events, filters]);
+  // 週表示は日の一覧と同じく開始日で数える（複数日のイベントは開始日にだけ出す）
+  const inWeek = useCallback(
+    (event: Event) => event.date >= weekFirst && event.date <= weekLast,
+    [weekFirst, weekLast]
+  );
+  const weekEvents = useMemo(
+    () =>
+      // 日の一覧と同じ並び（開始時刻 → タイトル）
+      events
+        .filter((event) => inWeek(event) && matchesConditions(event, filters))
+        .sort(compareEvents),
+    [events, filters, inWeek]
+  );
+  // 週表示ではエリアの件数も週のイベントで数える
+  const counts = useMemo(() => {
+    if (!isWeek) return countByArea(events, filters);
+    return countByArea(events, filters, inWeek);
+  }, [events, filters, isWeek, inWeek]);
   const markedDates = useMemo(() => matchingDates(events, filters), [events, filters]);
   const groups = useMemo(() => groupAreas(events, filters.areas), [events, filters.areas]);
 
@@ -52,28 +81,64 @@ export function EventExplorer({ events, today: serverToday, now: serverNow }: Ev
     update({ areas: [], format: "all", keyword: "" });
   }
 
+  // 上に固定される帯（サイトヘッダー + 日付バー）の下端を CSS 変数にし、週表示の枠の高さに使う
+  const rootRef = useRef<HTMLDivElement>(null);
+  const barRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const root = rootRef.current;
+    const bar = barRef.current;
+    if (!root || !bar || typeof ResizeObserver === "undefined") return;
+    const sync = () => root.style.setProperty("--page-bar-bottom", `${48 + bar.offsetHeight}px`);
+    sync();
+    const observer = new ResizeObserver(sync);
+    observer.observe(bar);
+    return () => observer.disconnect();
+  }, []);
+
   const selected = parseDateKey(filters.date);
   const selectedLabel = selected ? `${selected.month}月${selected.day}日` : filters.date;
 
   return (
-    <div className="mx-auto w-full min-w-0 max-w-[1080px] px-4 py-4">
+    <div ref={rootRef} className="mx-auto w-full min-w-0 max-w-[1080px] px-4 py-4">
       {/* top-12 = サイトヘッダー h-12 */}
-      <div className="sticky top-12 z-10 -mx-4 min-w-0 bg-background px-4 py-2">
-        <div className="flex items-center justify-between gap-6">
-          <DateNavigation
-            selectedDate={filters.date}
-            today={today}
-            onSelectDate={(date) => {
-              if (date !== filters.date) update({ date });
-            }}
-          />
-          <div className="hidden shrink-0 text-right lg:block" aria-hidden="true">
-            <p className="text-lg leading-none font-semibold tabular-nums">{selectedLabel}</p>
-            {filters.date === today ? (
+      <div ref={barRef} className="sticky top-12 z-10 -mx-4 min-w-0 bg-background px-4 py-2">
+        <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between lg:gap-6">
+          <div className="flex min-w-0 flex-col gap-2 lg:flex-row lg:items-center lg:gap-3">
+            <ViewToggle
+              view={filters.view}
+              onChange={(view) => {
+                if (view !== filters.view) update({ view });
+              }}
+            />
+            {isWeek ? (
+              <WeekNavigation
+                dates={week}
+                today={today}
+                selectedDate={filters.date}
+                onSelectDate={(date) => {
+                  if (date !== filters.date) update({ date });
+                }}
+              />
+            ) : (
+              <DateNavigation
+                selectedDate={filters.date}
+                today={today}
+                onSelectDate={(date) => {
+                  if (date !== filters.date) update({ date });
+                }}
+              />
+            )}
+          </div>
+          {/* 月・週で高さが変わらないよう、3 行分（日付・今日・件数）の高さを確保する */}
+          <div className="hidden h-[54px] shrink-0 text-right lg:block" aria-hidden="true">
+            <p className="text-lg leading-none font-semibold tabular-nums">
+              {isWeek ? formatWeekRange(week) : selectedLabel}
+            </p>
+            {!isWeek && filters.date === today ? (
               <p className="mt-1 text-sm leading-none font-medium text-primary">今日</p>
             ) : null}
             <p className="mt-1 text-sm leading-none text-secondary tabular-nums">
-              {visible.length}件
+              {isWeek ? weekEvents.length : visible.length}件
             </p>
           </div>
         </div>
@@ -103,17 +168,29 @@ export function EventExplorer({ events, today: serverToday, now: serverNow }: Ev
             onClear={clearFilters}
           />
         </aside>
-        <EventList
-          filters={filters}
-          events={visible}
-          today={today}
-          now={now}
-          onSelectDate={(date) => {
-            if (date !== filters.date) update({ date });
-          }}
-          onChangeFilters={(partial) => update(partial)}
-          onClearFilters={clearFilters}
-        />
+        {isWeek ? (
+          <WeekView
+            filters={filters}
+            dates={week}
+            events={weekEvents}
+            today={today}
+            now={now}
+            onOpenDay={(date) => update({ date, view: "month" })}
+            onChangeFilters={(partial) => update(partial)}
+          />
+        ) : (
+          <EventList
+            filters={filters}
+            events={visible}
+            today={today}
+            now={now}
+            onSelectDate={(date) => {
+              if (date !== filters.date) update({ date });
+            }}
+            onChangeFilters={(partial) => update(partial)}
+            onClearFilters={clearFilters}
+          />
+        )}
       </div>
     </div>
   );

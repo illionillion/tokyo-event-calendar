@@ -69,7 +69,7 @@ function placeLabel(event: Event): string {
  * イベント画像。connpass の image_url は期限付きなので、読み込めなかったら頭文字のサムネに切り替える。
  * ハイドレーション前に失敗した画像は onError が届かないため、マウント時にも読み込み結果を確かめる。
  */
-function EventThumbnail({ event }: { event: Event }) {
+export function EventThumbnail({ event }: { event: Event }) {
   const imageRef = useRef<HTMLImageElement>(null);
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
   const thumb = thumbnailStyle(event.id);
