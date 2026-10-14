@@ -25,7 +25,10 @@ export function EventList({
   onClearFilters,
 }: EventListProps) {
   const active = hasActiveFilters(filters);
-  const allEnded = events.length > 0 && events.every((event) => hasEnded(event.endedAt, now));
+  // 中止のイベントは「終了」ではなく「中止」と出すので、終了したかどうかの判定には含めない
+  const heldEvents = events.filter((event) => !event.cancelled);
+  const allEnded =
+    heldEvents.length > 0 && heldEvents.every((event) => hasEnded(event.endedAt, now));
   const isToday = filters.date === today;
   const holiday = holidayName(filters.date);
 
