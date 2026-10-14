@@ -73,8 +73,9 @@ describe("events", () => {
   });
 
   it("公開スナップショットは日付が違っても変換し直さない", () => {
-    const first = materializeEvents("2026-10-07");
-    const second = materializeEvents("2026-10-08");
+    const records = (raw as EventSnapshot).events;
+    const first = materializeEvents("2026-10-07", records);
+    const second = materializeEvents("2026-10-08", records);
 
     expect(second).toBe(first);
     const withStart = (raw as EventSnapshot).events.filter((event) => event.started_at);

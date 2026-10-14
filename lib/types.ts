@@ -25,6 +25,12 @@ export type Event = {
   cancelled: boolean;
 };
 
+/** 全イベントの軽い一覧に載せる項目。説明文などは日ごとのファイルにだけ入れる。 */
+export type EventSummary = Pick<
+  Event,
+  "id" | "title" | "date" | "start" | "end" | "format" | "area" | "venueName" | "url" | "cancelled"
+>;
+
 export type ConnpassGroup = {
   id: number;
   subdomain: string | null;

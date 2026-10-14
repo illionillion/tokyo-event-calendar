@@ -21,7 +21,7 @@ export function joinKeywordTerms(terms: string[]): string {
 export const keywordPlaceholder = joinKeywordTerms(["React", "LT", "渋谷"]);
 
 /** エリアを 1 つも選んでいなければすべて、選んでいればいずれかに当たるか（OR）。 */
-export function matchesArea(event: Event, areas: readonly string[]): boolean {
+export function matchesArea(event: Pick<Event, "area">, areas: readonly string[]): boolean {
   if (areas.length === 0) return true;
   return areas.includes(event.area);
 }
@@ -32,7 +32,7 @@ export function toggleArea(areas: readonly string[], area: string): string[] {
   return [...areas, area];
 }
 
-export function matchesFormat(event: Event, format: FormatFilter): boolean {
+export function matchesFormat(event: Pick<Event, "format">, format: FormatFilter): boolean {
   if (format === "all") return true;
   if (format === "online") return event.format === "online" || event.format === "hybrid";
   return event.format === "offline" || event.format === "hybrid";
@@ -117,6 +117,23 @@ export function matchingDates(events: Event[], filters: Filters): Set<string> {
     dates.add(event.date);
   }
 
+  return dates;
+}
+
+/**
+ * キーワードが無いときの、イベントのある日。軽い一覧（エリアと開催形態）だけで決まるので、
+ * まだ取っていない日のぶんも印を付けられる。
+ */
+export function matchingSummaryDates(
+  summaries: readonly Pick<Event, "date" | "area" | "format">[],
+  filters: Filters
+): Set<string> {
+  const dates = new Set<string>();
+  for (const summary of summaries) {
+    if (matchesArea(summary, filters.areas) && matchesFormat(summary, filters.format)) {
+      dates.add(summary.date);
+    }
+  }
   return dates;
 }
 

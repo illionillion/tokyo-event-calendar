@@ -5,8 +5,9 @@
   "type": "module",
   "packageManager": "pnpm@10.15.0",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build --webpack",
+    "dev": "pnpm build:data && next dev",
+    "build": "pnpm build:data && next build --webpack",
+    "build:data": "tsx scripts/build-event-data.ts",
     "start": "next start",
     "lint": "eslint",
     "lint:fix": "eslint --fix .",
