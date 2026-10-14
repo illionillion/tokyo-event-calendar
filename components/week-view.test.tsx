@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { ViewToggle, WeekNavigation, WeekView } from "@/components/week-view";
+import { CompactEventCard, ViewToggle, WeekNavigation, WeekView } from "@/components/week-view";
 import type { Event, Filters } from "@/lib/types";
 import { weekDates } from "@/lib/week";
 
@@ -22,6 +22,7 @@ function event(overrides: Partial<Event> & Pick<Event, "id" | "startedAt" | "end
     accepted: 0,
     limit: null,
     url: `https://connpass.com/event/${overrides.id}/`,
+    cancelled: false,
     ...overrides,
   };
 }
@@ -258,5 +259,27 @@ describe("WeekNavigation / ViewToggle", () => {
     expect(screen.getByRole("radio", { name: "月" })).toBeChecked();
     await user.click(screen.getByRole("radio", { name: "週" }));
     expect(onChange).toHaveBeenCalledWith("week");
+  });
+});
+
+describe("CompactEventCard", () => {
+  it("中止のイベントは日の一覧と同じ「中止」ラベルとグレーの見た目で出す", () => {
+    render(
+      <CompactEventCard
+        event={event({
+          id: "9",
+          title: "中止の勉強会",
+          startedAt: "2026-10-14T19:00:00+09:00",
+          endedAt: "2026-10-14T21:00:00+09:00",
+          cancelled: true,
+        })}
+        now="2026-10-14T01:00:00.000Z"
+      />
+    );
+    const link = screen.getByRole("link", { name: /中止の勉強会/ });
+    expect(link).toHaveAttribute("data-cancelled", "true");
+    expect(link).toHaveClass("bg-surface");
+    expect(within(link).getByTestId("cancelled-badge")).toHaveTextContent("中止");
+    expect(screen.getByText("中止の勉強会")).toHaveClass("line-through");
   });
 });

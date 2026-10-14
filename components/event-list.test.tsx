@@ -2,7 +2,32 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { EventList } from "@/components/event-list";
-import type { Filters } from "@/lib/types";
+import type { Event, Filters } from "@/lib/types";
+
+function pastEvent(overrides: Partial<Event> = {}): Event {
+  return {
+    id: "1",
+    title: "過去の勉強会",
+    catch: null,
+    description: null,
+    date: "2026-09-20",
+    start: "19:00",
+    end: "21:00",
+    startedAt: "2026-09-20T19:00:00+09:00",
+    endedAt: "2026-09-20T21:00:00+09:00",
+    format: "offline",
+    area: "渋谷区",
+    venueName: "",
+    address: "東京都渋谷区",
+    tags: [],
+    imageUrl: null,
+    accepted: 0,
+    limit: null,
+    url: "https://connpass.com/event/1/",
+    cancelled: false,
+    ...overrides,
+  };
+}
 
 const filters: Filters = {
   date: "2026-09-28",
@@ -110,5 +135,37 @@ describe("EventList", () => {
       <EventList {...props} filters={{ ...filters, date: "2026-10-17" }} today="2026-10-10" />
     );
     expect(screen.getByText("（土）")).toHaveClass("text-saturday");
+  });
+
+  it("過去の日でも、中止のイベントしかないときは「すべて終了」を出さない", () => {
+    render(
+      <EventList
+        filters={{ ...filters, date: "2026-09-20", areas: [] }}
+        events={[pastEvent({ cancelled: true })]}
+        today="2026-09-24"
+        now="2026-09-24T00:00:00.000Z"
+        onSelectDate={vi.fn()}
+        onChangeFilters={vi.fn()}
+        onClearFilters={vi.fn()}
+      />
+    );
+
+    expect(screen.queryByText("この日のイベントはすべて終了しています")).not.toBeInTheDocument();
+  });
+
+  it("過去の日で、中止でないイベントがすべて終わっていれば「すべて終了」を出す", () => {
+    render(
+      <EventList
+        filters={{ ...filters, date: "2026-09-20", areas: [] }}
+        events={[pastEvent(), pastEvent({ id: "2", cancelled: true })]}
+        today="2026-09-24"
+        now="2026-09-24T00:00:00.000Z"
+        onSelectDate={vi.fn()}
+        onChangeFilters={vi.fn()}
+        onClearFilters={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText("この日のイベントはすべて終了しています")).toBeInTheDocument();
   });
 });

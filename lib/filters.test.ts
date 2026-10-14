@@ -34,6 +34,7 @@ function event(overrides: Partial<Event> = {}): Event {
     accepted: 10,
     limit: 20,
     url: "https://connpass.com/event/1/",
+    cancelled: false,
     ...overrides,
   };
 }

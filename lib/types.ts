@@ -21,6 +21,8 @@ export type Event = {
   accepted: number;
   limit: number | null;
   url: string;
+  /** 中止になったイベント。一覧からは消さず、「中止」ラベルとグレーの見た目で出す。 */
+  cancelled: boolean;
 };
 
 export type ConnpassGroup = {
