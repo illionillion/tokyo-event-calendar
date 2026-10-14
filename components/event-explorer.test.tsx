@@ -28,6 +28,7 @@ const event: Event = {
   accepted: 10,
   limit: 20,
   url: "https://connpass.com/event/1/",
+  cancelled: false,
 };
 
 function renderExplorer() {

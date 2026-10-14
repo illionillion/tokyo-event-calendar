@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { EventThumbnail } from "@/components/event-card";
+import { CANCELLED_THUMBNAIL_CLASS, CancelledBadge, EventThumbnail } from "@/components/event-card";
 import { ActiveFilterChips } from "@/components/event-list";
 import { cn } from "@/lib/cn";
 import { addDays, dayNumber, formatDayHeading, hasEnded, weekdayLabel } from "@/lib/dates";
@@ -335,36 +335,46 @@ function DayColumn({ date, events, now }: { date: string; events: Event[]; now: 
  * サムネイルは余白なしでカードの上・左右の端まで広げ、connpass の画像に多い 16:9 で切り抜きを減らす、文字はその下に余白付きで置く。
  */
 export function CompactEventCard({ event, now }: { event: Event; now: string }) {
+  const cancelled = event.cancelled;
   const ended = hasEnded(event.endedAt, now);
+  const muted = cancelled || ended;
 
   return (
     <a
       href={event.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex min-w-0 flex-col overflow-hidden rounded-md border border-border bg-card hover:border-primary hover:bg-primary-soft"
+      data-cancelled={cancelled ? "true" : undefined}
+      className={cn(
+        "flex min-w-0 flex-col overflow-hidden rounded-md border border-border hover:border-primary hover:bg-primary-soft",
+        cancelled ? "bg-surface" : "bg-card"
+      )}
     >
       {/* 画像はカードの上・左右の端まで広げる（角はカードの overflow-hidden で丸める） */}
       <span
         data-testid="compact-thumbnail"
         className="relative block aspect-[16/9] w-full shrink-0 overflow-hidden bg-surface"
       >
-        <EventThumbnail event={event} />
+        <span className={cn("absolute inset-0", cancelled && CANCELLED_THUMBNAIL_CLASS)}>
+          <EventThumbnail event={event} />
+        </span>
+        {cancelled ? <CancelledBadge size="sm" /> : null}
       </span>
       <span className="flex min-w-0 flex-col gap-0.5 px-1.5 py-1 lg:px-1">
         <span
           className={cn(
             "text-[10px] font-semibold tabular-nums",
-            ended ? "text-secondary" : "text-foreground"
+            muted ? "text-secondary" : "text-foreground"
           )}
         >
           {event.start}–{event.end}
-          {ended ? <span className="ml-1 font-normal text-muted">終了</span> : null}
+          {ended && !cancelled ? <span className="ml-1 font-normal text-muted">終了</span> : null}
         </span>
         <span
           className={cn(
             "text-xs leading-tight font-medium [overflow-wrap:anywhere]",
-            ended ? "text-secondary" : "text-foreground"
+            muted ? "text-secondary" : "text-foreground",
+            cancelled && "line-through"
           )}
         >
           {event.title}

@@ -70,6 +70,17 @@ export function formatFromConnpass(
   return mentionsOnline ? "hybrid" : "offline";
 }
 
+/** タイトルの先頭に付く中止の印。【中止】【開催中止】[中止]［中止］（中止）など。 */
+const CANCELLED_TITLE_PREFIX = /^\s*[【\[［(（]\s*(?:開催)?中止\s*[】\]］)）]/;
+
+/**
+ * 中止のイベントか。connpass API v2 の open_status が "cancelled" のほか、
+ * 主催者がステータスを変えずにタイトルの先頭へ【中止】などと書いた場合も中止として扱う。
+ */
+export function isCancelledEvent(event: Pick<ConnpassEvent, "title" | "open_status">): boolean {
+  return event.open_status === "cancelled" || CANCELLED_TITLE_PREFIX.test(event.title);
+}
+
 function assertConnpassEvent(event: CalendarSourceEvent): void {
   if (!Number.isInteger(event.id) || !event.title || !event.url) {
     throw new Error("イベントデータを読み取れませんでした");
@@ -155,5 +166,6 @@ export function toCalendarEvent(event: CalendarSourceEvent, dayDelta = 0): Event
     accepted: event.accepted,
     limit: event.limit,
     url: event.url,
+    cancelled: isCancelledEvent(event),
   };
 }

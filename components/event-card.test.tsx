@@ -22,6 +22,7 @@ const event: Event = {
   accepted: 48,
   limit: 80,
   url: "https://connpass.com/event/390004/",
+  cancelled: false,
 };
 
 describe("EventCard", () => {
@@ -167,5 +168,27 @@ describe("EventCard", () => {
     render(<EventCard event={event} now="2026-09-24T13:00:00.000Z" />);
     expect(screen.getByText("19:00–21:30")).toHaveClass("font-semibold", "text-secondary");
     expect(screen.getByText("19:00–21:30")).not.toHaveClass("text-foreground");
+  });
+
+  it("中止のイベントは「中止」ラベルを付け、グレーの見た目で残す", () => {
+    render(<EventCard event={{ ...event, cancelled: true }} now="2026-09-24T08:00:00.000Z" />);
+    const link = screen.getByRole("link", { name: /React LT Night/ });
+    expect(link).toHaveAttribute("data-cancelled", "true");
+    expect(link).toHaveClass("bg-surface");
+    expect(link).toHaveAccessibleName(/^中止/);
+    expect(screen.getByTestId("cancelled-badge")).toHaveTextContent("中止");
+    expect(screen.getByText(/^React LT Night Tokyo/)).toHaveClass("line-through", "text-secondary");
+  });
+
+  it("中止のイベントは終了後も「終了」ではなく「中止」だけを出す", () => {
+    render(<EventCard event={{ ...event, cancelled: true }} now="2026-09-24T13:00:00.000Z" />);
+    expect(screen.getByTestId("cancelled-badge")).toBeInTheDocument();
+    expect(screen.queryByText("終了")).not.toBeInTheDocument();
+  });
+
+  it("中止でないイベントには「中止」ラベルを付けない", () => {
+    render(<EventCard event={event} now="2026-09-24T08:00:00.000Z" />);
+    expect(screen.queryByTestId("cancelled-badge")).not.toBeInTheDocument();
+    expect(screen.getByRole("link")).not.toHaveAttribute("data-cancelled");
   });
 });

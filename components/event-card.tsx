@@ -107,30 +107,60 @@ export function EventThumbnail({ event }: { event: Event }) {
   );
 }
 
+/**
+ * 中止のイベントに付けるラベル。日の一覧（EventCard）と週表示（CompactEventCard）で共通に使う。
+ * サムネイルの左上に重ねるので、カードの大きさは中止でない場合と変わらない。
+ */
+export function CancelledBadge({ size = "md" }: { size?: "sm" | "md" }) {
+  return (
+    <span
+      data-testid="cancelled-badge"
+      className={cn(
+        "absolute top-1.5 left-1.5 inline-flex items-center rounded bg-secondary font-bold text-white shadow-sm",
+        size === "sm" ? "px-1 py-px text-[10px] leading-3" : "px-2 py-0.5 text-[13px] leading-4"
+      )}
+    >
+      中止
+    </span>
+  );
+}
+
+/** 中止のカードのサムネイル。色を抜いて薄くし、一覧でひと目で分かるようにする。 */
+export const CANCELLED_THUMBNAIL_CLASS = "grayscale opacity-60";
+
 type EventCardProps = {
   event: Event;
   now: string;
 };
 
 export function EventCard({ event, now }: EventCardProps) {
+  const cancelled = event.cancelled;
   const ended = hasEnded(event.endedAt, now);
+  const muted = cancelled || ended;
 
   return (
     <a
       href={event.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex w-full min-w-0 max-w-full flex-col overflow-hidden rounded-lg border border-border bg-card hover:border-primary hover:bg-primary-soft hover:shadow-sm lg:flex-row lg:items-stretch"
+      data-cancelled={cancelled ? "true" : undefined}
+      className={cn(
+        "flex w-full min-w-0 max-w-full flex-col overflow-hidden rounded-lg border border-border hover:border-primary hover:bg-primary-soft hover:shadow-sm lg:flex-row lg:items-stretch",
+        cancelled ? "bg-surface" : "bg-card"
+      )}
     >
       <span className="relative block aspect-[16/9] w-full shrink-0 overflow-hidden lg:aspect-auto lg:min-h-40 lg:w-72 lg:self-stretch">
-        <EventThumbnail event={event} />
+        <span className={cn("absolute inset-0", cancelled && CANCELLED_THUMBNAIL_CLASS)}>
+          <EventThumbnail event={event} />
+        </span>
+        {cancelled ? <CancelledBadge /> : null}
       </span>
       <span className="flex min-w-0 flex-1 flex-col justify-center px-3 py-3 lg:px-4">
         <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <span
             className={cn(
               "text-[13px] font-semibold tabular-nums",
-              ended ? "text-secondary" : "text-foreground"
+              muted ? "text-secondary" : "text-foreground"
             )}
           >
             {event.start}–{event.end}
@@ -138,20 +168,25 @@ export function EventCard({ event, now }: EventCardProps) {
           <span
             className={cn(
               "inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[13px] leading-4 font-semibold tabular-nums",
-              ended
+              muted
                 ? "border-border bg-surface text-foreground"
                 : "border-primary bg-card text-primary"
             )}
           >
             {formatCapacity(event.accepted, event.limit)}
           </span>
-          {ended ? (
+          {ended && !cancelled ? (
             <span className="inline-flex shrink-0 items-center rounded-full bg-surface px-2 py-0.5 text-[12px] leading-4 font-semibold text-foreground">
               終了
             </span>
           ) : null}
         </span>
-        <span className="mt-1 block text-[15px] leading-5 font-semibold wrap-anywhere text-pretty text-foreground line-clamp-2">
+        <span
+          className={cn(
+            "mt-1 block text-[15px] leading-5 font-semibold wrap-anywhere text-pretty line-clamp-2",
+            cancelled ? "text-secondary line-through" : "text-foreground"
+          )}
+        >
           {event.title}
           <span className="sr-only">（connpassで開く）</span>
         </span>
