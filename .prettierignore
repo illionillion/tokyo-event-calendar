@@ -6,3 +6,6 @@ dist
 coverage
 pnpm-lock.yaml
 package-lock.json
+# Marp のスライドと X の投稿文は整形すると見た目や文字数が変わる
+promo/slides.md
+promo/post.md

@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 600" width="520" height="600">
+  <!-- 背景の円 -->
+  <circle cx="270" cy="300" r="230" fill="#f8eceb"/>
+  <circle cx="470" cy="110" r="18" fill="#2b62b0" opacity="0.18"/>
+  <circle cx="60" cy="470" r="12" fill="#c83e3a" opacity="0.25"/>
+
+  <!-- カレンダー -->
+  <g transform="translate(150,70)">
+    <rect x="6" y="10" width="300" height="290" rx="22" fill="#2c3034" opacity="0.08"/>
+    <rect x="0" y="0" width="300" height="290" rx="22" fill="#ffffff" stroke="#e3e5e8" stroke-width="3"/>
+    <path d="M0 22 a22 22 0 0 1 22 -22 h256 a22 22 0 0 1 22 22 v40 h-300 z" fill="#c83e3a"/>
+    <rect x="62" y="-14" width="12" height="34" rx="6" fill="#2c3034"/>
+    <rect x="226" y="-14" width="12" height="34" rx="6" fill="#2c3034"/>
+    <!-- 曜日ドット -->
+    <g>
+      <circle cx="33" cy="84" r="5" fill="#c83e3a"/>
+      <circle cx="72" cy="84" r="5" fill="#c9cdd2"/>
+      <circle cx="111" cy="84" r="5" fill="#c9cdd2"/>
+      <circle cx="150" cy="84" r="5" fill="#c9cdd2"/>
+      <circle cx="189" cy="84" r="5" fill="#c9cdd2"/>
+      <circle cx="228" cy="84" r="5" fill="#c9cdd2"/>
+      <circle cx="267" cy="84" r="5" fill="#2b62b0"/>
+    </g>
+    <!-- 日付セル（4週×7日） -->
+    <g fill="#f0f1f3">
+      <rect x="16" y="104" width="34" height="34" rx="8"/><rect x="55" y="104" width="34" height="34" rx="8"/><rect x="94" y="104" width="34" height="34" rx="8"/><rect x="133" y="104" width="34" height="34" rx="8"/><rect x="172" y="104" width="34" height="34" rx="8"/><rect x="211" y="104" width="34" height="34" rx="8"/><rect x="250" y="104" width="34" height="34" rx="8"/>
+      <rect x="16" y="146" width="34" height="34" rx="8"/><rect x="55" y="146" width="34" height="34" rx="8"/><rect x="94" y="146" width="34" height="34" rx="8"/><rect x="133" y="146" width="34" height="34" rx="8"/><rect x="172" y="146" width="34" height="34" rx="8"/><rect x="211" y="146" width="34" height="34" rx="8"/>
+      <rect x="16" y="188" width="34" height="34" rx="8"/><rect x="55" y="188" width="34" height="34" rx="8"/><rect x="94" y="188" width="34" height="34" rx="8"/><rect x="133" y="188" width="34" height="34" rx="8"/><rect x="172" y="188" width="34" height="34" rx="8"/><rect x="211" y="188" width="34" height="34" rx="8"/><rect x="250" y="188" width="34" height="34" rx="8"/>
+      <rect x="16" y="230" width="34" height="34" rx="8"/><rect x="55" y="230" width="34" height="34" rx="8"/><rect x="94" y="230" width="34" height="34" rx="8"/><rect x="133" y="230" width="34" height="34" rx="8"/><rect x="172" y="230" width="34" height="34" rx="8"/><rect x="211" y="230" width="34" height="34" rx="8"/><rect x="250" y="230" width="34" height="34" rx="8"/>
+    </g>
+    <!-- 日曜列（赤み）・土曜列（青み） -->
+    <g fill="#c83e3a" opacity="0.14">
+      <rect x="16" y="104" width="34" height="34" rx="8"/><rect x="16" y="146" width="34" height="34" rx="8"/><rect x="16" y="188" width="34" height="34" rx="8"/><rect x="16" y="230" width="34" height="34" rx="8"/>
+    </g>
+    <g fill="#2b62b0" opacity="0.14">
+      <rect x="250" y="104" width="34" height="34" rx="8"/><rect x="250" y="188" width="34" height="34" rx="8"/><rect x="250" y="230" width="34" height="34" rx="8"/>
+    </g>
+    <!-- 過ぎてしまった日（イベントのあった日） -->
+    <rect x="250" y="146" width="34" height="34" rx="8" fill="#2b62b0"/>
+    <path d="M259 155 l16 16 M275 155 l-16 16" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+    <!-- イベントのドット -->
+    <g fill="#c83e3a">
+      <circle cx="111" cy="132" r="3.5"/><circle cx="189" cy="174" r="3.5"/><circle cx="72" cy="216" r="3.5"/><circle cx="228" cy="258" r="3.5"/><circle cx="150" cy="258" r="3.5"/>
+    </g>
+  </g>
+
+  <!-- 吹き出し -->
+  <g transform="translate(300,380)">
+    <path d="M0 0 h170 a20 20 0 0 1 20 20 v52 a20 20 0 0 1 -20 20 h-120 l-26 22 l4 -22 h-28 a20 20 0 0 1 -20 -20 v-52 a20 20 0 0 1 20 -20 z" fill="#ffffff" stroke="#c83e3a" stroke-width="3"/>
+    <text x="85" y="58" text-anchor="middle" font-family="Noto Sans CJK JP, sans-serif" font-size="30" font-weight="700" fill="#c83e3a">見逃した…</text>
+  </g>
+
+  <!-- 人物（シンプルなフラット表現） -->
+  <g transform="translate(70,300)">
+    <!-- 胴体 -->
+    <path d="M40 290 v-100 a70 70 0 0 1 140 0 v100 z" fill="#2b62b0"/>
+    <path d="M90 136 l20 26 l20 -26 z" fill="#ffffff" opacity="0.9"/>
+    <!-- 首 -->
+    <rect x="98" y="112" width="24" height="26" rx="8" fill="#f1c9a8"/>
+    <!-- 頭 -->
+    <circle cx="110" cy="80" r="46" fill="#f1c9a8"/>
+    <path d="M64 78 a46 46 0 0 1 92 -6 c-18 -14 -42 -16 -62 -6 c-12 6 -22 8 -30 12 z" fill="#2c3034"/>
+    <!-- 困り顔（目・眉・口） -->
+    <path d="M90 76 l12 -5 M130 76 l-12 -5" stroke="#2c3034" stroke-width="3.5" stroke-linecap="round"/>
+    <circle cx="96" cy="88" r="4" fill="#2c3034"/>
+    <circle cx="124" cy="88" r="4" fill="#2c3034"/>
+    <path d="M100 108 q10 -7 20 0" stroke="#2c3034" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+    <!-- 頭に手を当てる腕 -->
+    <path d="M168 196 q44 -54 4 -112" stroke="#2b62b0" stroke-width="30" fill="none" stroke-linecap="round"/>
+    <circle cx="160" cy="70" r="17" fill="#f1c9a8"/>
+    <!-- 汗 -->
+    <path d="M62 52 q-10 16 0 22 q10 -6 0 -22 z" fill="#2b62b0" opacity="0.55"/>
+  </g>
+</svg>

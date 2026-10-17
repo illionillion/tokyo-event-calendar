@@ -1,0 +1,6 @@
+# Marp CLI の設定（promo/ で実行したときに読み込まれる）
+# スライドは <div> などの HTML と img/ のローカル画像を使う
+html: true
+allowLocalFiles: true
+# 16:9（1280x720）を 1.5 倍して 1920x1080 の PNG にする
+imageScale: 1.5
