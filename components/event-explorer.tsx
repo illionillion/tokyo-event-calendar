@@ -30,22 +30,26 @@ type EventExplorerProps = {
    * 省略すると、表示に要る日のイベントを静的ファイル（public/data/events/）から読む。
    */
   events?: Event[];
-  today: string;
-  now: string;
+  /** 省略するとブラウザの今の日付・時刻を使う（静的なページ）。 */
+  today?: string;
+  now?: string;
 };
 
 export function EventExplorer({
   events: givenEvents,
-  today: serverToday,
-  now: serverNow,
+  today: givenToday,
+  now: givenNow,
 }: EventExplorerProps) {
+  // 描くのはブラウザだけ（page.tsx の説明）なので、初回の描画で今の時刻を決めてよい
+  const [baseNow] = useState(() => givenNow ?? new Date().toISOString());
+  const baseToday = givenToday ?? todayKey(new Date(baseNow));
   const searchParams = useSearchParams();
   const [keywordResetKey, setKeywordResetKey] = useState(0);
   // History API の遷移ではサーバーの now / today が更新されないため、操作や戻る・進むのたびに手元で取り直す。
   const [clientNow, setClientNow] = useState<string | null>(null);
-  const now = clientNow !== null && clientNow > serverNow ? clientNow : serverNow;
+  const now = clientNow !== null && clientNow > baseNow ? clientNow : baseNow;
   const clientToday = clientNow === null ? null : todayKey(new Date(now));
-  const today = clientToday !== null && clientToday > serverToday ? clientToday : serverToday;
+  const today = clientToday !== null && clientToday > baseToday ? clientToday : baseToday;
 
   useEffect(() => {
     const refreshNow = () => setClientNow(new Date().toISOString());
