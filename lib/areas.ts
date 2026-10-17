@@ -239,7 +239,10 @@ export type AreaGroups = {
   other: string[];
 };
 
-export function groupAreas(events: Event[], selected: readonly string[]): AreaGroups {
+export function groupAreas(
+  events: readonly Pick<Event, "area">[],
+  selected: readonly string[]
+): AreaGroups {
   const present = new Set<string>();
 
   for (const event of events) {

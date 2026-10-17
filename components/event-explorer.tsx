@@ -8,25 +8,37 @@ import { EventList } from "@/components/event-list";
 import { FiltersPanel } from "@/components/filters-panel";
 import { ViewToggle, WeekNavigation, WeekView } from "@/components/week-view";
 import { groupAreas } from "@/lib/areas";
-import { parseDateKey, todayKey } from "@/lib/dates";
+import { monthGrid, monthValue, parseDateKey, todayKey } from "@/lib/dates";
 import {
   compareEvents,
   countByArea,
   filterEvents,
   matchesConditions,
   matchingDates,
+  matchingSummaryDates,
 } from "@/lib/filters";
 import { parseFilters, syncFilterUrl } from "@/lib/query";
-import type { Event, Filters } from "@/lib/types";
+import type { Event, EventSummary, Filters } from "@/lib/types";
+import { useEventData } from "@/lib/use-event-data";
 import { formatWeekRange, weekDates } from "@/lib/week";
 
+const NO_SUMMARIES: EventSummary[] = [];
+
 type EventExplorerProps = {
-  events: Event[];
+  /**
+   * 渡したときはこのイベントだけを使い、データを取りにいかない（テスト用）。
+   * 省略すると、表示に要る日のイベントを静的ファイル（public/data/events/）から読む。
+   */
+  events?: Event[];
   today: string;
   now: string;
 };
 
-export function EventExplorer({ events, today: serverToday, now: serverNow }: EventExplorerProps) {
+export function EventExplorer({
+  events: givenEvents,
+  today: serverToday,
+  now: serverNow,
+}: EventExplorerProps) {
   const searchParams = useSearchParams();
   const [keywordResetKey, setKeywordResetKey] = useState(0);
   // History API の遷移ではサーバーの now / today が更新されないため、操作や戻る・進むのたびに手元で取り直す。
@@ -45,6 +57,22 @@ export function EventExplorer({ events, today: serverToday, now: serverNow }: Ev
   const week = useMemo(() => weekDates(filters.date), [filters.date]);
   const weekFirst = week[0] ?? filters.date;
   const weekLast = week.at(-1) ?? filters.date;
+  // ミニカレンダーに出ている月。キーワードで絞るときは、その月の印を付けるために全項目のデータを読む。
+  const [calendarMonth, setCalendarMonth] = useState(() => monthValue(filters.date));
+  const keywordActive = filters.keyword.trim() !== "";
+  const requiredDates = useMemo(
+    () => (isWeek ? week : [filters.date]),
+    [isWeek, week, filters.date]
+  );
+  const calendarDates = useMemo(() => {
+    if (!keywordActive) return [];
+    const [year, month] = calendarMonth.split("-").map(Number);
+    return monthGrid(year ?? 0, month ?? 0).map((cell) => cell.date);
+  }, [keywordActive, calendarMonth]);
+  const data = useEventData(givenEvents === undefined, requiredDates, calendarDates);
+  const events = givenEvents ?? data.events;
+  const summaries = givenEvents ?? data.summaries ?? NO_SUMMARIES;
+  const ready = givenEvents !== undefined || data.ready;
   const visible = useMemo(() => filterEvents(events, filters), [events, filters]);
   // 週表示は日の一覧と同じく開始日で数える（複数日のイベントは開始日にだけ出す）
   const inWeek = useCallback(
@@ -64,8 +92,13 @@ export function EventExplorer({ events, today: serverToday, now: serverNow }: Ev
     if (!isWeek) return countByArea(events, filters);
     return countByArea(events, filters, inWeek);
   }, [events, filters, isWeek, inWeek]);
-  const markedDates = useMemo(() => matchingDates(events, filters), [events, filters]);
-  const groups = useMemo(() => groupAreas(events, filters.areas), [events, filters.areas]);
+  // キーワードが無ければ軽い一覧で全期間の印を付ける。キーワードがあれば読み込んだ日の全項目で探す。
+  const markedDates = useMemo(
+    () =>
+      keywordActive ? matchingDates(events, filters) : matchingSummaryDates(summaries, filters),
+    [keywordActive, events, summaries, filters]
+  );
+  const groups = useMemo(() => groupAreas(summaries, filters.areas), [summaries, filters.areas]);
 
   function navigate(next: Filters, mode: "push" | "replace") {
     setClientNow(new Date().toISOString());
@@ -138,7 +171,7 @@ export function EventExplorer({ events, today: serverToday, now: serverNow }: Ev
               <p className="mt-1 text-sm leading-none font-medium text-primary">今日</p>
             ) : null}
             <p className="mt-1 text-sm leading-none text-secondary tabular-nums">
-              {isWeek ? weekEvents.length : visible.length}件
+              {ready ? `${isWeek ? weekEvents.length : visible.length}件` : "読み込み中"}
             </p>
           </div>
         </div>
@@ -149,6 +182,7 @@ export function EventExplorer({ events, today: serverToday, now: serverNow }: Ev
             selectedDate={filters.date}
             today={today}
             markedDates={markedDates}
+            onViewMonthChange={setCalendarMonth}
             onSelectDate={(date) => {
               if (date !== filters.date) update({ date });
             }}
@@ -168,7 +202,9 @@ export function EventExplorer({ events, today: serverToday, now: serverNow }: Ev
             onClear={clearFilters}
           />
         </aside>
-        {isWeek ? (
+        {!ready ? (
+          <EventDataStatus error={data.error} onRetry={data.retry} />
+        ) : isWeek ? (
           <WeekView
             filters={filters}
             dates={week}
@@ -193,5 +229,35 @@ export function EventExplorer({ events, today: serverToday, now: serverNow }: Ev
         )}
       </div>
     </div>
+  );
+}
+
+function EventDataStatus({ error, onRetry }: { error: string | null; onRetry: () => void }) {
+  if (error) {
+    return (
+      <section role="alert" className="rounded-lg border border-border bg-card p-6 text-center">
+        <p className="text-sm text-foreground">{error}</p>
+        <button
+          type="button"
+          className="mt-3 inline-flex h-9 items-center rounded-md border border-border px-4 text-sm text-foreground hover:bg-surface"
+          onClick={onRetry}
+        >
+          もう一度読み込む
+        </button>
+      </section>
+    );
+  }
+
+  return (
+    <section role="status" aria-live="polite" className="min-w-0 space-y-2">
+      <span className="sr-only">イベントを読み込み中です</span>
+      {Array.from({ length: 4 }, (_, index) => (
+        <div
+          key={index}
+          aria-hidden="true"
+          className="h-56 animate-pulse rounded-lg border border-border bg-card lg:h-40"
+        />
+      ))}
+    </section>
   );
 }
