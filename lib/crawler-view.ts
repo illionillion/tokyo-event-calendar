@@ -8,8 +8,9 @@ export type CrawlerDay = { date: string; heading: string; events: EventSummary[]
 export type CrawlerView = {
   heading: string;
   days: CrawlerDay[];
-  previous: string;
-  next: string;
+  /** データの最初の日より前、最後の日より後には出さない。範囲内の空の日は通る。 */
+  previous: string | null;
+  next: string | null;
 };
 
 function normalize(value: string): string {
@@ -47,11 +48,28 @@ export function buildCrawlerView(
       ),
   }));
   const step = isWeek ? 7 : 1;
+  const bound = coverageBound(summaries);
 
   return {
     heading: isWeek ? formatWeekRange(dates) : formatDayHeading(filters.date),
     days,
-    previous: addDays(filters.date, -step),
-    next: addDays(filters.date, step),
+    previous: linkWithin(addDays(filters.date, -step), bound),
+    next: linkWithin(addDays(filters.date, step), bound),
   };
+}
+
+/** イベントがある最初の日から最後の日まで。その間の空の日も含む。 */
+function coverageBound(summaries: readonly EventSummary[]): { first: string; last: string } | null {
+  let first: string | undefined;
+  let last: string | undefined;
+  for (const event of summaries) {
+    if (!first || event.date < first) first = event.date;
+    if (!last || event.date > last) last = event.date;
+  }
+  return first && last ? { first, last } : null;
+}
+
+function linkWithin(date: string, bound: { first: string; last: string } | null): string | null {
+  if (!bound || date < bound.first || date > bound.last) return null;
+  return date;
 }

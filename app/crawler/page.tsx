@@ -6,12 +6,7 @@ import { buildCrawlerView } from "@/lib/crawler-view";
 import { loadSummaries } from "@/lib/crawler-data";
 import { formatLabel } from "@/lib/filters";
 import { filtersHref, parseFilters, type SearchParamRecord } from "@/lib/query";
-import {
-  requestMetadata,
-  resolveMetadataBase,
-  siteDescription,
-  siteTitle,
-} from "@/lib/site-metadata";
+import { requestMetadata, siteDescription, siteTitle } from "@/lib/site-metadata";
 import type { EventFormat, Filters } from "@/lib/types";
 
 /**
@@ -54,8 +49,7 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
 
 export default async function CrawlerPage({ searchParams }: PageProps) {
   const filters = await readFilters(searchParams);
-  const origin = resolveMetadataBase(await headers())?.origin ?? "http://localhost:3000";
-  const view = buildCrawlerView(await loadSummaries(origin), filters);
+  const view = buildCrawlerView(await loadSummaries(), filters);
   const total = view.days.reduce((sum, day) => sum + day.events.length, 0);
 
   return (
@@ -64,14 +58,20 @@ export default async function CrawlerPage({ searchParams }: PageProps) {
         {view.heading}の{describeFilters(filters)}イベント（{total}件）
       </h1>
       <p className="mt-2 text-sm text-secondary">{siteDescription}</p>
-      <nav aria-label="日付の移動" className="mt-4 flex gap-4 text-sm">
-        <Link href={filtersHref({ ...filters, date: view.previous })}>
-          {filters.view === "week" ? "前の週" : "前の日"}
-        </Link>
-        <Link href={filtersHref({ ...filters, date: view.next })}>
-          {filters.view === "week" ? "次の週" : "次の日"}
-        </Link>
-      </nav>
+      {view.previous || view.next ? (
+        <nav aria-label="日付の移動" className="mt-4 flex gap-4 text-sm">
+          {view.previous ? (
+            <Link href={filtersHref({ ...filters, date: view.previous })}>
+              {filters.view === "week" ? "前の週" : "前の日"}
+            </Link>
+          ) : null}
+          {view.next ? (
+            <Link href={filtersHref({ ...filters, date: view.next })}>
+              {filters.view === "week" ? "次の週" : "次の日"}
+            </Link>
+          ) : null}
+        </nav>
+      ) : null}
       {view.days.map((day) => (
         <section key={day.date} aria-labelledby={`day-${day.date}`} className="mt-6">
           <h2 id={`day-${day.date}`} className="text-lg font-semibold">

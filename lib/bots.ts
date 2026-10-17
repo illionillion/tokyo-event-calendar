@@ -21,7 +21,7 @@ const BOT_PATTERN = new RegExp(
     "applebot",
     "slurp",
     "petalbot",
-    "naver|yeti",
+    "naverbot|yeti",
     "seznambot",
     "twitterbot",
     "facebookexternalhit",
