@@ -69,6 +69,24 @@ describe("buildCrawlerView", () => {
     expect(view.next).toBeNull();
   });
 
+  it("週の端でも、イベントがある隣の週へはリンクする", () => {
+    const boundary = [summary("1", "2026-09-24"), summary("2", "2026-09-28")];
+    const first = buildCrawlerView(boundary, filters({ view: "week" }));
+    expect(first.previous).toBeNull();
+    expect(first.next).toBe("2026-09-28");
+
+    const second = buildCrawlerView(boundary, filters({ date: "2026-09-28", view: "week" }));
+    expect(second.days.map((day) => day.date)).toContain("2026-09-28");
+    expect(second.days.find((day) => day.date === "2026-09-28")?.events).toHaveLength(1);
+    expect(second.previous).toBe("2026-09-24");
+    expect(second.next).toBeNull();
+
+    const back = buildCrawlerView(boundary, filters({ date: "2026-09-24", view: "week" }));
+    expect(
+      back.days.find((day) => day.date === "2026-09-24")?.events.map((event) => event.id)
+    ).toEqual(["1"]);
+  });
+
   it("エリア・開催形態・キーワードで絞る", () => {
     expect(buildCrawlerView(events, filters({ areas: ["港区"] })).days[0]?.events).toEqual([]);
     expect(

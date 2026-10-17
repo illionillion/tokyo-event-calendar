@@ -8,7 +8,10 @@ export type CrawlerDay = { date: string; heading: string; events: EventSummary[]
 export type CrawlerView = {
   heading: string;
   days: CrawlerDay[];
-  /** データの最初の日より前、最後の日より後には出さない。範囲内の空の日は通る。 */
+  /**
+   * 月はデータの最初の日より前、最後の日より後には出さない。範囲内の空の日は通る。
+   * 週は隣の週がデータの範囲と重なるときだけ出し、リンク先はその重なりに収める。
+   */
   previous: string | null;
   next: string | null;
 };
@@ -47,15 +50,39 @@ export function buildCrawlerView(
         (left, right) => left.start.localeCompare(right.start) || left.id.localeCompare(right.id)
       ),
   }));
-  const step = isWeek ? 7 : 1;
   const bound = coverageBound(summaries);
 
   return {
     heading: isWeek ? formatWeekRange(dates) : formatDayHeading(filters.date),
     days,
-    previous: linkWithin(addDays(filters.date, -step), bound),
-    next: linkWithin(addDays(filters.date, step), bound),
+    previous: stepLink(filters.date, isWeek ? -7 : -1, bound, isWeek),
+    next: stepLink(filters.date, isWeek ? 7 : 1, bound, isWeek),
   };
+}
+
+/**
+ * 週は、移動先の週がデータの範囲と重なるときだけリンクする。
+ * 選んだ曜日が範囲の外でも、重なっている日へ寄せてその週を開けるようにする。
+ */
+function stepLink(
+  anchor: string,
+  step: number,
+  bound: { first: string; last: string } | null,
+  isWeek: boolean
+): string | null {
+  const target = addDays(anchor, step);
+  if (!isWeek) return linkWithin(target, bound);
+  if (!bound) return null;
+
+  const week = weekDates(target);
+  const weekFirst = week[0] ?? target;
+  const weekLast = week.at(-1) ?? target;
+  const overlapStart = weekFirst > bound.first ? weekFirst : bound.first;
+  const overlapEnd = weekLast < bound.last ? weekLast : bound.last;
+  if (overlapStart > overlapEnd) return null;
+  if (target < overlapStart) return overlapStart;
+  if (target > overlapEnd) return overlapEnd;
+  return target;
 }
 
 /** イベントがある最初の日から最後の日まで。その間の空の日も含む。 */
