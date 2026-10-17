@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { EventExplorer } from "@/components/event-explorer";
@@ -137,5 +137,73 @@ describe("EventExplorer（静的ファイルから読む）", () => {
     failDays = false;
     await user.click(screen.getByRole("button", { name: "もう一度読み込む" }));
     expect(await screen.findByRole("link", { name: /イベント1/ })).toBeInTheDocument();
+  });
+
+  it("開いたまま索引から日が消えても、再読み込みで空の一覧に戻る", async () => {
+    const user = userEvent.setup();
+    let dates: Record<string, number> = { "2026-09-24": 1 };
+    fetchMock.mockImplementation(async (url: string) => {
+      if (url === "/data/events/index.json") return Response.json({ generatedAt: "", dates });
+      if (url === "/data/events-lite.json") return Response.json([]);
+      return new Response("", { status: 404 });
+    });
+    renderExplorer();
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("404");
+    dates = {};
+    await user.click(screen.getByRole("button", { name: "もう一度読み込む" }));
+
+    expect(await screen.findByText("この日のイベントはありません")).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(requestedPaths().filter((path) => path === "/data/events/index.json")).toHaveLength(2);
+    expect(requestedPaths().filter((path) => path.includes("2026-09-24"))).toEqual([
+      "/data/events/2026-09-24.json",
+    ]);
+  });
+
+  it("失敗した日のエラーは、別の日を読み込んでいる間は出さない", async () => {
+    let releaseNext: () => void = () => {};
+    const nextDay = new Promise<Response>((resolve) => {
+      releaseNext = () => resolve(Response.json([]));
+    });
+    fetchMock.mockImplementation(async (url: string) => {
+      if (url === "/data/events/index.json") {
+        return Response.json({
+          generatedAt: "",
+          dates: { "2026-09-24": 1, "2026-09-25": 1 },
+        });
+      }
+      if (url === "/data/events-lite.json") return Response.json([]);
+      if (url.endsWith("/2026-09-24.json")) return new Response("", { status: 503 });
+      if (url.endsWith("/2026-09-25.json")) return nextDay;
+      return Response.json([]);
+    });
+    const { rerender } = renderExplorer();
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("503");
+    search.params = new URLSearchParams("date=2026-09-25");
+    rerender(<EventExplorer today="2026-09-24" now="2026-09-24T08:00:00.000Z" />);
+
+    expect(await screen.findByRole("status")).toHaveTextContent("イベントを読み込み中です");
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+
+    await act(async () => {
+      releaseNext();
+    });
+    expect(await screen.findByText("この日のイベントはありません")).toBeInTheDocument();
+  });
+
+  it("索引の失敗は日付を変えても残る", async () => {
+    fetchMock.mockImplementation(async (url: string) => {
+      if (url === "/data/events/index.json") return new Response("", { status: 503 });
+      return Response.json([]);
+    });
+    const { rerender } = renderExplorer();
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("503");
+    search.params = new URLSearchParams("date=2026-09-25");
+    rerender(<EventExplorer today="2026-09-24" now="2026-09-24T08:00:00.000Z" />);
+    expect(screen.getByRole("alert")).toHaveTextContent("503");
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
 });

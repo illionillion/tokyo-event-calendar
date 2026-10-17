@@ -2,7 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { EventIndex } from "@/lib/event-data";
-import { loadDayEvents, loadEventIndex, loadEventSummaries } from "@/lib/event-data-client";
+import {
+  invalidateEventMetadata,
+  loadDayEvents,
+  loadEventIndex,
+  loadEventSummaries,
+} from "@/lib/event-data-client";
 import type { Event, EventSummary } from "@/lib/types";
 
 export type EventDataState = {
@@ -19,6 +24,8 @@ export type EventDataState = {
 /**
  * 表示に要る日（required）と、あれば先に取っておく日（optional）のイベントを静的ファイルから読む。
  * enabled が false のときは何も取りにいかない（イベントを props で渡すテスト用）。
+ * 再読み込みは索引と軽い一覧を取り直し、索引から消えた日の読み込み済みデータも捨てる。
+ * 日の読み込み失敗は、そのとき表示に要る日にだけ出す。索引の失敗は日付を変えても残す。
  */
 export function useEventData(
   enabled: boolean,
@@ -28,7 +35,10 @@ export function useEventData(
   const [index, setIndex] = useState<EventIndex | null>(null);
   const [summaries, setSummaries] = useState<EventSummary[] | null>(null);
   const [days, setDays] = useState<ReadonlyMap<string, Event[]>>(() => new Map());
-  const [error, setError] = useState<string | null>(null);
+  /** 索引・軽い一覧の失敗。日付を変えても残す。 */
+  const [metadataError, setMetadataError] = useState<string | null>(null);
+  /** 表示に要る日の失敗。別の日を開いている間は出さない。 */
+  const [dayError, setDayError] = useState<{ requiredKey: string; message: string } | null>(null);
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
@@ -39,9 +49,17 @@ export function useEventData(
         if (!active) return;
         setIndex(nextIndex);
         setSummaries(nextSummaries);
+        setMetadataError(null);
+        setDays((current) => {
+          const removed = [...current.keys()].filter((date) => !nextIndex.dates[date]);
+          if (removed.length === 0) return current;
+          const next = new Map(current);
+          for (const date of removed) next.delete(date);
+          return next;
+        });
       },
       (reason: unknown) => {
-        if (active) setError(errorMessage(reason));
+        if (active) setMetadataError(errorMessage(reason));
       }
     );
     return () => {
@@ -68,7 +86,7 @@ export function useEventData(
             });
           },
           (reason: unknown) => {
-            if (active && reportError) setError(errorMessage(reason));
+            if (active && reportError) setDayError({ requiredKey, message: errorMessage(reason) });
           }
         );
       }
@@ -83,11 +101,24 @@ export function useEventData(
   const events = useMemo(() => [...days.values()].flat(), [days]);
   const ready = required.every((date) => days.has(date));
   const retry = useCallback(() => {
-    setError(null);
+    invalidateEventMetadata();
+    // 古い索引のまま消えた日を取りにいかない。新しい索引が届いてから読み直す。
+    setIndex(null);
+    setMetadataError(null);
+    setDayError(null);
     setAttempt((value) => value + 1);
   }, []);
 
-  return { events, summaries, ready, error: ready ? null : error, retry };
+  const dayErrorMessage =
+    dayError !== null && dayError.requiredKey === requiredKey ? dayError.message : null;
+
+  return {
+    events,
+    summaries,
+    ready,
+    error: ready ? null : (metadataError ?? dayErrorMessage),
+    retry,
+  };
 }
 
 function errorMessage(reason: unknown): string {

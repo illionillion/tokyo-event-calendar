@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { clearEventDataCache, loadDayEvents, loadEventIndex } from "@/lib/event-data-client";
+import {
+  clearEventDataCache,
+  invalidateEventMetadata,
+  loadDayEvents,
+  loadEventIndex,
+  loadEventSummaries,
+} from "@/lib/event-data-client";
 
 const index = { generatedAt: "", dates: { "2026-10-01": 1 } };
 
@@ -36,5 +42,26 @@ describe("event-data-client", () => {
     await expect(loadEventIndex()).rejects.toThrow("503");
     await expect(loadEventIndex()).resolves.toEqual(index);
     expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("再読み込みでは成功済みの索引と軽い一覧を捨てて取り直す", async () => {
+    const nextIndex = { generatedAt: "", dates: {} };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(Response.json(index))
+      .mockResolvedValueOnce(Response.json([{ id: "1" }]))
+      .mockResolvedValueOnce(Response.json(nextIndex))
+      .mockResolvedValueOnce(Response.json([]));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(loadEventIndex()).resolves.toEqual(index);
+    await expect(loadEventSummaries()).resolves.toEqual([{ id: "1" }]);
+    await expect(loadEventIndex()).resolves.toEqual(index);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+
+    invalidateEventMetadata();
+    await expect(loadEventIndex()).resolves.toEqual(nextIndex);
+    await expect(loadEventSummaries()).resolves.toEqual([]);
+    expect(fetchMock).toHaveBeenCalledTimes(4);
   });
 });
