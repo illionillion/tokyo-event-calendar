@@ -2,7 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { EventIndex } from "@/lib/event-data";
-import { loadDayEvents, loadEventIndex, loadEventSummaries } from "@/lib/event-data-client";
+import {
+  invalidateEventMetadata,
+  loadDayEvents,
+  loadEventIndex,
+  loadEventSummaries,
+} from "@/lib/event-data-client";
 import type { Event, EventSummary } from "@/lib/types";
 
 export type EventDataState = {
@@ -19,6 +24,7 @@ export type EventDataState = {
 /**
  * 表示に要る日（required）と、あれば先に取っておく日（optional）のイベントを静的ファイルから読む。
  * enabled が false のときは何も取りにいかない（イベントを props で渡すテスト用）。
+ * 再読み込みは索引と軽い一覧を取り直し、索引から消えた日の読み込み済みデータも捨てる。
  */
 export function useEventData(
   enabled: boolean,
@@ -39,6 +45,13 @@ export function useEventData(
         if (!active) return;
         setIndex(nextIndex);
         setSummaries(nextSummaries);
+        setDays((current) => {
+          const removed = [...current.keys()].filter((date) => !nextIndex.dates[date]);
+          if (removed.length === 0) return current;
+          const next = new Map(current);
+          for (const date of removed) next.delete(date);
+          return next;
+        });
       },
       (reason: unknown) => {
         if (active) setError(errorMessage(reason));
@@ -83,6 +96,9 @@ export function useEventData(
   const events = useMemo(() => [...days.values()].flat(), [days]);
   const ready = required.every((date) => days.has(date));
   const retry = useCallback(() => {
+    invalidateEventMetadata();
+    // 古い索引のまま消えた日を取りにいかない。新しい索引が届いてから読み直す。
+    setIndex(null);
     setError(null);
     setAttempt((value) => value + 1);
   }, []);

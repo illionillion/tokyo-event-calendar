@@ -138,4 +138,26 @@ describe("EventExplorer（静的ファイルから読む）", () => {
     await user.click(screen.getByRole("button", { name: "もう一度読み込む" }));
     expect(await screen.findByRole("link", { name: /イベント1/ })).toBeInTheDocument();
   });
+
+  it("開いたまま索引から日が消えても、再読み込みで空の一覧に戻る", async () => {
+    const user = userEvent.setup();
+    let dates: Record<string, number> = { "2026-09-24": 1 };
+    fetchMock.mockImplementation(async (url: string) => {
+      if (url === "/data/events/index.json") return Response.json({ generatedAt: "", dates });
+      if (url === "/data/events-lite.json") return Response.json([]);
+      return new Response("", { status: 404 });
+    });
+    renderExplorer();
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("404");
+    dates = {};
+    await user.click(screen.getByRole("button", { name: "もう一度読み込む" }));
+
+    expect(await screen.findByText("この日のイベントはありません")).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(requestedPaths().filter((path) => path === "/data/events/index.json")).toHaveLength(2);
+    expect(requestedPaths().filter((path) => path.includes("2026-09-24"))).toEqual([
+      "/data/events/2026-09-24.json",
+    ]);
+  });
 });
