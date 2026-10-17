@@ -61,8 +61,8 @@ export function buildCrawlerView(
 }
 
 /**
- * 週は、移動先の週がデータの範囲と重なるときだけリンクする。
- * 選んだ曜日が範囲の外でも、重なっている日へ寄せてその週を開けるようにする。
+ * 範囲の外にいるときは、近づく方向だけ一番近い端へリンクする。遠ざかる方向は出さない。
+ * 週は隣の週が範囲と重なればそこへ寄せ、重ならなければ端の週へ飛ぶ。
  */
 function stepLink(
   anchor: string,
@@ -70,19 +70,44 @@ function stepLink(
   bound: { first: string; last: string } | null,
   isWeek: boolean
 ): string | null {
-  const target = addDays(anchor, step);
-  if (!isWeek) return linkWithin(target, bound);
   if (!bound) return null;
+  const towardFuture = step > 0;
+  const target = addDays(anchor, step);
 
-  const week = weekDates(target);
-  const weekFirst = week[0] ?? target;
-  const weekLast = week.at(-1) ?? target;
+  if (!isWeek) {
+    if (towardFuture) {
+      if (anchor >= bound.last) return null;
+      if (target < bound.first) return bound.first;
+      if (target > bound.last) return bound.last;
+      return target;
+    }
+    if (anchor <= bound.first) return null;
+    if (target > bound.last) return bound.last;
+    if (target < bound.first) return bound.first;
+    return target;
+  }
+
+  const adjacent = clampToWeekOverlap(target, bound);
+  if (adjacent) return adjacent;
+  if (towardFuture) {
+    if (anchor >= bound.first) return null;
+    return clampToWeekOverlap(bound.first, bound);
+  }
+  if (anchor <= bound.last) return null;
+  return clampToWeekOverlap(bound.last, bound);
+}
+
+/** その日の週とデータの範囲が重なるなら、リンク先を重なりの中に収める。 */
+function clampToWeekOverlap(date: string, bound: { first: string; last: string }): string | null {
+  const week = weekDates(date);
+  const weekFirst = week[0] ?? date;
+  const weekLast = week.at(-1) ?? date;
   const overlapStart = weekFirst > bound.first ? weekFirst : bound.first;
   const overlapEnd = weekLast < bound.last ? weekLast : bound.last;
   if (overlapStart > overlapEnd) return null;
-  if (target < overlapStart) return overlapStart;
-  if (target > overlapEnd) return overlapEnd;
-  return target;
+  if (date < overlapStart) return overlapStart;
+  if (date > overlapEnd) return overlapEnd;
+  return date;
 }
 
 /** イベントがある最初の日から最後の日まで。その間の空の日も含む。 */
@@ -94,9 +119,4 @@ function coverageBound(summaries: readonly EventSummary[]): { first: string; las
     if (!last || event.date > last) last = event.date;
   }
   return first && last ? { first, last } : null;
-}
-
-function linkWithin(date: string, bound: { first: string; last: string } | null): string | null {
-  if (!bound || date < bound.first || date > bound.last) return null;
-  return date;
 }

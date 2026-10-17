@@ -35,11 +35,13 @@ const BOT_PATTERN = new RegExp(
     "whatsapp",
     "line-poker",
     "skypeuripreview",
-    "pinterest(bot)?",
+    "pinterestbot",
+    "pinterest/0\\.2",
     "embedly",
     "hatena",
     "mastodon",
     "bluesky",
+    "cardyb",
   ].join("|"),
   "i"
 );

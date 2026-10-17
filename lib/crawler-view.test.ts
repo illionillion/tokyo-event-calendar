@@ -87,6 +87,23 @@ describe("buildCrawlerView", () => {
     ).toEqual(["1"]);
   });
 
+  it("範囲の外からは、近づく端へだけリンクする", () => {
+    const coverage = [summary("1", "2026-10-20"), summary("2", "2026-10-22")];
+    const before = buildCrawlerView(coverage, filters({ date: "2026-10-17" }));
+    expect(before.previous).toBeNull();
+    expect(before.next).toBe("2026-10-20");
+    const after = buildCrawlerView(coverage, filters({ date: "2026-10-25" }));
+    expect(after.previous).toBe("2026-10-22");
+    expect(after.next).toBeNull();
+
+    const weekBefore = buildCrawlerView(coverage, filters({ date: "2026-10-03", view: "week" }));
+    expect(weekBefore.previous).toBeNull();
+    expect(weekBefore.next).toBe("2026-10-20");
+    const weekAfter = buildCrawlerView(coverage, filters({ date: "2026-11-07", view: "week" }));
+    expect(weekAfter.previous).toBe("2026-10-22");
+    expect(weekAfter.next).toBeNull();
+  });
+
   it("エリア・開催形態・キーワードで絞る", () => {
     expect(buildCrawlerView(events, filters({ areas: ["港区"] })).days[0]?.events).toEqual([]);
     expect(
