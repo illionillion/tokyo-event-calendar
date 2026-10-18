@@ -9,10 +9,13 @@ function request(ua: string | null, path = "/", search = ""): NextRequest {
 }
 
 describe("middleware", () => {
-  it("通常のブラウザはそのまま通す", () => {
+  it("通常のブラウザはそのまま通し、共有キャッシュは UA で分ける", () => {
     const response = middleware(request("Mozilla/5.0 Chrome/120.0.0.0"));
     expect(response.headers.get("x-middleware-rewrite")).toBeNull();
     expect(response.headers.get("Cache-Control")).toBeNull();
+    expect(response.headers.get("Vary")).toBe(
+      "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, User-Agent"
+    );
   });
 
   it("クローラーは /crawler へ書き換え、共有キャッシュに入れない", () => {
@@ -26,5 +29,8 @@ describe("middleware", () => {
     const rewrite = response.headers.get("x-middleware-rewrite");
     expect(rewrite).toContain("/crawler?date=2026-10-20&view=week");
     expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+    expect(response.headers.get("Vary")).toBe(
+      "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, User-Agent"
+    );
   });
 });
