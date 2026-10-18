@@ -104,6 +104,16 @@ describe("buildCrawlerView", () => {
     expect(weekAfter.next).toBeNull();
   });
 
+  it("いまの週が範囲と重なるときは、同じ週の端へはリンクしない", () => {
+    const coverage = [summary("1", "2026-10-20"), summary("2", "2026-10-22")];
+    const early = buildCrawlerView(coverage, filters({ date: "2026-10-18", view: "week" }));
+    expect(early.previous).toBeNull();
+    expect(early.next).toBeNull();
+    const late = buildCrawlerView(coverage, filters({ date: "2026-10-24", view: "week" }));
+    expect(late.previous).toBeNull();
+    expect(late.next).toBeNull();
+  });
+
   it("エリア・開催形態・キーワードで絞る", () => {
     expect(buildCrawlerView(events, filters({ areas: ["港区"] })).days[0]?.events).toEqual([]);
     expect(

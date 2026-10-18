@@ -53,7 +53,7 @@ export default async function CrawlerPage({ searchParams }: PageProps) {
   const total = view.days.reduce((sum, day) => sum + day.events.length, 0);
 
   return (
-    <main className="mx-auto w-full max-w-[1080px] px-4 py-6">
+    <main id="events" className="mx-auto w-full max-w-[1080px] px-4 py-6">
       <h1 className="text-xl font-semibold">
         {view.heading}の{describeFilters(filters)}イベント（{total}件）
       </h1>

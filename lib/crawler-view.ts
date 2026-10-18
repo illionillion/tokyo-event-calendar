@@ -62,7 +62,8 @@ export function buildCrawlerView(
 
 /**
  * 範囲の外にいるときは、近づく方向だけ一番近い端へリンクする。遠ざかる方向は出さない。
- * 週は隣の週が範囲と重なればそこへ寄せ、重ならなければ端の週へ飛ぶ。
+ * 週は隣の週が範囲と重なればそこへ寄せる。いまの週がすでに重なっているときは、
+ * 隣が重ならなくても端へは飛ばない（同じ週へのリンクになるため）。
  */
 function stepLink(
   anchor: string,
@@ -89,6 +90,7 @@ function stepLink(
 
   const adjacent = clampToWeekOverlap(target, bound);
   if (adjacent) return adjacent;
+  if (clampToWeekOverlap(anchor, bound)) return null;
   if (towardFuture) {
     if (anchor >= bound.first) return null;
     return clampToWeekOverlap(bound.first, bound);
