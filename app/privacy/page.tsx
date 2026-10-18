@@ -1,20 +1,15 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import { LegalPageLayout } from "@/components/legal-page-layout";
 import { MarkdownContent } from "@/components/markdown-content";
 import { loadLegalDocument } from "@/lib/load-legal-document";
-import { requestMetadata } from "@/lib/site-metadata";
 
 const doc = loadLegalDocument("privacy");
 
-export async function generateMetadata(): Promise<Metadata> {
-  return {
-    ...requestMetadata(await headers()),
-    title: doc.pageTitle,
-    description: doc.description,
-    alternates: { canonical: `/${doc.canonicalPath}` },
-  };
-}
+export const metadata: Metadata = {
+  title: doc.pageTitle,
+  description: doc.description,
+  alternates: { canonical: `/${doc.canonicalPath}` },
+};
 
 /**
  * プライバシーポリシーページ
