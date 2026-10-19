@@ -8,12 +8,11 @@ import { requestMetadata } from "@/lib/site-metadata";
 const doc = loadLegalDocument("terms");
 
 export async function generateMetadata(): Promise<Metadata> {
-  return {
-    ...requestMetadata(await headers()),
+  return requestMetadata(await headers(), {
     title: doc.pageTitle,
     description: doc.description,
-    alternates: { canonical: `/${doc.canonicalPath}` },
-  };
+    url: `/${doc.canonicalPath}`,
+  });
 }
 
 /**

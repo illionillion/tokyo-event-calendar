@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
-import { todayKey } from "@/lib/dates";
-import { buildCrawlerView } from "@/lib/crawler-view";
+import { crawlerPageMeta, describeFilters } from "@/lib/crawler-copy";
 import { loadSummaries } from "@/lib/crawler-data";
-import { formatLabel } from "@/lib/filters";
+import { buildCrawlerView } from "@/lib/crawler-view";
+import { todayKey } from "@/lib/dates";
 import { filtersHref, parseFilters, type SearchParamRecord } from "@/lib/query";
-import { requestMetadata, siteDescription, siteTitle } from "@/lib/site-metadata";
+import { requestMetadata, siteDescription } from "@/lib/site-metadata";
 import type { EventFormat, Filters } from "@/lib/types";
 
 /**
@@ -25,26 +25,10 @@ async function readFilters(searchParams: Promise<SearchParamRecord>): Promise<Fi
   return parseFilters(await searchParams, todayKey());
 }
 
-function describeFilters(filters: Filters): string {
-  const parts = [
-    filters.areas.length > 0 ? filters.areas.join("・") : null,
-    filters.format !== "all" ? formatLabel(filters.format) : null,
-    filters.keyword ? `「${filters.keyword}」` : null,
-  ].filter(Boolean);
-  return parts.length > 0 ? `${parts.join("・")}の` : "";
-}
-
 export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
   const filters = await readFilters(searchParams);
   const view = buildCrawlerView([], filters);
-  const title = `${view.heading}の${describeFilters(filters)}イベント | ${siteTitle}`;
-
-  return {
-    ...requestMetadata(await headers()),
-    title,
-    description: siteDescription,
-    alternates: { canonical: filtersHref(filters) },
-  };
+  return requestMetadata(await headers(), crawlerPageMeta(view.heading, filters));
 }
 
 export default async function CrawlerPage({ searchParams }: PageProps) {
