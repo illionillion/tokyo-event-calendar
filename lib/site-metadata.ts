@@ -30,23 +30,53 @@ export function resolveMetadataBase(headerList: Headers): URL | undefined {
   return new URL(`${proto}://${host}`);
 }
 
-const ogImage = {
-  url: "/og.svg",
+/** X カードの twitter:site と twitter:creator。 */
+export const twitterSite = "@Sei_engineer";
+
+/** 共有カード用の画像。X は SVG を受け付けないので PNG。相対 URL は metadataBase で絶対 URL になる。 */
+export const ogImage = {
+  url: "/og.png",
   width: 1200,
   height: 630,
-  type: "image/svg+xml",
+  type: "image/png",
   alt: siteTitle,
+};
+
+export type RequestPageMeta = {
+  title: string;
+  description: string;
+  /** metadataBase からのパス。canonical と og:url に使う。 */
+  url: string;
 };
 
 /**
  * リクエストごとに描くページ（クローラー向けのページ・規約など）の共通メタデータ。
- * ホストから metadataBase を決め、OGP を付ける。静的な `/` では使わない（headers() で動的になるため）。
+ * ホストから metadataBase を決め、OGP と X カードを付ける。
+ * 静的な `/` では使わない（headers() で動的になるため）。
  */
-export function requestMetadata(headerList: Headers): Metadata {
+export function requestMetadata(headerList: Headers, page: RequestPageMeta): Metadata {
   return {
     ...baseMetadata,
+    title: page.title,
+    description: page.description,
     metadataBase: resolveMetadataBase(headerList),
-    openGraph: { siteName: siteTitle, locale: "ja_JP", type: "website", images: [ogImage] },
-    twitter: { card: "summary_large_image", images: [ogImage] },
+    alternates: { canonical: page.url },
+    openGraph: {
+      title: page.title,
+      description: page.description,
+      url: page.url,
+      siteName: siteTitle,
+      locale: "ja_JP",
+      type: "website",
+      images: [ogImage],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: page.title,
+      description: page.description,
+      site: twitterSite,
+      creator: twitterSite,
+      images: [ogImage],
+    },
   };
 }
