@@ -4,6 +4,12 @@
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.15.0",
+  "pnpm": {
+    "overrides": {
+      "sharp": ">=0.35.5",
+      "source-map-js": ">=1.2.2"
+    }
+  },
   "scripts": {
     "dev": "pnpm build:data && next dev",
     "build": "pnpm build:data && next build --webpack",
@@ -24,7 +30,7 @@
   },
   "dependencies": {
     "entities": "^8.1.0",
-    "next": "16.3.6",
+    "next": "16.3.8",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "react-markdown": "^10.1.0"
@@ -40,10 +46,10 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.0.1",
-    "@vitest/coverage-v8": "^4.1.4",
+    "@vitest/coverage-v8": "^4.1.12",
     "@vitest/eslint-plugin": "^1.6.23",
     "eslint": "^9",
-    "eslint-config-next": "16.3.6",
+    "eslint-config-next": "16.3.8",
     "eslint-plugin-testing-library": "^7.16.2",
     "jsdom": "^29.0.2",
     "lefthook": "^2.1.6",
@@ -51,7 +57,7 @@
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "typescript": "^5",
-    "vite": "^8.0.16",
-    "vitest": "^4.1.4"
+    "vite": "^8.3.3",
+    "vitest": "^4.1.12"
   }
 }
