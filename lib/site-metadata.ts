@@ -4,6 +4,9 @@ export const siteTitle = "東京イベントカレンダー";
 export const siteDescription =
   "東京都と神奈川県・埼玉県・千葉県の connpass イベントを、日付・場所・キーワードから探すカレンダーです。";
 
+/** sitemap と robots.txt の絶対 URL に使う公開サイトのオリジン。 */
+export const siteUrl = "https://tokyo-event-calendar.illionillion.workers.dev";
+
 /** 全ページ共通。絶対 URL を使わないので、静的なページでもそのまま使える。 */
 export const baseMetadata: Metadata = {
   title: siteTitle,
