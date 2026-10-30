@@ -8,6 +8,9 @@ export const siteDescription =
 export const baseMetadata: Metadata = {
   title: siteTitle,
   description: siteDescription,
+  verification: {
+    google: "Jb-kdqdlbXyt8O9rI0WOAQ92_gL1YGjN468S2392Rdc",
+  },
   icons: {
     icon: [{ url: "/favicon.svg", type: "image/svg+xml", sizes: "any" }],
     apple: [{ url: "/apple-touch-icon.svg", type: "image/svg+xml", sizes: "180x180" }],
