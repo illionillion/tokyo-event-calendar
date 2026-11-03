@@ -153,7 +153,9 @@ const COLUMNS =
  *   金曜・土曜の列も左端まで動かせるようにする
  * - 日付の見出しの行は本体と分け、ページに対して sticky にする（top はページ上部の固定帯の下端
  *   = --page-bar-bottom）。横スクロールする枠の中に置くと sticky がページ基準にならないため、
- *   見出しの行は overflow-x: hidden にして、本体の横スクロールに scrollLeft を合わせる。
+ *   見出しの行は本体の横スクロールに scrollLeft を合わせる。
+ *   overflow-x: hidden は sticky と同じ要素に置かない。hidden は縦もスクロール容器になり、
+ *   WebKit（X のアプリ内ブラウザなど）で直前の週範囲ラベルの上端が切れ、日付カードが重なる。
  *   z-index はページの固定帯（z-10）より下なので、帯の上に見出しが重ならない
  * 複数日のイベントは日の一覧と同じく開始日にだけ出す（件数も日の一覧と揃える）。
  */
@@ -192,33 +194,35 @@ export function WeekView({
 
   return (
     <section id="events" aria-labelledby="week-heading" className="min-w-0">
-      <div className="flex flex-wrap items-end justify-between gap-2">
-        <h2 id="week-heading" className="text-lg font-semibold text-balance lg:text-base">
+      {/*
+        末尾揃え（items-end）にしない。WebKit は flex の end 揃えで、はみ出した文字の上端を切る。
+        余白は行の内側に取り、日付カードの白背景がラベルにかぶっても字形が欠けないようにする。
+      */}
+      <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1 py-1.5">
+        <h2 id="week-heading" className="min-w-0 text-lg font-semibold lg:text-base">
           {range}
           <span className="sr-only">の週</span>
         </h2>
-        <p className="text-sm text-secondary tabular-nums" aria-live="polite">
+        <p className="shrink-0 text-sm text-secondary tabular-nums" aria-live="polite">
           {events.length}件
         </p>
       </div>
       <ActiveFilterChips filters={filters} onChangeFilters={onChangeFilters} />
-      <div
-        ref={headerRef}
-        data-testid="week-header-row"
-        className="sticky top-[var(--page-bar-bottom,0px)] z-[5] mt-3 min-w-0 overflow-x-hidden bg-background pb-1.5"
-      >
-        <div className={COLUMNS}>
-          {dates.map((date) => (
-            <DayHeader
-              key={date}
-              date={date}
-              count={byDate.get(date)?.length ?? 0}
-              today={today}
-              onOpenDay={onOpenDay}
-            />
-          ))}
-          {/* 本体の末尾の余白の列と幅を揃える（lg 未満だけ） */}
-          <span aria-hidden="true" className="lg:hidden" />
+      <div className="sticky top-[var(--page-bar-bottom,0px)] z-[5] mt-3 min-w-0 bg-background pb-1.5">
+        <div ref={headerRef} data-testid="week-header-row" className="min-w-0 overflow-x-hidden">
+          <div className={COLUMNS}>
+            {dates.map((date) => (
+              <DayHeader
+                key={date}
+                date={date}
+                count={byDate.get(date)?.length ?? 0}
+                today={today}
+                onOpenDay={onOpenDay}
+              />
+            ))}
+            {/* 本体の末尾の余白の列と幅を揃える（lg 未満だけ） */}
+            <span aria-hidden="true" className="lg:hidden" />
+          </div>
         </div>
       </div>
       {/* lg 未満は週の部分だけ横スクロールする（ページ自体は横にはみ出さない） */}
