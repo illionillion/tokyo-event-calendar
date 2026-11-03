@@ -136,9 +136,19 @@ describe("WeekView", () => {
       "snap-x",
       "lg:overflow-visible"
     );
-    // 日付の見出しの行はページ上部の固定帯の下に sticky（帯の z-10 より下に描く）
+    // 日付の見出しの行はページ上部の固定帯の下に sticky（帯の z-10 より下に描く）。
+    // overflow は sticky と分け、WebKit で週範囲ラベルの上端が切れないようにする
     const headerRow = screen.getByTestId("week-header-row");
-    expect(headerRow).toHaveClass("sticky", "top-[var(--page-bar-bottom,0px)]", "z-[5]");
+    expect(headerRow).toHaveClass("overflow-x-hidden");
+    expect(headerRow.parentElement).toHaveClass(
+      "sticky",
+      "top-[var(--page-bar-bottom,0px)]",
+      "z-[5]"
+    );
+    expect(headerRow.parentElement).not.toHaveClass("overflow-x-hidden");
+    const rangeHeading = screen.getByRole("heading", { level: 2, name: /の週$/ });
+    expect(rangeHeading.parentElement).toHaveClass("items-baseline", "py-1.5");
+    expect(rangeHeading).not.toHaveClass("text-balance");
     // 本体を横スクロールすると見出しの行も同じだけずれる
     const scroller = screen.getByTestId("week-scroller");
     scroller.scrollLeft = 120;
