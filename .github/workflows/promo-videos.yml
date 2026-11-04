@@ -1,0 +1,120 @@
+name: Promo videos
+
+# 週次の LT / もくもく紹介動画（縦 2 本と横 2 本）。ci.yml とは別ワークフローなので、
+# ここが失敗しても lint・テスト・Next のビルドは止まらない。
+# 土曜 6:00 JST（金曜 21:00 UTC）。イベントスナップショット（毎日 UTC 18:00）の後。
+on:
+  schedule:
+    - cron: "0 21 * * 5"
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "基準日（YYYY-MM-DD、日本時間）。空なら実行日。土曜投稿が案内する来週を書き出す。"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: promo-videos-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  render:
+    name: Render weekly promo videos
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'schedule' && 'main' || github.ref }}
+
+      - name: Install browser libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libnss3 \
+            libdbus-1-3 \
+            libatk1.0-0 \
+            libatk-bridge2.0-0 \
+            libcups2 \
+            libdrm2 \
+            libxkbcommon0 \
+            libxcomposite1 \
+            libxdamage1 \
+            libxfixes3 \
+            libxrandr2 \
+            libgbm1 \
+            libpango-1.0-0 \
+            libcairo2 \
+            libxshmfence1
+          sudo apt-get install -y libasound2t64 || sudo apt-get install -y libasound2
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: Install app dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Remotion dependencies
+        run: pnpm --dir remotion install --frozen-lockfile
+
+      - name: Type-check Remotion
+        run: pnpm promo:type-check
+
+      - name: Render promo videos
+        env:
+          PROMO_CONCURRENCY: "2"
+          DATE: ${{ inputs.date }}
+        run: |
+          if [ -n "$DATE" ]; then
+            pnpm promo:render -- --date "$DATE"
+          else
+            pnpm promo:render
+          fi
+
+      - name: Upload videos
+        uses: actions/upload-artifact@v4
+        with:
+          name: promo-videos
+          retention-days: 14
+          if-no-files-found: error
+          path: |
+            public/promo/videos/week-lt.mp4
+            public/promo/videos/week-lt-landscape.mp4
+            public/promo/videos/week-mokumoku.mp4
+            public/promo/videos/week-mokumoku-landscape.mp4
+            public/promo/videos/manifest.json
+
+      - name: Commit videos on main
+        if: github.ref == 'refs/heads/main'
+        env:
+          LEFTHOOK: "0"
+        run: |
+          git add \
+            public/promo/videos/week-lt.mp4 \
+            public/promo/videos/week-lt-landscape.mp4 \
+            public/promo/videos/week-mokumoku.mp4 \
+            public/promo/videos/week-mokumoku-landscape.mp4 \
+            public/promo/videos/manifest.json
+          if git diff --cached --quiet; then
+            echo "動画に変化はありません"
+            exit 0
+          fi
+          git config user.name "Yuto Ichinose"
+          git config user.email "60034520+illionillion@users.noreply.github.com"
+          git commit -m "chore: 週次の LT・もくもく紹介動画を更新する"
+          # push は GITHUB_TOKEN で行う（この push では Cloudflare のデプロイが走らないことがある）
+          git push origin HEAD:main

@@ -16,6 +16,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Test coverage output
     "coverage/**",
+    // Remotion は別パッケージ。ルートの型チェック・ESLint 対象外。
+    "remotion/**",
   ]),
   {
     files: ["**/*.{test,spec}.{ts,tsx}"],

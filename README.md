@@ -37,20 +37,51 @@ API の利用条件は [connpass API利用規約](https://help.connpass.com/api/
 
 ## Scripts
 
-| Command                   | Description                   |
-| ------------------------- | ----------------------------- |
-| `pnpm dev`                | 開発サーバー起動              |
-| `pnpm build`              | 本番ビルド                    |
-| `pnpm start`              | 本番サーバー起動              |
-| `pnpm lint`               | ESLint                        |
-| `pnpm type-check`         | TypeScript 型チェック         |
-| `pnpm format`             | Prettier で整形               |
-| `pnpm format:check`       | Prettier チェック             |
-| `pnpm test`               | Vitest（watch）               |
-| `pnpm test:run`           | Vitest（一回実行）            |
-| `pnpm test:coverage`      | Vitest + coverage             |
-| `pnpm fetch:events`       | スナップショット取得（CI 用） |
-| `pnpm fetch:events:local` | 同上（`.env` を読む）         |
+| Command                   | Description                       |
+| ------------------------- | --------------------------------- |
+| `pnpm dev`                | 開発サーバー起動                  |
+| `pnpm build`              | 本番ビルド                        |
+| `pnpm start`              | 本番サーバー起動                  |
+| `pnpm lint`               | ESLint                            |
+| `pnpm type-check`         | TypeScript 型チェック             |
+| `pnpm format`             | Prettier で整形                   |
+| `pnpm format:check`       | Prettier チェック                 |
+| `pnpm test`               | Vitest（watch）                   |
+| `pnpm test:run`           | Vitest（一回実行）                |
+| `pnpm test:coverage`      | Vitest + coverage                 |
+| `pnpm fetch:events`       | スナップショット取得（CI 用）     |
+| `pnpm fetch:events:local` | 同上（`.env` を読む）             |
+| `pnpm promo:install`      | Remotion の依存を入れる           |
+| `pnpm promo:studio`       | 紹介動画のプレビュー              |
+| `pnpm promo:prepare`      | 実データで props とサムネだけ作る |
+| `pnpm promo:render`       | 週次の紹介動画を 2 本書く         |
+| `pnpm promo:type-check`   | Remotion 側の型チェック           |
+
+## 週次の紹介動画
+
+LT ともくもく会の動画を、Remotion で `data/events.json` から書き出します。中身は同じで、縦（1080×1920、Instagram / YouTube）と横（1920×1080、X）を出します。ナレーションと BGM はありません。詳細な絞り込みとライセンスは [remotion/README.md](remotion/README.md) にあります。
+
+土曜の投稿と同じく、基準日の次の土曜が案内する「来週」（日曜〜土曜、日本時間）が対象です。
+
+| 動画        | 向き         | ファイル                                          | 絞り込み                                 |
+| ----------- | ------------ | ------------------------------------------------- | ---------------------------------------- |
+| A. LT       | 縦 1080×1920 | `public/promo/videos/week-lt.mp4`                 | サイトの週表示 `keyword=LT` と同じ       |
+| A. LT       | 横 1920×1080 | `public/promo/videos/week-lt-landscape.mp4`       | 同上                                     |
+| B. もくもく | 縦 1080×1920 | `public/promo/videos/week-mokumoku.mp4`           | サイトの週表示 `keyword=もくもく` と同じ |
+| B. もくもく | 横 1920×1080 | `public/promo/videos/week-mokumoku-landscape.mp4` | 同上                                     |
+
+各動画は日付と開始時刻の順で最大 10 件、尺は約 25 秒までです。`.github/workflows/promo-videos.yml` が土曜 6:00 JST に 4 本書いて `main` に commit します。このワークフローは `ci.yml` と別で、失敗しても lint・テスト・ビルドは止まりません。
+
+公開 URL（デプロイ後）:
+
+- https://tokyo-event-calendar.illionillion.workers.dev/promo/videos/week-lt.mp4
+- https://tokyo-event-calendar.illionillion.workers.dev/promo/videos/week-lt-landscape.mp4
+- https://tokyo-event-calendar.illionillion.workers.dev/promo/videos/week-mokumoku.mp4
+- https://tokyo-event-calendar.illionillion.workers.dev/promo/videos/week-mokumoku-landscape.mp4
+
+手元では `pnpm promo:install` のあと `pnpm promo:studio`（サンプル）か `pnpm promo:render`（実データ）です。
+
+Remotion は [Remotion Free License](https://www.remotion.dev/docs/license) で使っています。個人、および従業員 3 人までの組織は無償です。
 
 ## Development tooling
 

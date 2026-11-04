@@ -3,6 +3,7 @@ pre-commit:
   commands:
     lint:
       glob: "**/*.{ts,tsx,mjs}"
+      exclude: "(^|/)remotion/"
       run: pnpm exec eslint --fix {staged_files}
       stage_fixed: true
     format:
