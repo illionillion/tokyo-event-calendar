@@ -1,0 +1,28 @@
+{
+  "anchor": "2026-11-05",
+  "weekStart": "2026-11-08",
+  "weekEnd": "2026-11-14",
+  "weekLabel": "2026年11月8日〜14日",
+  "generatedAt": "2026-11-04T15:12:14.372Z",
+  "cap": 10,
+  "videos": [
+    {
+      "id": "lt",
+      "keyword": "LT",
+      "file": "week-lt.mp4",
+      "publicPath": "/promo/videos/week-lt.mp4",
+      "matched": 36,
+      "shown": 10,
+      "seconds": 24.8
+    },
+    {
+      "id": "mokumoku",
+      "keyword": "もくもく",
+      "file": "week-mokumoku.mp4",
+      "publicPath": "/promo/videos/week-mokumoku.mp4",
+      "matched": 12,
+      "shown": 10,
+      "seconds": 24.8
+    }
+  ]
+}
