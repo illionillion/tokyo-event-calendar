@@ -1,6 +1,6 @@
 name: Promo videos
 
-# 週次の LT / もくもく紹介動画。ci.yml とは別ワークフローなので、
+# 週次の LT / もくもく紹介動画（縦 2 本と横 2 本）。ci.yml とは別ワークフローなので、
 # ここが失敗しても lint・テスト・Next のビルドは止まらない。
 # 土曜 6:00 JST（金曜 21:00 UTC）。イベントスナップショット（毎日 UTC 18:00）の後。
 on:
@@ -93,7 +93,9 @@ jobs:
           if-no-files-found: error
           path: |
             public/promo/videos/week-lt.mp4
+            public/promo/videos/week-lt-landscape.mp4
             public/promo/videos/week-mokumoku.mp4
+            public/promo/videos/week-mokumoku-landscape.mp4
             public/promo/videos/manifest.json
 
       - name: Commit videos on main
@@ -103,7 +105,9 @@ jobs:
         run: |
           git add \
             public/promo/videos/week-lt.mp4 \
+            public/promo/videos/week-lt-landscape.mp4 \
             public/promo/videos/week-mokumoku.mp4 \
+            public/promo/videos/week-mokumoku-landscape.mp4 \
             public/promo/videos/manifest.json
           if git diff --cached --quiet; then
             echo "動画に変化はありません"

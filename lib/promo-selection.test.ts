@@ -55,6 +55,14 @@ describe("土曜投稿の週", () => {
 describe("紹介動画の絞り込み", () => {
   it("週次投稿と同じ語だけを使い、発表や作業会は足さない", () => {
     expect(PROMO_VARIANTS.map((variant) => variant.keyword)).toEqual(["LT", "もくもく"]);
+    expect(
+      PROMO_VARIANTS.flatMap((variant) => variant.outputs.map((output) => output.fileName))
+    ).toEqual([
+      "week-lt.mp4",
+      "week-lt-landscape.mp4",
+      "week-mokumoku.mp4",
+      "week-mokumoku-landscape.mp4",
+    ]);
   });
 
   it("サイトの keyword と同じ部分一致で、日付と開始時刻の順に最大 10 件", () => {

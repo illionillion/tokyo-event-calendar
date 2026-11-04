@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { continueRender, delayRender, staticFile } from "remotion";
-import { PromoFrame } from "./frame";
+import { PromoFrame, useLandscape } from "./frame";
 import { theme } from "./theme";
 import type { PromoCard } from "./types";
 
@@ -68,6 +68,85 @@ function EventThumb({ card }: { card: PromoCard }) {
 }
 
 export function EventCard({ card }: { card: PromoCard }) {
+  const landscape = useLandscape();
+
+  if (landscape) {
+    return (
+      <PromoFrame>
+        <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
+          <div
+            style={{
+              width: 980,
+              margin: 24,
+              boxSizing: "border-box",
+              padding: 20,
+              backgroundColor: theme.thumb,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <EventThumb card={card} />
+          </div>
+          <div
+            style={{
+              flex: 1,
+              minWidth: 0,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              padding: "28px 48px 28px 12px",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "baseline",
+                justifyContent: "space-between",
+                gap: 24,
+              }}
+            >
+              <div style={{ fontSize: 32, fontWeight: 700, color: theme.accent, lineHeight: 1.3 }}>
+                {card.cancelled ? "中止　" : ""}
+                {card.dateLabel}
+                <span style={{ fontWeight: 500, color: theme.secondary }}>　{card.timeLabel}</span>
+              </div>
+              <div style={{ flexShrink: 0, fontSize: 26, fontWeight: 500, color: theme.faint }}>
+                {card.index} / {card.total}
+              </div>
+            </div>
+            <div
+              style={{
+                marginTop: 20,
+                fontSize: 46,
+                fontWeight: 700,
+                lineHeight: 1.35,
+                maxHeight: 46 * 1.35 * 3,
+                overflow: "hidden",
+                display: "-webkit-box",
+                WebkitLineClamp: 3,
+                WebkitBoxOrient: "vertical",
+              }}
+            >
+              {card.title}
+            </div>
+            <div
+              style={{
+                marginTop: 18,
+                fontSize: 30,
+                fontWeight: 500,
+                lineHeight: 1.4,
+                color: theme.muted,
+              }}
+            >
+              {card.placeLabel}
+            </div>
+          </div>
+        </div>
+      </PromoFrame>
+    );
+  }
+
   return (
     <PromoFrame>
       <div

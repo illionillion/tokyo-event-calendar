@@ -1,35 +1,33 @@
 import { Composition } from "remotion";
 import { sampleLt, sampleMokumoku } from "./samples";
 import { durationInFrames, FPS } from "./timing";
+import type { PromoProps } from "./types";
 import { WeeklyPromo } from "./WeeklyPromo";
+
+function promoComposition(id: string, props: PromoProps, width: number, height: number) {
+  return (
+    <Composition
+      id={id}
+      component={WeeklyPromo}
+      durationInFrames={durationInFrames(props.cards.length)}
+      fps={FPS}
+      width={width}
+      height={height}
+      defaultProps={props}
+      calculateMetadata={({ props: next }) => ({
+        durationInFrames: durationInFrames(next.cards.length),
+      })}
+    />
+  );
+}
 
 export function RemotionRoot() {
   return (
     <>
-      <Composition
-        id="WeeklyLt"
-        component={WeeklyPromo}
-        durationInFrames={durationInFrames(sampleLt.cards.length)}
-        fps={FPS}
-        width={1080}
-        height={1920}
-        defaultProps={sampleLt}
-        calculateMetadata={({ props }) => ({
-          durationInFrames: durationInFrames(props.cards.length),
-        })}
-      />
-      <Composition
-        id="WeeklyMokumoku"
-        component={WeeklyPromo}
-        durationInFrames={durationInFrames(sampleMokumoku.cards.length)}
-        fps={FPS}
-        width={1080}
-        height={1920}
-        defaultProps={sampleMokumoku}
-        calculateMetadata={({ props }) => ({
-          durationInFrames: durationInFrames(props.cards.length),
-        })}
-      />
+      {promoComposition("WeeklyLt", sampleLt, 1080, 1920)}
+      {promoComposition("WeeklyMokumoku", sampleMokumoku, 1080, 1920)}
+      {promoComposition("WeeklyLtLandscape", sampleLt, 1920, 1080)}
+      {promoComposition("WeeklyMokumokuLandscape", sampleMokumoku, 1920, 1080)}
     </>
   );
 }

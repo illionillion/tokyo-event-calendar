@@ -18,17 +18,33 @@ export const PROMO_ENDING_FRAMES = 90;
 export const PROMO_VARIANTS = [
   {
     id: "lt",
-    compositionId: "WeeklyLt",
     keyword: "LT",
-    fileName: "week-lt.mp4",
     headline: "LT",
+    outputs: [
+      { orientation: "vertical", compositionId: "WeeklyLt", fileName: "week-lt.mp4" },
+      {
+        orientation: "landscape",
+        compositionId: "WeeklyLtLandscape",
+        fileName: "week-lt-landscape.mp4",
+      },
+    ],
   },
   {
     id: "mokumoku",
-    compositionId: "WeeklyMokumoku",
     keyword: "もくもく",
-    fileName: "week-mokumoku.mp4",
     headline: "もくもく",
+    outputs: [
+      {
+        orientation: "vertical",
+        compositionId: "WeeklyMokumoku",
+        fileName: "week-mokumoku.mp4",
+      },
+      {
+        orientation: "landscape",
+        compositionId: "WeeklyMokumokuLandscape",
+        fileName: "week-mokumoku-landscape.mp4",
+      },
+    ],
   },
 ] as const;
 

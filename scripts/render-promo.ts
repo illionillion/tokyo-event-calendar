@@ -21,7 +21,6 @@ import {
   promoTimeLabel,
   saturdayPostWeek,
   takePromoEvents,
-  type PromoVariant,
 } from "../lib/promo-selection";
 import {
   contentLengthWithin,
@@ -114,7 +113,12 @@ function run(command: string, args: string[], cwd: string): Promise<void> {
   });
 }
 
-async function renderVideo(variant: PromoVariant, propsPath: string, outputPath: string) {
+async function renderVideo(
+  compositionId: string,
+  fileName: string,
+  propsPath: string,
+  outputPath: string
+) {
   await run(
     "pnpm",
     [
@@ -122,7 +126,7 @@ async function renderVideo(variant: PromoVariant, propsPath: string, outputPath:
       "remotion",
       "render",
       "src/index.ts",
-      variant.compositionId,
+      compositionId,
       outputPath,
       `--props=${propsPath}`,
       "--codec=h264",
@@ -148,7 +152,7 @@ async function renderVideo(variant: PromoVariant, propsPath: string, outputPath:
       `${path.basename(outputPath)} が ${size} バイトで、上限 ${MAX_VIDEO_BYTES} を超えています`
     );
   }
-  console.log(`${variant.fileName}: ${(size / 1024 / 1024).toFixed(1)} MiB`);
+  console.log(`${fileName}: ${(size / 1024 / 1024).toFixed(1)} MiB`);
 }
 
 async function main(): Promise<void> {
@@ -199,18 +203,23 @@ async function main(): Promise<void> {
       `${variant.keyword}: ${matched.length} 件中 ${shown.length} 件、サムネ ${thumbs} 枚、${promoDurationSeconds(shown.length).toFixed(1)} 秒`
     );
 
-    const outputPath = path.join(outputDir, variant.fileName);
-    if (!args.prepareOnly) await renderVideo(variant, propsPath, outputPath);
-
-    manifestVideos.push({
-      id: variant.id,
-      keyword: variant.keyword,
-      file: variant.fileName,
-      publicPath: `/promo/videos/${variant.fileName}`,
-      matched: matched.length,
-      shown: shown.length,
-      seconds: Math.round(promoDurationSeconds(shown.length) * 10) / 10,
-    });
+    const seconds = Math.round(promoDurationSeconds(shown.length) * 10) / 10;
+    for (const output of variant.outputs) {
+      const outputPath = path.join(outputDir, output.fileName);
+      if (!args.prepareOnly) {
+        await renderVideo(output.compositionId, output.fileName, propsPath, outputPath);
+      }
+      manifestVideos.push({
+        id: variant.id,
+        orientation: output.orientation,
+        keyword: variant.keyword,
+        file: output.fileName,
+        publicPath: `/promo/videos/${output.fileName}`,
+        matched: matched.length,
+        shown: shown.length,
+        seconds,
+      });
+    }
   }
 
   if (args.prepareOnly) {
@@ -218,7 +227,9 @@ async function main(): Promise<void> {
     return;
   }
   if (args.only) {
-    console.log("1 本だけ書きました。manifest は 2 本そろったときだけ更新します。");
+    console.log(
+      "指定した種類だけ書きました。manifest は LT ともくもくがそろったときだけ更新します。"
+    );
     return;
   }
 
