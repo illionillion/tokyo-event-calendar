@@ -10,6 +10,7 @@ import { spawn } from "node:child_process";
 import { copyFile, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { parseArgs } from "../lib/promo-args";
 import { formatDayHeading, parseDateKey, todayKey } from "../lib/dates";
 import { materializeEvents } from "../lib/events";
 import {
@@ -18,12 +19,17 @@ import {
   promoDurationSeconds,
   promoPlaceLabel,
   promoTimeLabel,
-  promoVariant,
   saturdayPostWeek,
   takePromoEvents,
   type PromoVariant,
 } from "../lib/promo-selection";
-import { imageExtension, isHttpsUrl } from "../lib/promo-thumbs";
+import {
+  contentLengthWithin,
+  imageExtension,
+  isHttpsUrl,
+  MAX_THUMB_BYTES,
+  readBodyUpTo,
+} from "../lib/promo-thumbs";
 import { siteTitle, siteUrl } from "../lib/site-metadata";
 import type { Event, EventSnapshot } from "../lib/types";
 import { formatWeekRange } from "../lib/week";
@@ -39,37 +45,6 @@ const displayUrl = siteUrl.endsWith("/") ? siteUrl : `${siteUrl}/`;
 /** Workers の静的ファイル上限（25 MiB 前後）に余裕を残す。 */
 const MAX_VIDEO_BYTES = 20 * 1024 * 1024;
 const THUMB_TIMEOUT_MS = 15_000;
-
-type Args = {
-  date?: string;
-  only?: PromoVariant["id"];
-  prepareOnly: boolean;
-};
-
-function parseArgs(argv: string[]): Args {
-  const args: Args = { prepareOnly: false };
-  for (let index = 0; index < argv.length; index += 1) {
-    const token = argv[index];
-    if (token === "--prepare-only") {
-      args.prepareOnly = true;
-      continue;
-    }
-    if (token === "--date" || token === "--only") {
-      const value = argv[index + 1];
-      if (!value) throw new Error(`${token} の値がありません`);
-      index += 1;
-      if (token === "--date") args.date = value;
-      else {
-        const variant = promoVariant(value);
-        if (!variant) throw new Error(`--only は lt か mokumoku です: ${value}`);
-        args.only = variant.id;
-      }
-      continue;
-    }
-    throw new Error(`不明な引数です: ${token}`);
-  }
-  return args;
-}
 
 function concurrency(): string {
   const raw = process.env.PROMO_CONCURRENCY ?? "2";
@@ -93,8 +68,15 @@ async function downloadThumb(event: Event): Promise<string | null> {
         "user-agent": "tokyo-event-calendar-promo",
       },
     });
-    if (!response.ok) return null;
-    const bytes = new Uint8Array(await response.arrayBuffer());
+    if (
+      !response.ok ||
+      !contentLengthWithin(response.headers.get("content-length"), MAX_THUMB_BYTES)
+    ) {
+      await response.body?.cancel().catch(() => undefined);
+      return null;
+    }
+    const bytes = await readBodyUpTo(response.body, MAX_THUMB_BYTES);
+    if (!bytes) return null;
     const extension = imageExtension(bytes);
     if (!extension) return null;
     const filename = `${event.id}.${extension}`;

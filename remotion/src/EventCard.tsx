@@ -1,4 +1,6 @@
-import { Img, staticFile } from "remotion";
+import { useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
+import { continueRender, delayRender, staticFile } from "remotion";
 import { PromoFrame } from "./frame";
 import { theme } from "./theme";
 import type { PromoCard } from "./types";
@@ -11,6 +13,58 @@ function initial(title: string): string {
     [Symbol.iterator]()
     .next().value;
   return segment?.segment ?? "・";
+}
+
+function Letter({ title }: { title: string }) {
+  return (
+    <div style={{ fontSize: 160, fontWeight: 700, lineHeight: 1, color: theme.accent }}>
+      {initial(title)}
+    </div>
+  );
+}
+
+/**
+ * 1 枚のデコード失敗で動画全体を止めない。
+ * そのカードだけ頭文字に戻す。
+ */
+function EventThumb({ card }: { card: PromoCard }) {
+  const src = card.thumb ? staticFile(card.thumb) : null;
+  const [failed, setFailed] = useState(false);
+  const imageRef = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    const image = imageRef.current;
+    if (!src || !image) return;
+    const handle = delayRender(`サムネ ${card.id}`);
+    let settled = false;
+    const release = () => {
+      if (settled) return;
+      settled = true;
+      continueRender(handle);
+    };
+    const fail = () => {
+      if (settled) return;
+      flushSync(() => setFailed(true));
+      release();
+    };
+    image.addEventListener("error", fail);
+    image.decode().then(release).catch(fail);
+    return () => {
+      image.removeEventListener("error", fail);
+      release();
+    };
+  }, [card.id, src]);
+
+  if (!src || failed) return <Letter title={card.title} />;
+
+  return (
+    <img
+      ref={imageRef}
+      src={src}
+      alt=""
+      style={{ width: "100%", height: "100%", objectFit: "contain" }}
+    />
+  );
 }
 
 export function EventCard({ card }: { card: PromoCard }) {
@@ -28,16 +82,7 @@ export function EventCard({ card }: { card: PromoCard }) {
           justifyContent: "center",
         }}
       >
-        {card.thumb ? (
-          <Img
-            src={staticFile(card.thumb)}
-            style={{ width: "100%", height: "100%", objectFit: "contain" }}
-          />
-        ) : (
-          <div style={{ fontSize: 160, fontWeight: 700, lineHeight: 1, color: theme.accent }}>
-            {initial(card.title)}
-          </div>
-        )}
+        <EventThumb card={card} />
       </div>
       <div
         style={{
