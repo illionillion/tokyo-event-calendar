@@ -3,6 +3,7 @@ import { EmptyWeek } from "./EmptyWeek";
 import { Ending } from "./Ending";
 import { EventCard } from "./EventCard";
 import { Opening } from "./Opening";
+import { theme } from "./theme";
 import { CARD_FRAMES, EMPTY_FRAMES, ENDING_FRAMES, OPENING_FRAMES } from "./timing";
 import type { PromoProps } from "./types";
 
@@ -16,7 +17,7 @@ export function WeeklyPromo(props: PromoProps) {
   const empty = props.cards.length === 0;
 
   return (
-    <AbsoluteFill style={{ backgroundColor: "#14090b" }}>
+    <AbsoluteFill style={{ backgroundColor: theme.page }}>
       <Series>
         <Series.Sequence durationInFrames={OPENING_FRAMES}>
           <Opening {...props} />
