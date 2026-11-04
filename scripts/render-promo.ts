@@ -7,7 +7,7 @@
  *   pnpm promo:render -- --date 2026-10-24 --only lt
  */
 import { spawn } from "node:child_process";
-import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { formatDayHeading, parseDateKey, todayKey } from "../lib/dates";
@@ -182,6 +182,11 @@ async function main(): Promise<void> {
   const events = materializeEvents(todayKey(), snapshot.events);
   const variants = PROMO_VARIANTS.filter((variant) => !args.only || variant.id === args.only);
 
+  await mkdir(path.join(remotionDir, "public", "brand"), { recursive: true });
+  await copyFile(
+    path.join(rootDir, "public", "favicon.svg"),
+    path.join(remotionDir, "public", "brand", "favicon.svg")
+  );
   await rm(thumbDir, { recursive: true, force: true });
   await mkdir(thumbDir, { recursive: true });
   await mkdir(propsDir, { recursive: true });
