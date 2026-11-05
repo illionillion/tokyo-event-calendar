@@ -50,3 +50,10 @@ next-env.d.ts
 /remotion/props/generated/
 /remotion/public/thumbs/
 /remotion/.remotion/
+
+# promo（告知用スライド）の作業ファイル
+/promo/.venv/
+/promo/shots/
+/promo/node_modules/
+__pycache__/
+*.py[cod]
