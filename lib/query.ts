@@ -1,5 +1,5 @@
 import { parseDateKey } from "@/lib/dates";
-import type { Filters, FormatFilter } from "@/lib/types";
+import type { Filters, FormatFilter, ViewMode } from "@/lib/types";
 
 export type SearchParamRecord = Record<string, string | string[] | undefined>;
 
@@ -26,6 +26,11 @@ function parseAreas(values: string[]): string[] {
   return areas;
 }
 
+/** `view=week` のときだけ週表示。値が無い・不明なときは従来の月表示。 */
+function parseView(value: string | undefined): ViewMode {
+  return value === "week" ? "week" : "month";
+}
+
 function parseFormat(value: string | undefined): FormatFilter {
   if (value === "online" || value === "offline") return value;
   return "all";
@@ -48,6 +53,7 @@ export function parseFilters(params: URLSearchParams | SearchParamRecord, today:
     areas: parseAreas(areaValues),
     format: parseFormat(read("format")),
     keyword,
+    view: parseView(read("view")),
   };
 }
 
@@ -60,6 +66,7 @@ export function buildQuery(filters: Filters): string {
 
   const keyword = filters.keyword.trim();
   if (keyword) params.set("keyword", keyword);
+  if (filters.view === "week") params.set("view", "week");
 
   return params.toString();
 }

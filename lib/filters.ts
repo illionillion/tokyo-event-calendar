@@ -21,7 +21,7 @@ export function joinKeywordTerms(terms: string[]): string {
 export const keywordPlaceholder = joinKeywordTerms(["React", "LT", "渋谷"]);
 
 /** エリアを 1 つも選んでいなければすべて、選んでいればいずれかに当たるか（OR）。 */
-export function matchesArea(event: Event, areas: readonly string[]): boolean {
+export function matchesArea(event: Pick<Event, "area">, areas: readonly string[]): boolean {
   if (areas.length === 0) return true;
   return areas.includes(event.area);
 }
@@ -32,7 +32,7 @@ export function toggleArea(areas: readonly string[], area: string): string[] {
   return [...areas, area];
 }
 
-export function matchesFormat(event: Event, format: FormatFilter): boolean {
+export function matchesFormat(event: Pick<Event, "format">, format: FormatFilter): boolean {
   if (format === "all") return true;
   if (format === "online") return event.format === "online" || event.format === "hybrid";
   return event.format === "offline" || event.format === "hybrid";
@@ -63,7 +63,7 @@ export function hasActiveFilters(filters: Filters): boolean {
   return Boolean(filters.areas.length > 0 || filters.format !== "all" || filters.keyword.trim());
 }
 
-function compareEvents(left: Event, right: Event): number {
+export function compareEvents(left: Event, right: Event): number {
   const byTime = left.startedAt.localeCompare(right.startedAt);
   if (byTime !== 0) return byTime;
   return left.title.localeCompare(right.title, "ja");
@@ -78,11 +78,28 @@ export function filterEvents(events: Event[], filters: Filters): Event[] {
     .sort(compareEvents);
 }
 
-export function countByArea(events: Event[], filters: Filters): Map<string, number> {
+/** 日付以外の条件（エリア・開催形態・キーワード）に当たるか。 */
+export function matchesConditions(event: Event, filters: Filters): boolean {
+  return (
+    matchesArea(event, filters.areas) &&
+    matchesFormat(event, filters.format) &&
+    matchesKeyword(event, filters.keyword)
+  );
+}
+
+/**
+ * エリアごとの件数。エリア以外の条件で数える。
+ * inScope で数える日付の範囲を変えられる（既定は選択中の日に始まるイベント、週表示では週のうちに始まるイベント）。
+ */
+export function countByArea(
+  events: Event[],
+  filters: Filters,
+  inScope: (event: Event) => boolean = (event) => event.date === filters.date
+): Map<string, number> {
   const counts = new Map<string, number>();
 
   for (const event of events) {
-    if (event.date !== filters.date || !event.area) continue;
+    if (!inScope(event) || !event.area) continue;
     if (!matchesFormat(event, filters.format) || !matchesKeyword(event, filters.keyword)) continue;
     counts.set(event.area, (counts.get(event.area) ?? 0) + 1);
   }
@@ -100,6 +117,23 @@ export function matchingDates(events: Event[], filters: Filters): Set<string> {
     dates.add(event.date);
   }
 
+  return dates;
+}
+
+/**
+ * キーワードが無いときの、イベントのある日。軽い一覧（エリアと開催形態）だけで決まるので、
+ * まだ取っていない日のぶんも印を付けられる。
+ */
+export function matchingSummaryDates(
+  summaries: readonly Pick<Event, "date" | "area" | "format">[],
+  filters: Filters
+): Set<string> {
+  const dates = new Set<string>();
+  for (const summary of summaries) {
+    if (matchesArea(summary, filters.areas) && matchesFormat(summary, filters.format)) {
+      dates.add(summary.date);
+    }
+  }
   return dates;
 }
 

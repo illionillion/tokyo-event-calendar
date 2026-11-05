@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/cn";
 import {
   dayNumber,
@@ -20,6 +20,8 @@ type MiniCalendarProps = {
   today: string;
   markedDates: Set<string>;
   onSelectDate: (date: string) => void;
+  /** 表示中の月（YYYY-MM）が変わったとき。その月のイベントを読み込むのに使う。 */
+  onViewMonthChange?: (month: string) => void;
 };
 
 export function MiniCalendar({
@@ -27,6 +29,7 @@ export function MiniCalendar({
   today,
   markedDates,
   onSelectDate,
+  onViewMonthChange,
 }: MiniCalendarProps) {
   const [viewMonth, setViewMonth] = useState(monthValue(selectedDate));
   const [trackedDate, setTrackedDate] = useState(selectedDate);
@@ -35,6 +38,10 @@ export function MiniCalendar({
     setTrackedDate(selectedDate);
     setViewMonth(monthValue(selectedDate));
   }
+
+  useEffect(() => {
+    onViewMonthChange?.(viewMonth);
+  }, [onViewMonthChange, viewMonth]);
 
   const [yearText, monthText] = viewMonth.split("-");
   const year = Number(yearText);

@@ -42,6 +42,15 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# build-event-data で生成する静的なイベントデータ
+/public/data/
+
+# Remotion。依存と、レンダー前に落とすサムネはコミットしない
+/remotion/node_modules/
+/remotion/props/generated/
+/remotion/public/thumbs/
+/remotion/.remotion/
+
 # promo（告知用スライド）の作業ファイル
 /promo/.venv/
 /promo/shots/

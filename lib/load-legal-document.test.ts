@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   assertFrontmatter,
@@ -76,5 +77,11 @@ describe("loadLegalDocument", () => {
     expect(doc.canonicalPath).toBe("terms");
     expect(doc.content).toContain("connpass API から 1 日 1 回取得");
     expect(doc.content).toContain("日本法");
+  });
+
+  it("does not read the markdown from disk when called", () => {
+    const source = readFileSync("lib/load-legal-document.ts", "utf8");
+    expect(source).not.toMatch(/readFileSync\s*\(/);
+    expect(source).not.toContain('from "node:fs"');
   });
 });

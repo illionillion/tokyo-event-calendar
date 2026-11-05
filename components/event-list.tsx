@@ -25,7 +25,10 @@ export function EventList({
   onClearFilters,
 }: EventListProps) {
   const active = hasActiveFilters(filters);
-  const allEnded = events.length > 0 && events.every((event) => hasEnded(event.endedAt, now));
+  // 中止のイベントは「終了」ではなく「中止」と出すので、終了したかどうかの判定には含めない
+  const heldEvents = events.filter((event) => !event.cancelled);
+  const allEnded =
+    heldEvents.length > 0 && heldEvents.every((event) => hasEnded(event.endedAt, now));
   const isToday = filters.date === today;
   const holiday = holidayName(filters.date);
 
@@ -55,43 +58,7 @@ export function EventList({
         </p>
       </div>
 
-      {active ? (
-        <ul className="mt-3 flex flex-wrap gap-2">
-          {filters.areas.map((area) => (
-            <li key={`area-${area}`}>
-              <FilterChip
-                label={area}
-                onClear={() =>
-                  onChangeFilters({ areas: filters.areas.filter((name) => name !== area) })
-                }
-                clearLabel={`${area}の条件を解除`}
-              />
-            </li>
-          ))}
-          {filters.format !== "all" ? (
-            <li>
-              <FilterChip
-                label={formatLabel(filters.format)}
-                onClear={() => onChangeFilters({ format: "all" })}
-                clearLabel="開催形態の条件を解除"
-              />
-            </li>
-          ) : null}
-          {splitKeywordTerms(filters.keyword).map((term, index, terms) => (
-            <li key={`${term}-${index}`}>
-              <FilterChip
-                label={term}
-                onClear={() =>
-                  onChangeFilters({
-                    keyword: joinKeywordTerms(terms.filter((_, i) => i !== index)),
-                  })
-                }
-                clearLabel={`${term}の条件を解除`}
-              />
-            </li>
-          ))}
-        </ul>
-      ) : null}
+      <ActiveFilterChips filters={filters} onChangeFilters={onChangeFilters} />
 
       {events.length === 0 ? (
         <EmptyState
@@ -128,6 +95,55 @@ export function EventList({
         </>
       )}
     </section>
+  );
+}
+
+/** 選択中の条件をチップで出し、1 つずつ外せるようにする（一覧と週表示で共通）。 */
+export function ActiveFilterChips({
+  filters,
+  onChangeFilters,
+}: {
+  filters: Filters;
+  onChangeFilters: (partial: Partial<Filters>) => void;
+}) {
+  if (!hasActiveFilters(filters)) return null;
+
+  return (
+    <ul className="mt-3 flex flex-wrap gap-2">
+      {filters.areas.map((area) => (
+        <li key={`area-${area}`}>
+          <FilterChip
+            label={area}
+            onClear={() =>
+              onChangeFilters({ areas: filters.areas.filter((name) => name !== area) })
+            }
+            clearLabel={`${area}の条件を解除`}
+          />
+        </li>
+      ))}
+      {filters.format !== "all" ? (
+        <li>
+          <FilterChip
+            label={formatLabel(filters.format)}
+            onClear={() => onChangeFilters({ format: "all" })}
+            clearLabel="開催形態の条件を解除"
+          />
+        </li>
+      ) : null}
+      {splitKeywordTerms(filters.keyword).map((term, index, terms) => (
+        <li key={`${term}-${index}`}>
+          <FilterChip
+            label={term}
+            onClear={() =>
+              onChangeFilters({
+                keyword: joinKeywordTerms(terms.filter((_, i) => i !== index)),
+              })
+            }
+            clearLabel={`${term}の条件を解除`}
+          />
+        </li>
+      ))}
+    </ul>
   );
 }
 

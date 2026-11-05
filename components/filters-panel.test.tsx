@@ -10,6 +10,7 @@ const filters: Filters = {
   areas: ["渋谷区"],
   format: "all",
   keyword: "",
+  view: "month",
 };
 
 function Panel({ onKeyword }: { onKeyword: (keyword: string) => void }) {

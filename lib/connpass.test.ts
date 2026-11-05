@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { areaFromAddress, formatFromConnpass, toCalendarEvent } from "@/lib/connpass";
+import {
+  areaFromAddress,
+  formatFromConnpass,
+  isCancelledEvent,
+  toCalendarEvent,
+} from "@/lib/connpass";
 import { connpassEvent, snapshotEvent } from "@/lib/connpass.fixtures";
 
 describe("connpass", () => {
@@ -95,5 +100,30 @@ describe("connpass", () => {
     expect(() => toCalendarEvent(snapshotEvent({ title: "" }))).toThrow(
       "イベントデータを読み取れませんでした"
     );
+  });
+
+  it("open_status が cancelled のイベントを中止として扱う", () => {
+    expect(toCalendarEvent(connpassEvent({ open_status: "cancelled" }))?.cancelled).toBe(true);
+    expect(toCalendarEvent(connpassEvent({ open_status: "close" }))?.cancelled).toBe(false);
+    expect(toCalendarEvent(connpassEvent({ open_status: "open" }))?.cancelled).toBe(false);
+  });
+
+  it("タイトルの先頭の【中止】なども中止として扱い、途中の「中止」は扱わない", () => {
+    for (const title of [
+      "【中止】Go もくもく会",
+      "【開催中止】LT会",
+      "[中止] 勉強会",
+      "［中止］勉強会",
+      "（中止）勉強会",
+    ]) {
+      expect(isCancelledEvent({ title, open_status: "preopen" })).toBe(true);
+    }
+    for (const title of [
+      "雨天中止の可能性あり BBQ",
+      "中止になった企画の振り返り",
+      "【延期】勉強会",
+    ]) {
+      expect(isCancelledEvent({ title, open_status: "preopen" })).toBe(false);
+    }
   });
 });

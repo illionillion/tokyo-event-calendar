@@ -22,6 +22,7 @@ function event(area: string): Event {
     accepted: 0,
     limit: null,
     url: "https://connpass.com/event/1/",
+    cancelled: false,
   };
 }
 
