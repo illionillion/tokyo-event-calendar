@@ -1,5 +1,6 @@
 /**
- * data/events.json から、土曜の週次投稿と同じ 2 本（LT / もくもく）の紹介動画を書き出す。
+ * data/events.json から、次の土曜投稿が案内する来週の紹介動画（LT / もくもく、縦横）を書き出す。
+ * 公開パスは固定。中身は毎日のジョブで上書きする。
  * サムネはレンダー前に remotion/public/thumbs へ落とす。失敗したカードは文字だけ。
  *
  *   pnpm promo:prepare

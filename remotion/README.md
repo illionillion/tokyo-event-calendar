@@ -1,12 +1,14 @@
-# 週次の紹介動画
+# 毎日の紹介動画
 
 同じ内容を、縦 1080×1920（Instagram / YouTube）と横 1920×1080（X）で書き出します。横は縦を引き伸ばさず、サムネを左、日付・タイトル・場所を右に組み直します。ナレーションと BGM はありません。
 
 アプリ本体の依存には入れません。`remotion/` は別の `package.json` と `pnpm-lock.yaml` を持ち、ルートの `pnpm install`（Next.js / Workers の CI）では Remotion もヘッドレスブラウザも入りません。
 
+動画は毎日再生成します。公開パスは固定です。土曜の X 投稿（本編が LT、リプライがもくもく）は、下の URL を添付すれば最新の日次成果物になります。X の投稿頻度と文面は、このリポジトリの外で土曜の週次のままです。
+
 ## 2 種類 × 縦横
 
-土曜の週次投稿に合わせています。投稿本文は、サイトの週表示をキーワードで開いた件数を案内しています。
+中身の週は、次の土曜投稿が案内する「来週」です。投稿本文は、サイトの週表示をキーワードで開いた件数を案内しています。
 
 - 本投稿: 「LT」で絞り込んだ週表示
 - リプライ: 「もくもく」で絞り込んだ週表示
@@ -38,7 +40,7 @@
 
 レンダー前に `image_url`（https のみ）を `remotion/public/thumbs/` へ保存し、動画に焼き込みます。再生時にリモート画像は参照しません。URL が無い、失効している、画像でない、4MB を超える場合は、頭文字だけのカードにします。
 
-connpass の画像 URL は時間が経つと失効します。スナップショット更新のあと、土曜のジョブで取り直します。
+connpass の画像 URL は時間が経つと失効します。スナップショット更新のあと、毎日のジョブで取り直します。
 
 ## コマンド
 
@@ -57,7 +59,7 @@ pnpm promo:type-check
 | `pnpm promo:install`    | `remotion/` で `pnpm install --frozen-lockfile`                                                                                   |
 | `pnpm promo:studio`     | サンプルカードで Remotion Studio を開く。縦は `WeeklyLt` / `WeeklyMokumoku`、横は `WeeklyLtLandscape` / `WeeklyMokumokuLandscape` |
 | `pnpm promo:prepare`    | 実データで props とサムネだけ作る。動画は書かない                                                                                 |
-| `pnpm promo:render`     | 2 本を `public/promo/videos/` に書く                                                                                              |
+| `pnpm promo:render`     | 縦横 4 本を `public/promo/videos/` の固定パスへ書く                                                                               |
 | `pnpm promo:type-check` | `remotion/` の `tsc --noEmit`                                                                                                     |
 
 実データで Studio を見るとき:
@@ -84,8 +86,8 @@ pnpm promo:render -- --only lt
 
 `.github/workflows/promo-videos.yml` だけが動画を作ります。`ci.yml` には入っていません。失敗しても ESLint、型チェック、テスト、Next のビルドは続き、このジョブだけが失敗します。
 
-- 定期: 土曜 6:00 JST（金曜 21:00 UTC）。スナップショット更新（毎日 UTC 18:00）の後。GitHub の schedule は遅れることがあります
-- 手動: `workflow_dispatch`。入力 `date` は基準日（空なら実行日）
+- 定期: 毎日・スナップショット後。UTC 19:00（日本時間 4:00）。スナップショット更新は毎日 UTC 18:00（日本時間 3:00）。GitHub の schedule は遅れることがあります
+- 手動: `workflow_dispatch`。入力 `date` は基準日（空なら実行日）。次の土曜投稿が案内する来週を書き出す
 - 打ち切り: ジョブ 30 分。並列は `PROMO_CONCURRENCY=2`
 - 成功すると artifact `promo-videos` を 14 日残し、`main` では 4 本の MP4 と `manifest.json` を commit して push する
 - push は `GITHUB_TOKEN` です。イベントスナップショットの更新と同じく、この push では Cloudflare のデプロイが走らないことがあります。公開 URL に載るのは、その後のデプロイです
@@ -102,7 +104,7 @@ pnpm promo:render -- --only lt
 
 ## 容量
 
-CRF 28、最大 2500k、音声なしです。スクリプトは 1 本が 20MB を超えると失敗します。Workers の静的アセットは 1 ファイルおおよそ 25MB が上限になるためです。Git LFS は使っていません。週 1 回、同じパスを上書きします。履歴はその差分の分だけ増えます。
+CRF 28、最大 2500k、音声なしです。スクリプトは 1 本が 20MB を超えると失敗します。Workers の静的アセットは 1 ファイルおおよそ 25MB が上限になるためです。Git LFS は使っていません。毎日、同じパスを上書きします。ファイルを消すだけのジョブは置いていません。履歴はその差分の分だけ増えます。
 
 ## ライセンス
 
