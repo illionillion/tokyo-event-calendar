@@ -5,10 +5,10 @@ export const CONNPASS_EVENTS_ENDPOINT = "https://connpass.com/api/v2/events/";
 
 /**
  * リクエストの間隔。API リファレンスの制限（API キーごとに 1 秒間に 1 リクエストまで）より広く、
- * 利用申請の内容に合わせて 5 秒に 1 回までにする。前のレスポンスを受け取ってから待つので、
+ * 都道府県検索の 2 ページ目で 429 になりやすいため 10 秒に 1 回までにする。前のレスポンスを受け取ってから待つので、
  * リクエストの開始どうしは必ずこれ以上あく。
  */
-export const REQUEST_INTERVAL_MS = 5_000;
+export const REQUEST_INTERVAL_MS = 10_000;
 
 /** API の count の上限。 */
 export const PAGE_SIZE = 100;
