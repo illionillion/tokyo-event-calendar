@@ -1,11 +1,14 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { twitterSite } from "@/lib/site-metadata";
 
 const LINK_CLASS = "text-secondary underline-offset-2 hover:text-primary hover:underline";
 
 const AUTHOR_PROFILE_URL = "https://github.com/illionillion";
 const REPOSITORY_URL = "https://github.com/illionillion/tokyo-event-calendar";
 const ISSUES_URL = `${REPOSITORY_URL}/issues`;
+const MISSING_EVENT_ISSUE_URL = `${REPOSITORY_URL}/issues/new?template=missing_event.yml`;
+const AUTHOR_DM_URL = `https://x.com/${twitterSite.replace(/^@/, "")}`;
 
 function ExternalLink({ href, children }: { href: string; children: ReactNode }) {
   return (
@@ -24,6 +27,21 @@ export function Footer() {
           <p className="text-pretty text-[13px] text-secondary">
             掲載しているイベントは、connpass から 1 日 1 回取得した情報です。カードを開くと connpass
             のイベントページへ移動します。
+          </p>
+          <p className="text-pretty text-[13px] text-secondary">
+            都道府県の検索に出てこない connpass のイベントは、
+            <ExternalLink href={MISSING_EVENT_ISSUE_URL}>
+              Issue
+              <span className="sr-only">（表示されていないイベントの申請）</span>
+            </ExternalLink>
+            {" か "}
+            <ExternalLink href={AUTHOR_DM_URL}>
+              DM
+              <span className="sr-only">（作者の X）</span>
+            </ExternalLink>
+            {
+              " で知らせてください。確認できれば表示に足します。おすすめとしての優遇ではありません。"
+            }
           </p>
           <p className="text-pretty text-[13px] text-secondary">
             作者{" "}

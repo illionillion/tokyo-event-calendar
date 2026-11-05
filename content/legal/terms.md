@@ -18,7 +18,7 @@ lastUpdated: 2026年11月5日
 
 同じ掲載情報から、毎週、LT ともくもく会の短い紹介動画を公開します。動画は告知用です。開催の有無や内容の最終確認は、connpass のイベントページで行ってください。
 
-掲載するイベント情報は、connpass API から 1 日 1 回取得したものです。取得後に connpass 上で変更された内容は、次の取得まで反映されません。
+掲載するイベント情報は、connpass API から 1 日 1 回取得したものです。取得の基本は、東京都・神奈川県・埼玉県・千葉県の検索です。この検索に載らないイベントのうち、申請を確認したものも同じ取得に含めます。おすすめとしての掲載優遇ではありません。取得後に connpass 上で変更された内容は、次の取得まで反映されません。
 
 ## 第3条（免責・非保証）
 
@@ -50,6 +50,8 @@ lastUpdated: 2026年11月5日
 ## 第8条（お問い合わせ）
 
 本サービスに関するお問い合わせ・不具合報告は [GitHub Issues](https://github.com/illionillion/tokyo-event-calendar/issues) をご利用ください。
+
+都道府県の検索に載らず、本サービスに表示されない connpass のイベントは、[表示されていないイベント](https://github.com/illionillion/tokyo-event-calendar/issues/new?template=missing_event.yml) の Issue、または [作者への DM（X）](https://x.com/Sei_engineer) で知らせてください。確認できたものは一覧に追加します。これはおすすめとしての掲載優遇ではありません。
 
 ## 第9条（準拠法）
 

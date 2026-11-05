@@ -21,6 +21,26 @@ describe("Footer", () => {
     );
   });
 
+  it("都道府県検索に出ないイベントの申請先を案内し、優遇ではないと書く", () => {
+    render(<Footer />);
+
+    expect(screen.getByRole("contentinfo")).toHaveTextContent(
+      "確認できれば表示に足します。おすすめとしての優遇ではありません。"
+    );
+
+    const issue = screen.getByRole("link", { name: /Issue（表示されていないイベントの申請）/ });
+    expect(issue).toHaveAttribute(
+      "href",
+      "https://github.com/illionillion/tokyo-event-calendar/issues/new?template=missing_event.yml"
+    );
+    expect(issue).toHaveAttribute("target", "_blank");
+    expect(issue).toHaveAttribute("rel", "noopener noreferrer");
+
+    const dm = screen.getByRole("link", { name: /DM（作者の X）/ });
+    expect(dm).toHaveAttribute("href", "https://x.com/Sei_engineer");
+    expect(dm).toHaveAttribute("target", "_blank");
+  });
+
   it("スポンサーや金銭の呼びかけを出さない", () => {
     render(<Footer />);
 

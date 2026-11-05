@@ -1,0 +1,43 @@
+name: 表示されていないイベント
+description: 都道府県の検索に載らない connpass イベントを、カレンダーへ足す申請
+title: "[Event] "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        東京都・神奈川県・埼玉県・千葉県の検索では拾えない connpass のイベントを、一覧に足すための申請です。
+        おすすめ枠や掲載順の優遇ではありません。確認できたものを、通常の取得結果へ追加します。
+        connpass 上で参加を受け付けているイベントが対象です。connpass 以外で申し込むイベントは対象外です。
+
+  - type: textarea
+    id: identifiers
+    attributes:
+      label: イベントの識別子
+      description: URL、event_id、subdomain のうち、分かるものを書いてください。一つ以上必要です。
+      placeholder: |
+        URL: https://example.connpass.com/event/123456/
+        event_id: 123456
+        subdomain: example
+    validations:
+      required: true
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: 追加の単位
+      description: そのイベントだけを足すか、同じグループ（subdomain）のイベントを今後も足すか。
+      options:
+        - このイベントだけ
+        - このグループの今後のイベント
+        - 分からない
+    validations:
+      required: true
+
+  - type: textarea
+    id: note
+    attributes:
+      label: 補足
+      description: 都道府県の検索に出てこないことなど、分かれば書いてください。
+    validations:
+      required: false

@@ -42,29 +42,97 @@ export function targetMonths(now: Date, count = TARGET_MONTH_COUNT): string[] {
 
 export type EventsQuery = {
   months: readonly string[];
-  prefectures: readonly string[];
+  prefectures?: readonly string[];
+  /** グループの subdomain。都道府県インデックスに載らないイベントの補完に使う。 */
+  subdomains?: readonly string[];
+  /** イベント ID。都道府県インデックスに載らない単発のイベントの補完に使う。 */
+  eventIds?: readonly number[];
   start: number;
   count?: number;
 };
 
-/** イベント一覧 API の URL。複数の月・都道府県は同じ名前で並べ、開催日時順（order=2）で start と count でページを送る。 */
+/**
+ * 都道府県検索では拾えないイベントを足すための allowlist。
+ * ファイルは `subdomains` と `event_ids` だけを持つ（`data/connpass-supplements.json`）。
+ */
+export type ConnpassSupplements = {
+  subdomains: readonly string[];
+  eventIds: readonly number[];
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+/** subdomain は URL ではなく、英小文字・数字・ハイフンだけ。`dmm.connpass.com` の `dmm`。 */
+const SUBDOMAIN_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+/**
+ * 補完設定を読む。余計な項目や、URL をそのまま書いた subdomain、重複は受け付けない。
+ * 失敗したら API は呼ばない（呼び出し側が先にこれを通す）。
+ */
+export function parseConnpassSupplements(value: unknown): ConnpassSupplements {
+  if (!isRecord(value)) {
+    throw new Error("connpass の補完設定を読み取れませんでした");
+  }
+
+  const keys = Object.keys(value).sort();
+  if (keys.length !== 2 || keys[0] !== "event_ids" || keys[1] !== "subdomains") {
+    throw new Error("connpass の補完設定は subdomains と event_ids だけにしてください");
+  }
+  if (!Array.isArray(value.subdomains) || !Array.isArray(value.event_ids)) {
+    throw new Error("connpass の補完設定を読み取れませんでした");
+  }
+
+  const subdomains: string[] = [];
+  for (const subdomain of value.subdomains) {
+    if (typeof subdomain !== "string" || !SUBDOMAIN_PATTERN.test(subdomain)) {
+      throw new Error(
+        "connpass の補完設定の subdomain は、URL ではなく英小文字・数字・ハイフンだけにしてください"
+      );
+    }
+    if (subdomains.includes(subdomain)) {
+      throw new Error(`connpass の補完設定の subdomain が重複しています: ${subdomain}`);
+    }
+    subdomains.push(subdomain);
+  }
+
+  const eventIds: number[] = [];
+  for (const eventId of value.event_ids) {
+    if (typeof eventId !== "number" || !Number.isSafeInteger(eventId) || eventId <= 0) {
+      throw new Error("connpass の補完設定の event_id は正の整数にしてください");
+    }
+    if (eventIds.includes(eventId)) {
+      throw new Error(`connpass の補完設定の event_id が重複しています: ${eventId}`);
+    }
+    eventIds.push(eventId);
+  }
+
+  return { subdomains, eventIds };
+}
+
+/**
+ * イベント一覧 API の URL。複数の月・都道府県・subdomain・event_id は同じ名前で並べ、
+ * 開催日時順（order=2）で start と count でページを送る。
+ * 空の配列はパラメーターを付けない。補完は prefecture なしで subdomain または event_id を付ける。
+ */
 export function eventsSearchUrl({
   months,
-  prefectures,
+  prefectures = [],
+  subdomains = [],
+  eventIds = [],
   start,
   count = PAGE_SIZE,
 }: EventsQuery): URL {
   const url = new URL(CONNPASS_EVENTS_ENDPOINT);
   for (const month of months) url.searchParams.append("ym", month);
   for (const prefecture of prefectures) url.searchParams.append("prefecture", prefecture);
+  for (const subdomain of subdomains) url.searchParams.append("subdomain", subdomain);
+  for (const eventId of eventIds) url.searchParams.append("event_id", String(eventId));
   url.searchParams.set("order", "2");
   url.searchParams.set("start", String(start));
   url.searchParams.set("count", String(count));
   return url;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
 }
 
 const EVENT_TYPES: readonly unknown[] = ["participation", "advertisement"];
@@ -192,6 +260,11 @@ export type FetchEventsOptions = {
   apiKey: string;
   months: readonly string[];
   prefectures?: readonly string[];
+  /**
+   * 都道府県検索に加えて取る subdomain と event_id。
+   * 省略か両方が空なら、都道府県の検索だけを行う。
+   */
+  supplements?: ConnpassSupplements;
   fetch?: typeof fetch;
   sleep?: (ms: number) => Promise<void>;
   intervalMs?: number;
@@ -201,38 +274,69 @@ export type FetchEventsOptions = {
 
 const defaultSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
+type PageQuery = {
+  months: readonly string[];
+  prefectures: readonly string[];
+  subdomains: readonly string[];
+  eventIds: readonly number[];
+};
+
+type FetchContext = {
+  apiKey: string;
+  fetchImpl: typeof fetch;
+  sleep: (ms: number) => Promise<void>;
+  intervalMs: number;
+  maxRequests: number;
+  log: (message: string) => void;
+  /** 都道府県のページと補完のページを通した、これまでに始めたリクエスト数。 */
+  requestCount: number;
+};
+
+/** 先に入った id を残して、イベント id で一つにまとめる。 */
+function mergeById(groups: readonly (readonly SnapshotEvent[])[]): SnapshotEvent[] {
+  const seen = new Set<number>();
+  const unique: SnapshotEvent[] = [];
+  for (const group of groups) {
+    for (const event of group) {
+      if (seen.has(event.id)) continue;
+      seen.add(event.id);
+      unique.push(event);
+    }
+  }
+  return unique;
+}
+
 /**
- * イベント一覧 API を 1 ページずつ順に呼ぶ。2 回目以降は前のレスポンスのあと `intervalMs` 待つ。
- * どこかで失敗したら途中のデータは返さずに例外にする（API キーはメッセージに含めない）。
+ * 1 種類の検索条件を、1 ページずつ順に取る。2 回目以降（別の検索の続きも含む）は前のレスポンスのあと `intervalMs` 待つ。
+ * 都道府県・subdomain・event_id のどれも無い検索は、窓の中の全イベントを取りに行くので拒否する。
  */
-export async function fetchConnpassEvents({
-  apiKey,
-  months,
-  prefectures = TARGET_PREFECTURES,
-  fetch: fetchImpl = fetch,
-  sleep = defaultSleep,
-  intervalMs = REQUEST_INTERVAL_MS,
-  maxRequests = MAX_REQUESTS,
-  log = () => {},
-}: FetchEventsOptions): Promise<SnapshotEvent[]> {
-  if (!apiKey) throw new Error("connpass API キーがありません");
-  if (intervalMs < REQUEST_INTERVAL_MS) {
-    throw new Error(`リクエスト間隔は ${REQUEST_INTERVAL_MS}ms 以上にしてください`);
+async function fetchQueryPages(query: PageQuery, context: FetchContext): Promise<SnapshotEvent[]> {
+  if (
+    query.prefectures.length === 0 &&
+    query.subdomains.length === 0 &&
+    query.eventIds.length === 0
+  ) {
+    throw new Error("都道府県・subdomain・event_id のいずれも指定されていないため中断しました");
   }
 
   const events: SnapshotEvent[] = [];
   let start = 1;
 
-  for (let request = 1; ; request += 1) {
-    if (request > maxRequests) {
-      throw new Error(`リクエスト数が上限（${maxRequests} 回）を超えるため中断しました`);
+  for (;;) {
+    context.requestCount += 1;
+    if (context.requestCount > context.maxRequests) {
+      throw new Error(`リクエスト数が上限（${context.maxRequests} 回）を超えるため中断しました`);
     }
-    if (request > 1) await sleep(intervalMs);
+    if (context.requestCount > 1) await context.sleep(context.intervalMs);
 
-    const url = eventsSearchUrl({ months, prefectures, start });
-    log(`GET ${url.pathname}${url.search}`);
-    const response = await fetchImpl(url, {
-      headers: { "X-API-Key": apiKey, "User-Agent": USER_AGENT, Accept: "application/json" },
+    const url = eventsSearchUrl({ ...query, start });
+    context.log(`GET ${url.pathname}${url.search}`);
+    const response = await context.fetchImpl(url, {
+      headers: {
+        "X-API-Key": context.apiKey,
+        "User-Agent": USER_AGENT,
+        Accept: "application/json",
+      },
     });
     if (!response.ok) {
       throw new Error(`connpass API が ${response.status} を返しました`);
@@ -263,4 +367,69 @@ export async function fetchConnpassEvents({
     }
     start += body.events.length;
   }
+}
+
+/**
+ * 都道府県のイベント一覧を取り、続けて allowlist の subdomain と event_id でも取る。
+ * 補完は prefecture を付けない。API では subdomain と event_id は都道府県なしで検索できる。
+ * 別種の条件を一つの URL に混ぜると絞り込み（AND）になり、取りこぼしを拾えないので、検索は分ける。
+ * 同じ種類の複数値は都道府県と同じく和集合（同じ名前のパラメーターを繰り返す）として 1 回の検索にまとめる。
+ * 開催年月は都道府県の取得と同じ窓にする。グループの過去イベントを全部は取らない。
+ * リクエスト間隔は検索をまたいでも `intervalMs`。どこかで失敗したら、取れた分は返さずに例外にする
+ * （API キーはメッセージに含めない）。呼び出し側はそのときスナップショットを書き出さない。
+ * 重複はイベント id で除き、先に取れた都道府県側を残す。
+ */
+export async function fetchConnpassEvents({
+  apiKey,
+  months,
+  prefectures = TARGET_PREFECTURES,
+  supplements,
+  fetch: fetchImpl = fetch,
+  sleep = defaultSleep,
+  intervalMs = REQUEST_INTERVAL_MS,
+  maxRequests = MAX_REQUESTS,
+  log = () => {},
+}: FetchEventsOptions): Promise<SnapshotEvent[]> {
+  if (!apiKey) throw new Error("connpass API キーがありません");
+  if (intervalMs < REQUEST_INTERVAL_MS) {
+    throw new Error(`リクエスト間隔は ${REQUEST_INTERVAL_MS}ms 以上にしてください`);
+  }
+
+  const allowlist = parseConnpassSupplements({
+    subdomains: supplements?.subdomains ?? [],
+    event_ids: supplements?.eventIds ?? [],
+  });
+
+  const context: FetchContext = {
+    apiKey,
+    fetchImpl,
+    sleep,
+    intervalMs,
+    maxRequests,
+    log,
+    requestCount: 0,
+  };
+
+  const byPrefecture = await fetchQueryPages(
+    { months, prefectures, subdomains: [], eventIds: [] },
+    context
+  );
+
+  let bySubdomain: SnapshotEvent[] = [];
+  if (allowlist.subdomains.length > 0) {
+    bySubdomain = await fetchQueryPages(
+      { months, prefectures: [], subdomains: allowlist.subdomains, eventIds: [] },
+      context
+    );
+  }
+
+  let byEventId: SnapshotEvent[] = [];
+  if (allowlist.eventIds.length > 0) {
+    byEventId = await fetchQueryPages(
+      { months, prefectures: [], subdomains: [], eventIds: allowlist.eventIds },
+      context
+    );
+  }
+
+  return mergeById([byPrefecture, bySubdomain, byEventId]);
 }
