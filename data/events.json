@@ -1837,7 +1837,7 @@
       "place": "Sansan株式会社",
       "lat": "35.656587700000",
       "lon": "139.702370700000",
-      "accepted": 30,
+      "accepted": 31,
       "waiting": 0,
       "updated_at": "2026-11-02T12:58:13+09:00"
     },
@@ -2443,7 +2443,7 @@
       "place": "株式会社FLINTERSオフィス",
       "lat": "35.696044800000",
       "lon": "139.690370200000",
-      "accepted": 1,
+      "accepted": 2,
       "waiting": 0,
       "updated_at": "2026-11-05T18:20:19+09:00"
     },
@@ -2611,7 +2611,7 @@
       "place": "GMOインターネットグループ　グループ第２本社　GMO Yours・フクラス",
       "lat": "35.657590400000",
       "lon": "139.700151800000",
-      "accepted": 153,
+      "accepted": 154,
       "waiting": 0,
       "updated_at": "2026-10-28T18:31:01+09:00"
     },
@@ -2894,7 +2894,7 @@
       "id": 408330,
       "title": "マルチプロダクト基盤の立ち上げとどう向き合ってきたか",
       "catch": "基盤立ち上げの意思決定と苦労のリアル",
-      "description": "<h2>【イベント概要】</h2>\n<p>AIの進展や事業拡大に伴い、単一プロダクトから複数プロダクトを展開する組織が増えています。\n<br>プロダクトが増えるほど、「共通基盤をどう設計し、どう運用し続けるか」という課題は避けて通れません。\n<br>\n<br>権限や境界をどう引くか、優先順位をどう決めるか、負債や複雑性とどう向き合うか——マルチプロダクト化に取り組む企業の多くが、同じような壁にぶつかっています。\n<br>\n<br><strong> 本イベントでは、認証認可基盤のように複数のプロダクトから共通で利用される、プロダクトそのものを支える機能群に焦点を当て、マルチプロダクト展開を進めるログラス・LayerX・SmartHRの3社が、それぞれの基盤立ち上げと運用における意思決定と苦労のリアルを共有します。</strong>\n<br>\n<br>前半のセッションでは、各社のメンバーが「なぜその設計を選んだのか」「優先順位はどう決めたのか」「負債とどう付き合っているのか」といった具体的な事例を共有します。\n<br>後半のパネルディスカッションでは、参加者からの質問を交えながら3社の担当者がディスカッションを実施し、現地参加だからこそ聞ける、資料には残らないここでしか聞けない話にも踏み込む予定です。\n<br>\n<br>きれいごとでは終わらない、プロダクト基盤づくりの現場のリアルを持ち帰っていただけるイベントです。</p>\n<h2>【このような方にオススメ】</h2>\n<p>以下に少しでも当てはまる方のご参加をお待ちしています！</p>\n<ul>\n<li>プロダクトの共通基盤の設計・運用を担っているエンジニアの方</li>\n<li>単一プロダクトから複数プロダクト体制への移行期にある会社のエンジニアの方</li>\n<li>プロダクト基盤領域の意思決定プロセスに関心があるSRE・ソフトウェアエンジニアの方</li>\n<li>他社が基盤づくりでどんな壁にぶつかり、どう乗り越えてきたかを知りたい方</li>\n</ul>\n<h2>【開催日時】</h2>\n<p><font size=\"4\">2026年11月30日（月）19:00〜21:30（18:45受付開始）</font></p>\n<h2>【会場】</h2>\n<p>・会場名：株式会社ログラス オフィス\n<br>・住所　：<a href=\"https://maps.app.goo.gl/iehWxmixeb5HwtJB8\" rel=\"nofollow\">東京都港区三田3-11-24 国際興業三田第2ビル 9階</a>\n<br>　　　　　　都営地下鉄浅草線・京浜急行電鉄「泉岳寺駅」徒歩1分\n<br>　　　　　　JR山手線・京浜東北線「高輪ゲートウェイ駅」徒歩7分\n<br>　　　　　　<img src=\"https://cdn.prod.website-files.com/634e10ec52ffb62078e9da01/66015050f9357069c53a5f9c_IMG_2018.JPG\" width=\"300\"></p>\n<h2>【持ち物】</h2>\n<p>お持ちの方はお名刺を1枚お持ちください（ネームホルダーに入れていただきます）</p>\n<h2>【タイムテーブル】</h2>\n<table>\n<thead>\n<tr>\n<th style=\"text-align: left;\">時間</th>\n<th style=\"text-align: left;\">詳細</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td style=\"text-align: left;\">18:45-19:00</td>\n<td style=\"text-align: left;\">開場・受付</td>\n</tr>\n<tr>\n<td style=\"text-align: left;\">19:00-19:05</td>\n<td style=\"text-align: left;\">オープニング</td>\n</tr>\n<tr>\n<td style=\"text-align: left;\">19:05-19:25</td>\n<td style=\"text-align: left;\">セッション① ログラス村山「マルチプロダクトSaaSにおける認証基盤の立ち上げ ― 人とAIエージェントが混在する環境で基盤が担う責務」</td>\n</tr>\n<tr>\n<td style=\"text-align: left;\">19:25-19:45</td>\n<td style=\"text-align: left;\">セッション② LayerX izumin5210「（仮）コンパウンドプロダクトをつなぐ API 技術の選定・課題・これから」</td>\n</tr>\n<tr>\n<td style=\"text-align: left;\">19:45-20:05</td>\n<td style=\"text-align: left;\">セッション③ SmartHR 竹内「（仮）認証基盤をどう立ち上げたか ── モノリスから認証を切り出す、組織と技術の意思決定」</td>\n</tr>\n<tr>\n<td style=\"text-align: left;\">20:05-20:35</td>\n<td style=\"text-align: left;\">パネルディスカッション・質疑応答</td>\n</tr>\n<tr>\n<td style=\"text-align: left;\">20:40-21:30</td>\n<td style=\"text-align: left;\">懇親会</td>\n</tr>\n</tbody>\n</table>\n<h2>【登壇者】</h2>\n<h3>村山 大貴 | <font size=\"2\">株式会社ログラス 共通基盤エンジニア</font></h3>\n<p><img src=\" https://i.ibb.co/q3QfHvW2/2026-08-21-13-49-48.png\" width=\"150\">\n<br>フリー株式会社で5年半、認証認可や契約管理などの共通基盤領域において開発やエンジニアリングマネジメントを担当したのち、2026年に株式会社ログラスへ入社。プロダクト基盤チームで、現在はマルチプロダクトを支える認証基盤などの設計・構築を主導。</p>\n<h3>izumin5210 | <font size=\"2\">株式会社LayerX バクラク事業部 Staff Software Engineer</font></h3>\n<p><img src=\"https://i.ibb.co/jZ3kn2pW/2010175.jpg\" width=\"150\">\n<br>Platform Engineering/Enablingを担うチームで開発基盤の整備やアーキテクチャ検討、技術的課題の解決などに取り組む。Protobuf、GraphQLなどのAPI技術やデザインシステムなど、領域の橋渡しをする技術を好む。\n<br>X：<a href=\"https://x.com/izumin5210\" rel=\"nofollow\">@izumin5210</a></p>\n<h3>竹内 健太（bmf_san） | <font size=\"2\">株式会社SmartHR プロダクト基盤開発本部 認証・認可基盤ユニット チーフ</font></h3>\n<p><img src=\"https://i.ibb.co/21kGHQGg/bmf-san-1.png\" width=\"150\">\n<br>SmartHR プロダクト基盤開発本部 認証・認可基盤ユニットのチーフ。シニアプラットフォームエンジニア。スタートアップや受託開発の会社を経て、事業会社で通知基盤や認証・認可基盤などの基盤システムの設計・開発に携わる。2024年に SmartHR に入社し、現在は認証基盤の開発に取り組んでいる。趣味はジム、釣り、観葉植物。\n<br>X：<a href=\"https://x.com/bmf_san\" rel=\"nofollow\">@bmf_san</a></p>\n<h2>【モデレーター】</h2>\n<h3>山中 良太 | <font size=\"2\">株式会社ログラス 共通基盤エンジニア</font></h3>\n<p><img src=\"https://i.ibb.co/gFg0TDxW/E072-QQG5-A48-U0-APQJBS8-TW-00250511415b-512.jpg\" width=\"150\">\n<br>株式会社マネーフォワードにて4年間、ワークフロー基盤の開発・運用やエンジニアリングマネジメントを担当したのち、2026年4月に株式会社ログラスへ入社。現在はプロダクト基盤チームにて、マルチプロダクト展開を支えるテナント管理などの共通機能の設計・開発に従事。\n<br>X：<a href=\"https://x.com/yamachoo567\" rel=\"nofollow\">@yamachoo567</a></p>\n<h2>【共催企業一覧】</h2>\n<ul>\n<li>株式会社ログラス：<a href=\"https://loglass.co.jp/recruit\" rel=\"nofollow\">https://loglass.co.jp/recruit</a></li>\n<li>株式会社LayerX：<a href=\"https://jobs.layerx.co.jp/\" rel=\"nofollow\">https://jobs.layerx.co.jp/</a></li>\n<li>株式会社SmartHR：<a href=\"https://recruit.smarthr.co.jp/\" rel=\"nofollow\">https://recruit.smarthr.co.jp/</a></li>\n</ul>\n<h2>【注意事項】</h2>\n<ul>\n<li>当イベントの内容およびスケジュールは、予告なく変更となる場合があります。予めご了承ください。</li>\n<li>他の参加者の方の妨げになるような行為は禁止、運営側の判断でご退出をお願いする場合があります。</li>\n<li>ブログやSNSなどで当イベントに関する発信を行う際には、公序良俗に反する内容のないよう、ご協力をお願いします。</li>\n<li>当日のイベント風景を写真撮影させていただいております。内容は後日レポート記事やSNSへ掲載される場合がありますのでご了承ください。</li>\n</ul>\n<h2>【プライバシーポリシー】</h2>\n<p>事前・事後アンケート、その他、当イベントを通じて取得した個人情報等の取扱いはプライバシーポリシーに従って取り扱います。各企業のプライバシーポリシーにご同意の上、ご参加ください。</p>\n<ul>\n<li>株式会社ログラス：<a href=\"https://www.loglass.jp/term-and-policy/privacy-policy\" rel=\"nofollow\">https://www.loglass.jp/term-and-policy/privacy-policy</a></li>\n<li>株式会社LayerX：<a href=\"https://layerx.co.jp/privacy/\" rel=\"nofollow\">https://layerx.co.jp/privacy/</a></li>\n<li>株式会社SmartHR：<a href=\"https://smarthr.co.jp/privacy/\" rel=\"nofollow\">https://smarthr.co.jp/privacy/</a></li>\n</ul>",
+      "description": "<h2>【イベント概要】</h2>\n<p>AIの進展や事業拡大に伴い、単一プロダクトから複数プロダクトを展開する組織が増えています。\n<br>プロダクトが増えるほど、「共通基盤をどう設計し、どう運用し続けるか」という課題は避けて通れません。\n<br>\n<br>権限や境界をどう引くか、優先順位をどう決めるか、負債や複雑性とどう向き合うか——マルチプロダクト化に取り組む企業の多くが、同じような壁にぶつかっています。\n<br>\n<br><strong> 本イベントでは、認証認可基盤のように複数のプロダクトから共通で利用される、プロダクトそのものを支える機能群に焦点を当て、マルチプロダクト展開を進めるログラス・LayerX・SmartHRの3社が、それぞれの基盤立ち上げと運用における意思決定と苦労のリアルを共有します。</strong>\n<br>\n<br>前半のセッションでは、各社のメンバーが「なぜその設計を選んだのか」「優先順位はどう決めたのか」「負債とどう付き合っているのか」といった具体的な事例を共有します。\n<br>後半のパネルディスカッションでは、参加者からの質問を交えながら3社の担当者がディスカッションを実施し、現地参加だからこそ聞ける、資料には残らないここでしか聞けない話にも踏み込む予定です。\n<br>\n<br>きれいごとでは終わらない、プロダクト基盤づくりの現場のリアルを持ち帰っていただけるイベントです。</p>\n<h2>【このような方にオススメ】</h2>\n<p>以下に少しでも当てはまる方のご参加をお待ちしています！</p>\n<ul>\n<li>プロダクトの共通基盤の設計・運用を担っているエンジニアの方</li>\n<li>単一プロダクトから複数プロダクト体制への移行期にある会社のエンジニアの方</li>\n<li>プロダクト基盤領域の意思決定プロセスに関心があるSRE・ソフトウェアエンジニアの方</li>\n<li>他社が基盤づくりでどんな壁にぶつかり、どう乗り越えてきたかを知りたい方</li>\n</ul>\n<h2>【開催日時】</h2>\n<p><font size=\"4\">2026年11月30日（月）19:00〜21:30（18:45受付開始）</font></p>\n<h2>【会場】</h2>\n<p>・会場名：株式会社ログラス オフィス\n<br>・住所　：<a href=\"https://maps.app.goo.gl/iehWxmixeb5HwtJB8\" rel=\"nofollow\">東京都港区三田3-11-24 国際興業三田第2ビル 9階</a>\n<br>　　　　　　都営地下鉄浅草線・京浜急行電鉄「泉岳寺駅」徒歩1分\n<br>　　　　　　JR山手線・京浜東北線「高輪ゲートウェイ駅」徒歩7分\n<br>　　　　　　<img src=\"https://cdn.prod.website-files.com/634e10ec52ffb62078e9da01/66015050f9357069c53a5f9c_IMG_2018.JPG\" width=\"300\"></p>\n<h2>【持ち物】</h2>\n<p>お持ちの方はお名刺を1枚お持ちください（ネームホルダーに入れていただきます）</p>\n<h2>【タイムテーブル】</h2>\n<table>\n<thead>\n<tr>\n<th style=\"text-align: left;\">時間</th>\n<th style=\"text-align: left;\">詳細</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td style=\"text-align: left;\">18:45-19:00</td>\n<td style=\"text-align: left;\">開場・受付</td>\n</tr>\n<tr>\n<td style=\"text-align: left;\">19:00-19:05</td>\n<td style=\"text-align: left;\">オープニング</td>\n</tr>\n<tr>\n<td style=\"text-align: left;\">19:05-19:25</td>\n<td style=\"text-align: left;\">セッション① ログラス村山「マルチプロダクトSaaSにおける認証基盤の立ち上げ ― 人とAIエージェントが混在する環境で基盤が担う責務」</td>\n</tr>\n<tr>\n<td style=\"text-align: left;\">19:25-19:45</td>\n<td style=\"text-align: left;\">セッション② LayerX izumin5210「（仮）コンパウンドプロダクトをつなぐ API 技術の選定・課題・これから」</td>\n</tr>\n<tr>\n<td style=\"text-align: left;\">19:45-20:05</td>\n<td style=\"text-align: left;\">セッション③ SmartHR 竹内「（仮）認証基盤をどう立ち上げたか ── モノリスから認証を切り出す、組織と技術の意思決定」</td>\n</tr>\n<tr>\n<td style=\"text-align: left;\">20:05-20:35</td>\n<td style=\"text-align: left;\">パネルディスカッション・質疑応答</td>\n</tr>\n<tr>\n<td style=\"text-align: left;\">20:40-21:30</td>\n<td style=\"text-align: left;\">懇親会</td>\n</tr>\n</tbody>\n</table>\n<h2>【登壇者】</h2>\n<h3>村山 大貴 | <font size=\"2\">株式会社ログラス 共通基盤エンジニア</font></h3>\n<p><img src=\" https://i.ibb.co/q3QfHvW2/2026-08-21-13-49-48.png\" width=\"150\">\n<br>フリー株式会社で5年半、認証認可や契約管理などの共通基盤領域において開発やエンジニアリングマネジメントを担当したのち、2026年に株式会社ログラスへ入社。プロダクト基盤チームで、現在はマルチプロダクトを支える認証基盤などの設計・構築を主導。</p>\n<h3>izumin5210 | <font size=\"2\">株式会社LayerX バクラク事業部 Staff Software Engineer</font></h3>\n<p><img src=\"https://i.ibb.co/jZ3kn2pW/2010175.jpg\" width=\"150\">\n<br>Platform Engineering/Enablingを担うチームで開発基盤の整備やアーキテクチャ検討、技術的課題の解決などに取り組む。Protobuf、GraphQLなどのAPI技術やデザインシステムなど、領域の橋渡しをする技術を好む。\n<br>X：<a href=\"https://x.com/izumin5210\" rel=\"nofollow\">@izumin5210</a></p>\n<h3>竹内 健太（bmf_san） | <font size=\"2\">株式会社SmartHR プロダクト基盤開発本部 認証・認可基盤ユニット チーフ</font></h3>\n<p><img src=\"https://i.ibb.co/21kGHQGg/bmf-san-1.png\" width=\"150\">\n<br>SmartHR プロダクト基盤開発本部 認証・認可基盤ユニットのチーフ。シニアプラットフォームエンジニア。スタートアップや受託開発の会社を経て、事業会社で通知基盤や認証・認可基盤などの基盤システムの設計・開発に携わる。2024年に SmartHR に入社し、現在は認証基盤の開発に取り組んでいる。趣味はジム、釣り、観葉植物。\n<br>X：<a href=\"https://x.com/bmf_san\" rel=\"nofollow\">@bmf_san</a></p>\n<h2>【モデレーター】</h2>\n<h3>山中 良太 | <font size=\"2\">株式会社ログラス 共通基盤エンジニア</font></h3>\n<p><img src=\"https://i.ibb.co/gFg0TDxW/E072-QQG5-A48-U0-APQJBS8-TW-00250511415b-512.jpg\" width=\"150\">\n<br>株式会社マネーフォワードにて4年間、ワークフロー基盤の開発・運用やエンジニアリングマネジメントを担当したのち、2026年4月に株式会社ログラスへ入社。現在はプロダクト基盤チームにて、マルチプロダクト展開を支えるテナント管理などの共通機能の設計・開発に従事。\n<br>X：<a href=\"https://x.com/yamachoo567\" rel=\"nofollow\">@yamachoo567</a></p>\n<h2>【共催企業一覧】</h2>\n<ul>\n<li>株式会社ログラス：<a href=\"https://loglass.co.jp/recruit\" rel=\"nofollow\">https://loglass.co.jp/recruit</a></li>\n<li>株式会社LayerX：<a href=\"https://jobs.layerx.co.jp/\" rel=\"nofollow\">https://jobs.layerx.co.jp/</a></li>\n<li>株式会社SmartHR：<a href=\"https://recruit.smarthr.co.jp/\" rel=\"nofollow\">https://recruit.smarthr.co.jp/</a></li>\n</ul>\n<h2>【注意事項】</h2>\n<ul>\n<li><span style=\"color: red;\"><strong>飲食目的で参加する行為は固くお断りします。該当すると運営が判断した場合はご退出いただきます。</strong></span></li>\n<li>他の参加者の方の妨げになるような行為やハラスメントは禁止しており、運営側の判断でご退出をお願いする場合があります。</li>\n<li>ブログやSNSなどで当イベントに関する発信を行う際には、公序良俗に反する内容のないよう、ご協力をお願いします。</li>\n<li>当日のイベント風景を写真撮影させていただいております。内容は後日レポート記事やSNSへ掲載される場合がありますのでご了承ください。</li>\n<li>イベント趣旨に沿わない可能性がある場合などは、当社の判断において申し込みをキャンセルさせていただく場合がございますので、予めご了承ください。</li>\n<li>当イベントの内容およびスケジュールは、予告なく変更となる場合があります。予めご了承ください。</li>\n</ul>\n<h2>【プライバシーポリシー】</h2>\n<p>事前・事後アンケート、その他、当イベントを通じて取得した個人情報等の取扱いはプライバシーポリシーに従って取り扱います。各企業のプライバシーポリシーにご同意の上、ご参加ください。</p>\n<ul>\n<li>株式会社ログラス：<a href=\"https://www.loglass.jp/term-and-policy/privacy-policy\" rel=\"nofollow\">https://www.loglass.jp/term-and-policy/privacy-policy</a></li>\n<li>株式会社LayerX：<a href=\"https://layerx.co.jp/privacy/\" rel=\"nofollow\">https://layerx.co.jp/privacy/</a></li>\n<li>株式会社SmartHR：<a href=\"https://smarthr.co.jp/privacy/\" rel=\"nofollow\">https://smarthr.co.jp/privacy/</a></li>\n</ul>",
       "url": "https://loglass-tech.connpass.com/event/408330/",
       "image_url": "https://media.connpass.com/thumbs/c0/95/c09545aeebae806dc03151d3d45e9aba.png",
       "hash_tag": "基盤立ち上げ",
@@ -2914,9 +2914,9 @@
       "place": "株式会社ログラス本社",
       "lat": "35.640456600000",
       "lon": "139.741426900000",
-      "accepted": 48,
+      "accepted": 47,
       "waiting": 0,
-      "updated_at": "2026-10-27T08:08:26+09:00"
+      "updated_at": "2026-11-05T20:29:43+09:00"
     },
     {
       "id": 411087,
@@ -4274,7 +4274,7 @@
       "id": 412171,
       "title": "曖昧な相談をどう解く？LayerX FDE体験ワークショップ",
       "catch": "「FDEって何をするの？」に、実践ワークで答えます！",
-      "description": "<h2>概要</h2>\n<p>「FDEって何をするの？」<br>\n「顧客の課題に向き合う仕事に興味があるけれど、具体的なイメージが持てない」</p>\n<p>そんな方に向けて、LayerXのFDE（Forward Deployed Engineer）の仕事を体験できるワークショップを開催します。</p>\n<p>FDEは、顧客からの曖昧な相談を受け、課題を整理し、限られた情報や条件の中で、何をつくるか・何をつくらないかを考える仕事です。</p>\n<p>今回のワークショップでは、技術広報のイベント開催業務を一般化したケースを題材にします。</p>\n<p>会場予約、イベント開催申請、connpassページの作成、参加者数を踏まえた飲食発注など、複数の業務がある状況で、参加者のみなさんに以下を考えていただきます。</p>\n<ul>\n<li>本当の課題は何か</li>\n<li>どの課題から解決するか</li>\n<li>何を自動化し、どこに人の確認を残すか</li>\n<li>最初に何をつくり、何をつくらないか</li>\n</ul>\n<p>個人ワークを中心に、FDEメンバーとの対話や追加条件を踏まえた再検討、考え方の共有・振り返りを行います。</p>\n<p>FDEの仕事や、顧客の曖昧な相談をどのように解決策へつなげていくのかに興味がある方におすすめです。</p>\n<h2>こんな方におすすめ</h2>\n<ul>\n<li>FDEという仕事に興味がある方</li>\n<li>FDEへの転職を検討している方</li>\n<li>顧客の課題整理や業務改善に関心がある方</li>\n<li>SIer・受託開発・プロダクト開発などの経験を活かして、より顧客に近い仕事をしたい方</li>\n<li>「FDEが自分に向いているのか知りたい」と考えている方</li>\n</ul>\n<h2>日時・場所</h2>\n<ul>\n<li><strong>日時</strong>: 2026年11月26日（木）16:00〜21:30（開場15:45）</li>\n<li><strong>開催場所</strong>: 株式会社LayerX（銀座松竹スクエア 5階）</li>\n</ul>\n<h2>開催形式</h2>\n<ul>\n<li>オフライン開催</li>\n</ul>\n<h2>ご参加にあたって</h2>\n<ul>\n<li>タイムテーブルは後日掲載いたします。</li>\n<li>個人ワークを中心としたプログラムです。</li>\n<li>プログラミングや実際のシステム開発を行うイベントではありません。</li>\n<li>FDEやプログラミングに関する事前知識は必要ありません。</li>\n<li>実在する顧客の情報や社内の機密情報は扱いません。</li>\n<li>懇親会は任意参加です。</li>\n<li>当日の進行やコンテンツ内容は、よりよいワークショップにするため変更となる場合があります。</li>\n</ul>\n<h2>参加方法</h2>\n<p>参加を希望される方は、connpassのアンケートにご回答ください。</p>\n<h2>アンケートについて</h2>\n<p>当日のワーク内容や参加者同士の対話をより有意義にするため、FDEに関する理解や、簡単なケースへの回答をお伺いします。</p>\n<p>回答内容は、ワークショップの設計や当日の進行改善のために使用します。アンケートの回答を参加可否の判断に使用することはありません。応募者多数の場合は、抽選で参加者を決定します。</p>\n<p>個人を特定する情報や、採用選考を目的とした質問は含みません。</p>\n<h2>株式会社LayerX Ai Workforce事業について</h2>\n<p>株式会社LayerX の Ai Workforce事業は、「企業と共に成長する」をコンセプトに、エンタープライズ向けAIプラットフォームを提供しています。企業ごとに異なる業務プロセスをAIに学習させ、営業・法務・人事・研究開発など、幅広い領域におけるドキュメントの管理・作成・レビューを支援。部署を横断したAI活用を促進し、業務の効率化と、働く人がより創造的な仕事に取り組める環境づくりを目指しています。</p>\n<ul>\n<li><a href=\"https://getaiworkforce.com/\" rel=\"nofollow\">Ai Workforce 事業サイト</a></li>\n</ul>\n<h2>行動規範・プライバシーポリシー</h2>\n<p>本イベントへのお申し込みをもって、行動規範・プライバシーポリシーへ同意いただいたものとみなします。あらかじめご了承のうえ、お申し込みください。</p>\n<h3>行動規範</h3>\n<ul>\n<li><a href=\"https://jobs.layerx.co.jp/code-of-conduct\" rel=\"nofollow\">LayerX イベント行動規範</a></li>\n</ul>\n<h3>プライバシーポリシー</h3>\n<p>本イベントでご提供いただいた個人情報は、イベントの運営・管理、イベントの改善又は新規企画のための分析、採用情報等のご案内で利用いたします。</p>\n<ul>\n<li><a href=\"https://layerx.co.jp/privacy\" rel=\"nofollow\">株式会社LayerX プライバシーポリシー</a></li>\n<li><a href=\"https://jobs.layerx.co.jp/privacy\" rel=\"nofollow\">株式会社LayerX 採用プライバシーポリシー</a></li>\n</ul>\n<h2>注意事項</h2>\n<ul>\n<li>欠席される場合は、お手数ですが速やかにキャンセル連絡 connpass 経由でご連絡ください。</li>\n<li>本勉強会の目的は技術交流です。知識の共有や参加者同士の交流を目的としない方の参加はお断りします。</li>\n<li>イベント当日の様子を写真撮影・動画撮影・SNS 発信することは禁止にさせていただきます。ご了承ください。</li>\n</ul>",
+      "description": "<h2>概要</h2>\n<p>「FDEって何をするの？」<br>\n「顧客の課題に向き合う仕事に興味があるけれど、具体的なイメージが持てない」</p>\n<p>そんな方に向けて、LayerXのFDE（Forward Deployed Engineer）の仕事を体験できるワークショップを開催します。</p>\n<p>FDEは、顧客からの曖昧な相談を受け、課題を整理し、限られた情報や条件の中で、何をつくるか・何をつくらないかを考える仕事です。</p>\n<p>今回のワークショップでは、技術広報のイベント開催業務を一般化したケースを題材にします。</p>\n<p>会場予約、イベント開催申請、connpassページの作成、参加者数を踏まえた飲食発注など、複数の業務がある状況で、参加者のみなさんに以下を考えていただきます。</p>\n<ul>\n<li>本当の課題は何か</li>\n<li>どの課題から解決するか</li>\n<li>何を自動化し、どこに人の確認を残すか</li>\n<li>最初に何をつくり、何をつくらないか</li>\n</ul>\n<p>個人ワークを中心に、FDEメンバーとの対話や追加条件を踏まえた再検討、考え方の共有・振り返りを行います。</p>\n<p>FDEの仕事や、顧客の曖昧な相談をどのように解決策へつなげていくのかに興味がある方におすすめです。</p>\n<h2>こんな方におすすめ</h2>\n<ul>\n<li>FDEという仕事に興味がある方</li>\n<li>FDEへの転職を検討している方</li>\n<li>顧客の課題整理や業務改善に関心がある方</li>\n<li>SIer・受託開発・プロダクト開発などの経験を活かして、より顧客に近い仕事をしたい方</li>\n<li>「FDEが自分に向いているのか知りたい」と考えている方</li>\n</ul>\n<h2>日時・場所</h2>\n<ul>\n<li><strong>日時</strong>: 2026年11月26日（木）16:00〜21:30（開場15:45）</li>\n<li><strong>開催場所</strong>: 株式会社LayerX（銀座松竹スクエア 5階）</li>\n</ul>\n<h2>開催形式</h2>\n<ul>\n<li>オフライン開催</li>\n</ul>\n<h2>ご参加にあたって</h2>\n<ul>\n<li>タイムテーブルは後日掲載いたします。</li>\n<li>個人ワークを中心としたプログラムです。</li>\n<li>プログラミングや実際のシステム開発を行うイベントではありません。</li>\n<li>FDEやプログラミングに関する事前知識は必要ありません。</li>\n<li>実在する顧客の情報や社内の機密情報は扱いません。</li>\n<li>懇親会は任意参加です。</li>\n<li>当日の進行やコンテンツ内容は、よりよいワークショップにするため変更となる場合があります。</li>\n</ul>\n<h2>参加方法</h2>\n<p>参加を希望される方は、connpassのアンケートにご回答ください。</p>\n<h2>アンケートについて</h2>\n<ul>\n<li>当日のワーク内容や参加者同士の対話をより有意義にするため、FDEに関する理解や、簡単なケースへの回答をお伺いします。</li>\n<li>回答内容は、ワークショップの設計や当日の進行改善のために使用します。</li>\n<li>アンケートの回答を参加可否の判断に使用することはありません。</li>\n<li>応募者多数の場合は、抽選で参加者を決定します。</li>\n<li>個人を特定する情報や、採用選考を目的とした質問は含みません。</li>\n</ul>\n<h2>株式会社LayerX Ai Workforce事業について</h2>\n<p>株式会社LayerX の Ai Workforce事業は、「企業と共に成長する」をコンセプトに、エンタープライズ向けAIプラットフォームを提供しています。企業ごとに異なる業務プロセスをAIに学習させ、営業・法務・人事・研究開発など、幅広い領域におけるドキュメントの管理・作成・レビューを支援。部署を横断したAI活用を促進し、業務の効率化と、働く人がより創造的な仕事に取り組める環境づくりを目指しています。</p>\n<ul>\n<li><a href=\"https://getaiworkforce.com/\" rel=\"nofollow\">Ai Workforce 事業サイト</a></li>\n</ul>\n<h2>行動規範・プライバシーポリシー</h2>\n<p>本イベントへのお申し込みをもって、行動規範・プライバシーポリシーへ同意いただいたものとみなします。あらかじめご了承のうえ、お申し込みください。</p>\n<h3>行動規範</h3>\n<ul>\n<li><a href=\"https://jobs.layerx.co.jp/code-of-conduct\" rel=\"nofollow\">LayerX イベント行動規範</a></li>\n</ul>\n<h3>プライバシーポリシー</h3>\n<p>本イベントでご提供いただいた個人情報は、イベントの運営・管理、イベントの改善又は新規企画のための分析、採用情報等のご案内で利用いたします。</p>\n<ul>\n<li><a href=\"https://layerx.co.jp/privacy\" rel=\"nofollow\">株式会社LayerX プライバシーポリシー</a></li>\n<li><a href=\"https://jobs.layerx.co.jp/privacy\" rel=\"nofollow\">株式会社LayerX 採用プライバシーポリシー</a></li>\n</ul>\n<h2>注意事項</h2>\n<ul>\n<li>欠席される場合は、お手数ですが速やかにキャンセル連絡 connpass 経由でご連絡ください。</li>\n<li>本勉強会の目的は技術交流です。知識の共有や参加者同士の交流を目的としない方の参加はお断りします。</li>\n<li>イベント当日の様子を写真撮影・動画撮影・SNS 発信することは禁止にさせていただきます。ご了承ください。</li>\n</ul>",
       "url": "https://layerx.connpass.com/event/412171/",
       "image_url": "https://media.connpass.com/thumbs/59/3f/593f285b0bc17463b015bff04623e89c.png",
       "hash_tag": "LayerXFDE",
@@ -4296,7 +4296,7 @@
       "lon": "139.769481000000",
       "accepted": 0,
       "waiting": 0,
-      "updated_at": "2026-11-05T18:03:52+09:00"
+      "updated_at": "2026-11-05T20:42:39+09:00"
     },
     {
       "id": 406909,
@@ -6033,7 +6033,7 @@
       "place": "データミックス",
       "lat": "35.698162700000",
       "lon": "139.756086100000",
-      "accepted": 13,
+      "accepted": 14,
       "waiting": 0,
       "updated_at": "2026-11-03T10:22:30+09:00"
     },
@@ -6527,7 +6527,7 @@
       "place": "ビジョンセンター田町 6階 601室",
       "lat": "35.646505600000",
       "lon": "139.745786000000",
-      "accepted": 221,
+      "accepted": 222,
       "waiting": 1,
       "updated_at": "2026-10-30T18:52:02+09:00"
     },
@@ -6555,7 +6555,7 @@
       "place": "渋谷ストリーム グーグルオフィス",
       "lat": "35.661970700000",
       "lon": "139.703795000000",
-      "accepted": 8,
+      "accepted": 9,
       "waiting": 0,
       "updated_at": "2026-11-05T12:17:59+09:00"
     },
@@ -6922,14 +6922,14 @@
       "id": 410205,
       "title": "Business-JAWS #0 キックオフ！〜AWSとビジネスをつなぐコミュニティ始動〜",
       "catch": "「AWS×課題解決」に立ち向かう第一歩！",
-      "description": "<h1>イベント概要</h1>\n<p>JAWS-UGに、職種を越えてAWSを活用したビジネス課題解決を学び合う専門支部「Business-JAWS（ビジネスストラテジー支部）」が誕生しました！<br>\nエンジニア、非エンジニア問わず、AWSをビジネスに繋げたいと思っている方、興味がある方、お気軽にご参加下さい。<br>\n皆さまのご参加を心よりお待ちしております！</p>\n<h1>🎤 LT登壇者募集！（10分 × 3枠）</h1>\n<p>Business-JAWS #0 キックオフ！〜AWSとビジネスをつなぐコミュニティ始動〜 では、LT登壇者を募集します！</p>\n<p>テーマは 「AWS × ビジネス課題解決」。</p>\n<p>AWSの技術紹介だけでなく、ビジネス課題の発見や解決、新たな価値の創出につながる取り組みやアイデアをお待ちしています。</p>\n<p>💡 LTテーマ例</p>\n<ul>\n<li>AWSを活用した新規事業・サービスの創出</li>\n<li>生成AI・データ活用によるビジネス課題の解決</li>\n<li>AWSを活用した売上向上・業務改善・コスト最適化</li>\n<li>ビジネス視点で考えるAWSの活用方法</li>\n<li>エンジニアとビジネス部門の協業・挑戦事例</li>\n<li>AIB(AWS Certified AI Business Strategist)受験体験記</li>\n</ul>\n<p>成功事例はもちろん、失敗談や検証中の取り組み、これから挑戦したいアイデアも大歓迎！<br>\nエンジニア・非エンジニアを問わず、LT初登壇の方も歓迎します！</p>\n<p>📢 募集要項</p>\n<p>発表時間： 10分<br>\n募集枠： 3枠<br>\n選考方法： 応募が3枠を超えた場合は、運営にて抽選を行います。</p>\n<p>※JAWS-UGの「No Sell, No Job」に則り、営業・採用・製品宣伝を主目的とした発表はご遠慮ください。</p>\n<p>記念すべきBusiness-JAWS #0を、一緒に盛り上げましょう！</p>\n<h1>タイムテーブル</h1>\n<p>※予定は変更になる場合があります。</p>\n<table>\n<thead>\n<tr>\n<th style=\"text-align: center;\">時間</th>\n<th style=\"text-align: left;\">内容</th>\n<th style=\"text-align: left;\">登壇者</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td style=\"text-align: center;\">18:30 ～ 19:00</td>\n<td style=\"text-align: left;\">受付</td>\n<td style=\"text-align: left;\">運営</td>\n</tr>\n<tr>\n<td style=\"text-align: center;\">19:00 ～ 19:05</td>\n<td style=\"text-align: left;\">オープニング</td>\n<td style=\"text-align: left;\">運営</td>\n</tr>\n<tr>\n<td style=\"text-align: center;\">19:05 ～ 19:15</td>\n<td style=\"text-align: left;\">設立宣言</td>\n<td style=\"text-align: left;\">吉川</td>\n</tr>\n<tr>\n<td style=\"text-align: center;\">19:15 ～ 19:35</td>\n<td style=\"text-align: left;\">沼口さんから</td>\n<td style=\"text-align: left;\">AWS 沼口さん</td>\n</tr>\n<tr>\n<td style=\"text-align: center;\">19:35 ～ 19:50</td>\n<td style=\"text-align: left;\">招待枠①</td>\n<td style=\"text-align: left;\"></td>\n</tr>\n<tr>\n<td style=\"text-align: center;\">19:50 ～ 20:05</td>\n<td style=\"text-align: left;\">招待枠②</td>\n<td style=\"text-align: left;\"></td>\n</tr>\n<tr>\n<td style=\"text-align: center;\">20:05 ～ 20:15</td>\n<td style=\"text-align: left;\">休憩</td>\n<td style=\"text-align: left;\"></td>\n</tr>\n<tr>\n<td style=\"text-align: center;\">20:15 ～ 20:25</td>\n<td style=\"text-align: left;\">LT枠①</td>\n<td style=\"text-align: left;\"></td>\n</tr>\n<tr>\n<td style=\"text-align: center;\">20:25 ～ 20:35</td>\n<td style=\"text-align: left;\">LT枠②</td>\n<td style=\"text-align: left;\"></td>\n</tr>\n<tr>\n<td style=\"text-align: center;\">20:35 ～ 20:45</td>\n<td style=\"text-align: left;\">LT枠③</td>\n<td style=\"text-align: left;\"></td>\n</tr>\n<tr>\n<td style=\"text-align: center;\">20:45 ～ 20:50</td>\n<td style=\"text-align: left;\">エンディング</td>\n<td style=\"text-align: left;\">運営</td>\n</tr>\n<tr>\n<td style=\"text-align: center;\">20:50 ～ 20:55</td>\n<td style=\"text-align: left;\">写真撮影</td>\n<td style=\"text-align: left;\">全員</td>\n</tr>\n</tbody>\n</table>\n<h1>Business-JAWSについて</h1>\n<p>Business-JAWSは、AWSを活用してビジネス課題を解決する力を、職種を越えて学び合うJAWS-UGの専門支部です。<br>\n新規事業の創出、生成AIの活用、売上向上や業務改善などを題材に、ケース討議、LT会、資格勉強会を実施します。<br>\n個別のAWSサービスやアーキテクチャの探求にとどまらず、課題の発見・定義、事業戦略、価値検証といった上流領域にもフォーカスします。<br>\nエンジニアと非エンジニアが互いの知見を持ち寄り、協力して課題に立ち向かう「AWSとビジネスをつなぐコミュニティ」を目指します。</p>\n<h1>参加のルールとマナー</h1>\n<p>JAWS-UGの基本的な<a href=\"https://jaws-ug.jp/for-participant/\" rel=\"nofollow\">参加ルールとマナー</a>は以下のとおりです。参照先と以下に相違がある場合は、参照先が優先されます。</p>\n<h2>ルール</h2>\n<ul>\n<li>関係者の人種、性別、性的指向、身体的特徴、見た目、政治、宗教（または無宗教）などに係る表現は、いかなる場合も適切ではありません。 </li>\n<li>JAWS-UG は No sell, No Job です。イベントの趣旨と関係のない宣伝行為・採用活動・ネットワーキングのみを目的としたご参加はご遠慮ください。</li>\n</ul>\n<p>ルールに違反する方は参加をお断りする場合がございます。  </p>\n<h2>マナー</h2>\n<ul>\n<li>あなたのクリエイティブで前向きな発言がイベントをより楽しくします。発表者や質問者に対して疑問や意見がある場合は批判や罵り・嘲りではなく提案と課題解決の態度でポジティブな発言を心がけましょう。 </li>\n<li>全てのイベントは有志のボランティアにより非営利目的にて運営され、いつでもあなたの手助けを必要としています。お気付きの点があればぜひご協力をお願いいたします。</li>\n<li>私たちはコミュニティへの貢献を通じて社会からの信頼を得ることがより良いビジネスに繋がり、より自分らしい働き方を見つける手段になると信じています。</li>\n<li>AWSのユーザーグループは日本中、世界中に存在し、あなたの参加を待っています。是非コミュニティを通じて世界中の仲間と繋がりましょう。</li>\n</ul>\n<h1>個人情報保護について</h1>\n<p>勉強会の会場へ入館申請を行うため、参加者の本名やメールアドレスの情報を頂く場合があります。 そのため、connpassの事前アンケートで頂いた個人情報を以下に定める内容にて取り扱います。</p>\n<h1>個人情報の利用目的について</h1>\n<p>ご提供いただいた個人情報は、以下に定める目的にのみ利用いたします。  </p>\n<ul>\n<li>コミュニティ開催会場の入館申請手続き</li>\n<li>勉強会の申し込み者の入館時のご本人確認</li>\n</ul>\n<h1>個人情報の取り扱い</h1>\n<p>取得した個人情報は、connpassでの入力により取得を行います。当サイト上での個人情報の取得にあたっては、提供時における確認などのクリックによって本人の同意を得たものとします。 当コミュニティでは、次のいずれかに該当する場合を除き、個人情報を第三者に開示・提供いたしません。</p>\n<ul>\n<li>会場入館の目的に沿って会場提供者（社）に入館申請を行う場合</li>\n<li>本人の同意がある場合</li>\n<li>本人の生命の保護などのために必要な場合であって、緊急を要するなど、ご本人の同意を得ることが困難である場合</li>\n</ul>\n<h1>運営メンバー</h1>\n<p><strong>五十音順</strong></p>\n<h3>池田武尚</h3>\n<p><img src=\"https://business-jaws.github.io/images/contributors/ikeda.jpg\" alt=\"池田武尚\" width=\"200\"></p>\n<blockquote>\n<p>鹿児島を拠点とするAPN アドバンストティアサービスパートナー企業で代表をしています。<br>\n2025, 2026 Japan AWS Top Engineer / 2026 Japan AWS All Certifications Engineer</p>\n</blockquote>\n<h3>伊佐薫明</h3>\n<p><img src=\"https://business-jaws.github.io/images/contributors/isa.jpg\" alt=\"伊佐薫明\" width=\"200\"></p>\n<blockquote>\n<p>好きなサービスはKIRO<br>\nAI-DLC/Agentic Engineeringを模索中</p>\n</blockquote>\n<h3>小谷泰庸（はくひめ）［ビップシステムズ株式会社］</h3>\n<p><img src=\"https://business-jaws.github.io/images/contributors/hakuhime.png\" alt=\"小谷泰庸（はくひめ）\" width=\"200\"></p>\n<blockquote>\n<p>ビップシステムズ株式会社でAWSアーキテクチャ設計を主務とするエンジニアとして活動し、AWSを活用してビジネスを広げていくことを目指しています。<br>\n2頭のチワワと暮らしています。</p>\n</blockquote>\n<h3>高橋広和</h3>\n<p><img src=\"https://business-jaws.github.io/images/contributors/takahashi.png\" alt=\"高橋広和\" width=\"200\"></p>\n<blockquote>\n<p>某政令市のCCoEでFinOpsやってる公務員。AWSで住民サービスを向上させたい！</p>\n</blockquote>\n<h3>モブエンジニア</h3>\n<p><img src=\"https://business-jaws.github.io/images/contributors/mob.png\" alt=\"モブエンジニア\" width=\"200\"></p>\n<blockquote>\n<p>カンファレンススタッフを趣味としているSREエンジニア｡ビジネス創出とAI-DLCに関心があります。</p>\n</blockquote>\n<h3>山下祐樹</h3>\n<p><img src=\"https://business-jaws.github.io/images/contributors/yamashita.png\" alt=\"山下祐樹\" width=\"200\"></p>\n<blockquote>\n<p>エンジニア歴よりも飲食、営業歴が長いクラウドエンジニア. \nAI全般とAI-DLCに興味があります。<br>\nAWS Community Builder(AI Engineering)</p>\n</blockquote>\n<h3>吉川佳佑</h3>\n<p><img src=\"https://business-jaws.github.io/images/contributors/yoshikawa.jpg\" alt=\"吉川佳佑\" width=\"200\"></p>\n<blockquote>\n<p>NTTテクノクロス株式会社でAWSの設計構築に携わりながら、名古屋商科大学マネジメント研究科で経営戦略やマネジメントを勉強中。AIを活用した価値創出に興味がある。</p>\n</blockquote>",
+      "description": "<h1>イベント概要</h1>\n<p>JAWS-UGに、職種を越えてAWSを活用したビジネス課題解決を学び合う専門支部「Business-JAWS（ビジネスストラテジー支部）」が誕生しました！<br>\nエンジニア、非エンジニア問わず、AWSをビジネスに繋げたいと思っている方、興味がある方、お気軽にご参加下さい。<br>\n皆さまのご参加を心よりお待ちしております！</p>\n<h1>🎤 LT登壇者募集！（10分 × 3枠）</h1>\n<p>Business-JAWS #0 キックオフ！〜AWSとビジネスをつなぐコミュニティ始動〜 では、LT登壇者を募集します！</p>\n<p>テーマは 「AWS × ビジネス課題解決」。</p>\n<p>AWSの技術紹介だけでなく、ビジネス課題の発見や解決、新たな価値の創出につながる取り組みやアイデアをお待ちしています。</p>\n<p>💡 LTテーマ例</p>\n<ul>\n<li>AWSを活用した新規事業・サービスの創出</li>\n<li>生成AI・データ活用によるビジネス課題の解決</li>\n<li>AWSを活用した売上向上・業務改善・コスト最適化</li>\n<li>ビジネス視点で考えるAWSの活用方法</li>\n<li>エンジニアとビジネス部門の協業・挑戦事例</li>\n<li>AIB(AWS Certified AI Business Strategist)受験体験記</li>\n</ul>\n<p>成功事例はもちろん、失敗談や検証中の取り組み、これから挑戦したいアイデアも大歓迎！<br>\nエンジニア・非エンジニアを問わず、LT初登壇の方も歓迎します！</p>\n<p>📢 募集要項</p>\n<p>発表時間： 10分<br>\n募集枠： 3枠<br>\n選考方法： 応募が3枠を超えた場合は、運営にて抽選を行います。</p>\n<p>※JAWS-UGの「No Sell, No Job」に則り、営業・採用・製品宣伝を主目的とした発表はご遠慮ください。</p>\n<p>記念すべきBusiness-JAWS #0を、一緒に盛り上げましょう！</p>\n<h1>タイムテーブル</h1>\n<p>※予定は変更になる場合があります。</p>\n<table>\n<thead>\n<tr>\n<th style=\"text-align: center;\">時間</th>\n<th style=\"text-align: left;\">内容</th>\n<th style=\"text-align: left;\">登壇者</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td style=\"text-align: center;\">18:30 ～ 19:00</td>\n<td style=\"text-align: left;\">受付</td>\n<td style=\"text-align: left;\">運営</td>\n</tr>\n<tr>\n<td style=\"text-align: center;\">19:00 ～ 19:10</td>\n<td style=\"text-align: left;\">オープニング・設立宣言</td>\n<td style=\"text-align: left;\">吉川・運営</td>\n</tr>\n<tr>\n<td style=\"text-align: center;\">19:10 ～ 19:30</td>\n<td style=\"text-align: left;\">沼口さんから</td>\n<td style=\"text-align: left;\">AWS 沼口さん</td>\n</tr>\n<tr>\n<td style=\"text-align: center;\">19:30 ～ 19:45</td>\n<td style=\"text-align: left;\">招待枠①</td>\n<td style=\"text-align: left;\"></td>\n</tr>\n<tr>\n<td style=\"text-align: center;\">19:45 ～ 20:00</td>\n<td style=\"text-align: left;\">招待枠②</td>\n<td style=\"text-align: left;\"></td>\n</tr>\n<tr>\n<td style=\"text-align: center;\">20:00 ～ 20:10</td>\n<td style=\"text-align: left;\">休憩</td>\n<td style=\"text-align: left;\"></td>\n</tr>\n<tr>\n<td style=\"text-align: center;\">20:10 ～ 20:20</td>\n<td style=\"text-align: left;\">LT枠①</td>\n<td style=\"text-align: left;\"></td>\n</tr>\n<tr>\n<td style=\"text-align: center;\">20:20 ～ 20:30</td>\n<td style=\"text-align: left;\">LT枠②</td>\n<td style=\"text-align: left;\"></td>\n</tr>\n<tr>\n<td style=\"text-align: center;\">20:30 ～ 20:40</td>\n<td style=\"text-align: left;\">LT枠③</td>\n<td style=\"text-align: left;\"></td>\n</tr>\n<tr>\n<td style=\"text-align: center;\">20:40 ～ 20:50</td>\n<td style=\"text-align: left;\">LT枠④</td>\n<td style=\"text-align: left;\"></td>\n</tr>\n<tr>\n<td style=\"text-align: center;\">20:50 ～ 20:55</td>\n<td style=\"text-align: left;\">エンディング</td>\n<td style=\"text-align: left;\">運営</td>\n</tr>\n<tr>\n<td style=\"text-align: center;\">20:55 ～ 21:00</td>\n<td style=\"text-align: left;\">写真撮影</td>\n<td style=\"text-align: left;\">全員</td>\n</tr>\n</tbody>\n</table>\n<h1>Business-JAWSについて</h1>\n<p>Business-JAWSは、AWSを活用してビジネス課題を解決する力を、職種を越えて学び合うJAWS-UGの専門支部です。<br>\n新規事業の創出、生成AIの活用、売上向上や業務改善などを題材に、ケース討議、LT会、資格勉強会を実施します。<br>\n個別のAWSサービスやアーキテクチャの探求にとどまらず、課題の発見・定義、事業戦略、価値検証といった上流領域にもフォーカスします。<br>\nエンジニアと非エンジニアが互いの知見を持ち寄り、協力して課題に立ち向かう「AWSとビジネスをつなぐコミュニティ」を目指します。</p>\n<h1>参加のルールとマナー</h1>\n<p>JAWS-UGの基本的な<a href=\"https://jaws-ug.jp/for-participant/\" rel=\"nofollow\">参加ルールとマナー</a>は以下のとおりです。参照先と以下に相違がある場合は、参照先が優先されます。</p>\n<h2>ルール</h2>\n<ul>\n<li>関係者の人種、性別、性的指向、身体的特徴、見た目、政治、宗教（または無宗教）などに係る表現は、いかなる場合も適切ではありません。 </li>\n<li>JAWS-UG は No sell, No Job です。イベントの趣旨と関係のない宣伝行為・採用活動・ネットワーキングのみを目的としたご参加はご遠慮ください。</li>\n</ul>\n<p>ルールに違反する方は参加をお断りする場合がございます。  </p>\n<h2>マナー</h2>\n<ul>\n<li>あなたのクリエイティブで前向きな発言がイベントをより楽しくします。発表者や質問者に対して疑問や意見がある場合は批判や罵り・嘲りではなく提案と課題解決の態度でポジティブな発言を心がけましょう。 </li>\n<li>全てのイベントは有志のボランティアにより非営利目的にて運営され、いつでもあなたの手助けを必要としています。お気付きの点があればぜひご協力をお願いいたします。</li>\n<li>私たちはコミュニティへの貢献を通じて社会からの信頼を得ることがより良いビジネスに繋がり、より自分らしい働き方を見つける手段になると信じています。</li>\n<li>AWSのユーザーグループは日本中、世界中に存在し、あなたの参加を待っています。是非コミュニティを通じて世界中の仲間と繋がりましょう。</li>\n</ul>\n<h1>個人情報保護について</h1>\n<p>勉強会の会場へ入館申請を行うため、参加者の本名やメールアドレスの情報を頂く場合があります。 そのため、connpassの事前アンケートで頂いた個人情報を以下に定める内容にて取り扱います。</p>\n<h1>個人情報の利用目的について</h1>\n<p>ご提供いただいた個人情報は、以下に定める目的にのみ利用いたします。  </p>\n<ul>\n<li>コミュニティ開催会場の入館申請手続き</li>\n<li>勉強会の申し込み者の入館時のご本人確認</li>\n</ul>\n<h1>個人情報の取り扱い</h1>\n<p>取得した個人情報は、connpassでの入力により取得を行います。当サイト上での個人情報の取得にあたっては、提供時における確認などのクリックによって本人の同意を得たものとします。 当コミュニティでは、次のいずれかに該当する場合を除き、個人情報を第三者に開示・提供いたしません。</p>\n<ul>\n<li>会場入館の目的に沿って会場提供者（社）に入館申請を行う場合</li>\n<li>本人の同意がある場合</li>\n<li>本人の生命の保護などのために必要な場合であって、緊急を要するなど、ご本人の同意を得ることが困難である場合</li>\n</ul>\n<h1>運営メンバー</h1>\n<p><strong>五十音順</strong></p>\n<h3>池田武尚</h3>\n<p><img src=\"https://business-jaws.github.io/images/contributors/ikeda.jpg\" alt=\"池田武尚\" width=\"200\"></p>\n<blockquote>\n<p>鹿児島を拠点とするAPN アドバンストティアサービスパートナー企業で代表をしています。<br>\n2025, 2026 Japan AWS Top Engineer / 2026 Japan AWS All Certifications Engineer</p>\n</blockquote>\n<h3>伊佐薫明</h3>\n<p><img src=\"https://business-jaws.github.io/images/contributors/isa.jpg\" alt=\"伊佐薫明\" width=\"200\"></p>\n<blockquote>\n<p>好きなサービスはKIRO<br>\nAI-DLC/Agentic Engineeringを模索中</p>\n</blockquote>\n<h3>小谷泰庸（はくひめ）［ビップシステムズ株式会社］</h3>\n<p><img src=\"https://business-jaws.github.io/images/contributors/hakuhime.png\" alt=\"小谷泰庸（はくひめ）\" width=\"200\"></p>\n<blockquote>\n<p>ビップシステムズ株式会社でAWSアーキテクチャ設計を主務とするエンジニアとして活動し、AWSを活用してビジネスを広げていくことを目指しています。<br>\n2頭のチワワと暮らしています。</p>\n</blockquote>\n<h3>高橋広和</h3>\n<p><img src=\"https://business-jaws.github.io/images/contributors/takahashi.png\" alt=\"高橋広和\" width=\"200\"></p>\n<blockquote>\n<p>某政令市のCCoEでFinOpsやってる公務員。AWSで住民サービスを向上させたい！</p>\n</blockquote>\n<h3>モブエンジニア</h3>\n<p><img src=\"https://business-jaws.github.io/images/contributors/mob.png\" alt=\"モブエンジニア\" width=\"200\"></p>\n<blockquote>\n<p>カンファレンススタッフを趣味としているSREエンジニア｡ビジネス創出とAI-DLCに関心があります。</p>\n</blockquote>\n<h3>山下祐樹</h3>\n<p><img src=\"https://business-jaws.github.io/images/contributors/yamashita.png\" alt=\"山下祐樹\" width=\"200\"></p>\n<blockquote>\n<p>エンジニア歴よりも飲食、営業歴が長いクラウドエンジニア. \nAI全般とAI-DLCに興味があります。<br>\nAWS Community Builder(AI Engineering)</p>\n</blockquote>\n<h3>吉川佳佑</h3>\n<p><img src=\"https://business-jaws.github.io/images/contributors/yoshikawa.jpg\" alt=\"吉川佳佑\" width=\"200\"></p>\n<blockquote>\n<p>NTTテクノクロス株式会社でAWSの設計構築に携わりながら、名古屋商科大学マネジメント研究科で経営戦略やマネジメントを勉強中。AIを活用した価値創出に興味がある。</p>\n</blockquote>",
       "url": "https://business-jaws.connpass.com/event/410205/",
       "image_url": "https://media.connpass.com/thumbs/83/fb/83fb31a748d46cf8cfc65e910afcb5d4.png",
       "hash_tag": "business_jaws",
       "started_at": "2026-11-19T19:00:00+09:00",
       "ended_at": "2026-11-19T21:00:00+09:00",
       "published_at": "2026-10-22T21:02:08+09:00",
-      "limit": 265,
+      "limit": 266,
       "event_type": "participation",
       "open_status": "preopen",
       "group": {
@@ -6944,7 +6944,7 @@
       "lon": "139.740648000000",
       "accepted": 46,
       "waiting": 0,
-      "updated_at": "2026-10-29T20:34:19+09:00"
+      "updated_at": "2026-11-05T20:23:10+09:00"
     },
     {
       "id": 410368,
@@ -6998,7 +6998,7 @@
       "place": "アバナードオフィス：カフェスペース",
       "lat": "35.664561600000",
       "lon": "139.739496300000",
-      "accepted": 2,
+      "accepted": 3,
       "waiting": 0,
       "updated_at": "2026-11-05T18:31:22+09:00"
     },
@@ -11673,7 +11673,7 @@
       "place": "日本マイクロソフト株式会社 品川本社オフィス 31F セミナールーム B",
       "lat": "35.626614700000",
       "lon": "139.740773600000",
-      "accepted": 165,
+      "accepted": 167,
       "waiting": 0,
       "updated_at": "2026-11-05T17:17:03+09:00"
     },
@@ -11869,7 +11869,7 @@
       "place": "有明セントラルタワーホール＆カンファレンス",
       "lat": "35.632078500000",
       "lon": "139.793666700000",
-      "accepted": 532,
+      "accepted": 533,
       "waiting": 0,
       "updated_at": "2026-11-05T11:58:34+09:00"
     },
@@ -11897,7 +11897,7 @@
       "place": "神田KS10会議室",
       "lat": "35.690835600000",
       "lon": "139.767806400000",
-      "accepted": 25,
+      "accepted": 26,
       "waiting": 0,
       "updated_at": "2026-11-05T13:26:07+09:00"
     },
@@ -11925,7 +11925,7 @@
       "place": "イタンジ株式会社",
       "lat": "35.664586900000",
       "lon": "139.737777600000",
-      "accepted": 29,
+      "accepted": 30,
       "waiting": 0,
       "updated_at": "2026-10-19T13:18:04+09:00"
     },
@@ -12049,7 +12049,7 @@
       "published_at": "2026-10-06T17:58:24+09:00",
       "limit": 135,
       "event_type": "participation",
-      "open_status": "open",
+      "open_status": "close",
       "group": {
         "id": 11489,
         "subdomain": "shiftevolve",
