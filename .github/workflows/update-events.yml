@@ -1,6 +1,7 @@
 name: Update events snapshot
 
 # connpass API からイベントを取得し、data/events.json を更新して main に push する。
+# 都道府県の検索に加え、data/connpass-supplements.json の subdomain と event_id も同じ実行で足す。
 # サイトからは connpass API を呼ばない。API を呼ぶのはスナップショットの更新時だけ
 # （このワークフローの定期実行・手動実行と、手元の pnpm fetch:events / fetch:events:local）。
 on:

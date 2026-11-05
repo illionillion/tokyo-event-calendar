@@ -6,12 +6,14 @@ import {
   isSnapshotSourceEvent,
   isEventListResponse,
   PAGE_SIZE,
+  parseConnpassSupplements,
   REQUEST_INTERVAL_MS,
   TARGET_PREFECTURES,
   targetMonths,
   toSnapshotEvent,
 } from "@/lib/connpass-snapshot";
 import committedSnapshot from "@/data/events.json";
+import committedSupplements from "@/data/connpass-supplements.json";
 import { connpassEvent, eventListResponse } from "@/lib/connpass.fixtures";
 import type { ConnpassEvent } from "@/lib/types";
 
@@ -52,6 +54,52 @@ describe("connpass-snapshot", () => {
     expect(url.searchParams.get("order")).toBe("2");
     expect(url.searchParams.get("start")).toBe("101");
     expect(url.searchParams.get("count")).toBe(String(PAGE_SIZE));
+  });
+
+  it("補完の URL は都道府県を付けず、subdomain または event_id を同じ名前で並べる", () => {
+    const bySubdomain = eventsSearchUrl({
+      months: ["202611", "202612"],
+      subdomains: ["dmm", "example-group"],
+      start: 1,
+    });
+    expect(bySubdomain.searchParams.getAll("ym")).toEqual(["202611", "202612"]);
+    expect(bySubdomain.searchParams.getAll("subdomain")).toEqual(["dmm", "example-group"]);
+    expect(bySubdomain.searchParams.has("prefecture")).toBe(false);
+    expect(bySubdomain.searchParams.has("event_id")).toBe(false);
+
+    const byEventId = eventsSearchUrl({
+      months: ["202611"],
+      eventIds: [402090, 402091],
+      start: 1,
+    });
+    expect(byEventId.searchParams.getAll("event_id")).toEqual(["402090", "402091"]);
+    expect(byEventId.searchParams.has("prefecture")).toBe(false);
+    expect(byEventId.searchParams.has("subdomain")).toBe(false);
+  });
+
+  it("コミット済みの補完設定は subdomain dmm だけで、event_id は空", () => {
+    expect(parseConnpassSupplements(committedSupplements)).toEqual({
+      subdomains: ["dmm"],
+      eventIds: [],
+    });
+  });
+
+  it("補完設定の余計な項目、URL、重複、不正な event_id は受け付けない", () => {
+    expect(() =>
+      parseConnpassSupplements({ subdomains: ["dmm"], event_ids: [], note: "メモ" })
+    ).toThrow("subdomains と event_ids だけ");
+    expect(() =>
+      parseConnpassSupplements({ subdomains: ["https://dmm.connpass.com/"], event_ids: [] })
+    ).toThrow("英小文字");
+    expect(() => parseConnpassSupplements({ subdomains: ["dmm", "dmm"], event_ids: [] })).toThrow(
+      "重複しています: dmm"
+    );
+    expect(() => parseConnpassSupplements({ subdomains: [], event_ids: ["402090"] })).toThrow(
+      "正の整数"
+    );
+    expect(() => parseConnpassSupplements({ subdomains: [], event_ids: [402090, 402090] })).toThrow(
+      "重複しています: 402090"
+    );
   });
 
   it("取得対象は東京都・神奈川県・埼玉県・千葉県", () => {
@@ -300,6 +348,169 @@ describe("connpass-snapshot", () => {
         fetch: fetchMock as unknown as typeof fetch,
       })
     ).rejects.toThrow("API キーがありません");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("allowlist の subdomain と event_id を都道府県の結果へ足し、同じ id は先のものを残す", async () => {
+    const pages = [
+      [connpassEvent({ id: 1, title: "都内" }), connpassEvent({ id: 2, title: "都内の重複" })],
+      [connpassEvent({ id: 2, title: "補完側" }), connpassEvent({ id: 3, title: "グループ補完" })],
+      [connpassEvent({ id: 3, title: "id側" }), connpassEvent({ id: 402090, title: "指定ID" })],
+    ];
+    const fetchMock = vi.fn(async (url: URL) =>
+      jsonResponse(
+        eventListResponse(pages.shift() ?? [], {
+          results_start: Number(url.searchParams.get("start")),
+        })
+      )
+    );
+    const sleep = vi.fn(async () => {});
+
+    const events = await fetchConnpassEvents({
+      apiKey: TEST_KEY,
+      months: ["202611", "202612"],
+      supplements: { subdomains: ["dmm", "example-group"], eventIds: [402090, 402091] },
+      fetch: fetchMock as unknown as typeof fetch,
+      sleep,
+    });
+
+    expect(events.map((event) => [event.id, event.title])).toEqual([
+      [1, "都内"],
+      [2, "都内の重複"],
+      [3, "グループ補完"],
+      [402090, "指定ID"],
+    ]);
+    expect(sleep).toHaveBeenCalledTimes(2);
+    expect(sleep).toHaveBeenNthCalledWith(1, REQUEST_INTERVAL_MS);
+    expect(sleep).toHaveBeenNthCalledWith(2, REQUEST_INTERVAL_MS);
+
+    const calls = fetchMock.mock.calls as unknown as [URL, RequestInit][];
+    expect(calls).toHaveLength(3);
+    expect(calls[0]?.[0].searchParams.getAll("prefecture")).toEqual([
+      "tokyo",
+      "kanagawa",
+      "saitama",
+      "chiba",
+    ]);
+    expect(calls[0]?.[0].searchParams.has("subdomain")).toBe(false);
+    expect(calls[0]?.[0].searchParams.has("event_id")).toBe(false);
+    expect(calls[1]?.[0].searchParams.getAll("ym")).toEqual(["202611", "202612"]);
+    expect(calls[1]?.[0].searchParams.getAll("subdomain")).toEqual(["dmm", "example-group"]);
+    expect(calls[1]?.[0].searchParams.has("prefecture")).toBe(false);
+    expect(calls[1]?.[0].searchParams.has("event_id")).toBe(false);
+    expect(calls[2]?.[0].searchParams.getAll("event_id")).toEqual(["402090", "402091"]);
+    expect(calls[2]?.[0].searchParams.has("prefecture")).toBe(false);
+    expect(calls[2]?.[0].searchParams.has("subdomain")).toBe(false);
+    expect(calls.every(([url]) => !url.toString().includes(TEST_KEY))).toBe(true);
+  });
+
+  it("補完の subdomain もページを送り、都道府県のリクエストと合わせて間隔をあける", async () => {
+    const bodies = [
+      eventListResponse([connpassEvent({ id: 1 })], { results_available: 1 }),
+      eventListResponse(page(10, PAGE_SIZE), { results_available: PAGE_SIZE + 1 }),
+      eventListResponse([connpassEvent({ id: 10 + PAGE_SIZE })], {
+        results_available: PAGE_SIZE + 1,
+      }),
+    ];
+    const fetchMock = vi.fn(async (url: URL) => {
+      const body = bodies.shift() ?? eventListResponse([]);
+      return jsonResponse({ ...body, results_start: Number(url.searchParams.get("start")) });
+    });
+    const sleep = vi.fn(async () => {});
+
+    const events = await fetchConnpassEvents({
+      apiKey: TEST_KEY,
+      months: ["202611"],
+      supplements: { subdomains: ["dmm"], eventIds: [] },
+      fetch: fetchMock as unknown as typeof fetch,
+      sleep,
+    });
+
+    expect(events).toHaveLength(PAGE_SIZE + 2);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(sleep).toHaveBeenCalledTimes(2);
+    const calls = fetchMock.mock.calls as unknown as [URL, RequestInit][];
+    expect(calls.map(([url]) => url.searchParams.get("start"))).toEqual(["1", "1", "101"]);
+    expect(calls[1]?.[0].searchParams.getAll("subdomain")).toEqual(["dmm"]);
+    expect(calls[1]?.[0].searchParams.has("prefecture")).toBe(false);
+    expect(calls[2]?.[0].searchParams.get("start")).toBe("101");
+  });
+
+  it("補完が 0 件でも、都道府県の結果は返す", async () => {
+    const pages = [[connpassEvent({ id: 7 })], [], []];
+    const fetchMock = vi.fn(async (url: URL) =>
+      jsonResponse(
+        eventListResponse(pages.shift() ?? [], {
+          results_start: Number(url.searchParams.get("start")),
+        })
+      )
+    );
+
+    const events = await fetchConnpassEvents({
+      apiKey: TEST_KEY,
+      months: ["202611"],
+      supplements: { subdomains: ["dmm"], eventIds: [402090] },
+      fetch: fetchMock as unknown as typeof fetch,
+      sleep: async () => {},
+    });
+
+    expect(events.map((event) => event.id)).toEqual([7]);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+
+  it("補完の取得が失敗したら、都道府県分を返さずに失敗する", async () => {
+    const responses = [
+      jsonResponse(eventListResponse([connpassEvent({ id: 1 })])),
+      jsonResponse({}, 502),
+    ];
+    const fetchMock = vi.fn(async () => responses.shift() as Response);
+
+    const result = fetchConnpassEvents({
+      apiKey: TEST_KEY,
+      months: ["202611"],
+      supplements: { subdomains: ["dmm"], eventIds: [] },
+      fetch: fetchMock as unknown as typeof fetch,
+      sleep: async () => {},
+    });
+
+    await expect(result).rejects.toThrow("connpass API が 502 を返しました");
+    await expect(result).rejects.not.toThrow(TEST_KEY);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("補完のリクエストも、都道府県の取得と合算した回数の上限で止める", async () => {
+    const fetchMock = vi.fn(async (url: URL) =>
+      jsonResponse(
+        eventListResponse([connpassEvent({ id: 1 })], {
+          results_start: Number(url.searchParams.get("start")),
+        })
+      )
+    );
+
+    await expect(
+      fetchConnpassEvents({
+        apiKey: TEST_KEY,
+        months: ["202611"],
+        supplements: { subdomains: ["dmm"], eventIds: [] },
+        fetch: fetchMock as unknown as typeof fetch,
+        sleep: async () => {},
+        maxRequests: 1,
+      })
+    ).rejects.toThrow("上限（1 回）");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("補完設定が不正なら API を呼ばない", async () => {
+    const fetchMock = vi.fn();
+
+    await expect(
+      fetchConnpassEvents({
+        apiKey: TEST_KEY,
+        months: ["202611"],
+        supplements: { subdomains: ["DMM"], eventIds: [] },
+        fetch: fetchMock as unknown as typeof fetch,
+      })
+    ).rejects.toThrow("英小文字");
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });

@@ -1,5 +1,7 @@
 /**
  * connpass API v2 から東京都・神奈川県・埼玉県・千葉県のイベントを取得し、`data/events.json` に書き出す。
+ * `data/connpass-supplements.json` の subdomain と event_id も、都道府県なしの検索として足す
+ * （都道府県のインデックスに載らないイベントの補完。おすすめとしての優遇ではない）。
  * 通常は GitHub Actions（.github/workflows/update-events.yml）の定期実行で 1 日 1 回動く。
  * 同じワークフローの手動実行や、手元から下のコマンドで動かすこともできる（サイトからは呼ばない）。
  *
@@ -8,14 +10,16 @@
  *   CONNPASS_API_KEY=... pnpm fetch:events
  *
  * API キーは環境変数からだけ読み、ログやファイルには出さない。
+ * 補完設定の読み取りか、いずれかの API 呼び出しが失敗したときは、スナップショットを書き出さない。
  */
-import { writeFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { format, resolveConfig } from "prettier";
 import {
   buildSnapshot,
   fetchConnpassEvents,
+  parseConnpassSupplements,
   REQUEST_INTERVAL_MS,
   TARGET_PREFECTURES,
   targetMonths,
@@ -23,6 +27,7 @@ import {
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const outputPath = path.join(rootDir, "data", "events.json");
+const supplementsPath = path.join(rootDir, "data", "connpass-supplements.json");
 
 async function main(): Promise<void> {
   const apiKey = process.env.CONNPASS_API_KEY;
@@ -32,14 +37,22 @@ async function main(): Promise<void> {
     );
   }
 
+  const supplements = parseConnpassSupplements(await readSupplements());
   const months = targetMonths(new Date());
+  const supplementNote = [
+    supplements.subdomains.length > 0 ? `subdomain=${supplements.subdomains.join(",")}` : null,
+    supplements.eventIds.length > 0 ? `event_id=${supplements.eventIds.join(",")}` : null,
+  ]
+    .filter((part) => part !== null)
+    .join(" ");
   console.log(
-    `connpass API: ym=${months.join(",")} prefecture=${TARGET_PREFECTURES.join(",")} interval=${REQUEST_INTERVAL_MS}ms`
+    `connpass API: ym=${months.join(",")} prefecture=${TARGET_PREFECTURES.join(",")}${supplementNote ? ` ${supplementNote}` : ""} interval=${REQUEST_INTERVAL_MS}ms`
   );
 
   const events = await fetchConnpassEvents({
     apiKey,
     months,
+    supplements,
     log: (message) => console.log(message),
   });
   if (events.length === 0) {
@@ -56,6 +69,17 @@ async function main(): Promise<void> {
   console.log(
     `${snapshot.events.length} 件を ${path.relative(rootDir, outputPath)} に書き出しました`
   );
+}
+
+async function readSupplements(): Promise<unknown> {
+  try {
+    return JSON.parse(await readFile(supplementsPath, "utf8")) as unknown;
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `補完設定 ${path.relative(rootDir, supplementsPath)} を読み取れませんでした: ${detail}`
+    );
+  }
 }
 
 main().catch((error: unknown) => {

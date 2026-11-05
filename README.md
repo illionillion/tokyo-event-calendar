@@ -27,13 +27,21 @@ pnpm dev
 サイトからは connpass API を呼びません（利用者のアクセスで API を呼ぶことはありません）。API を呼ぶのは、スナップショットを更新するとき（GitHub Actions の定期実行・手動実行、または手元の `pnpm fetch:events` / `pnpm fetch:events:local`）だけです。
 
 1. `.github/workflows/update-events.yml` が 1 日 1 回（UTC 18:00 = 日本時間 3:00、手動実行も可）動く
-2. `scripts/fetch-connpass-events.ts` が connpass API v2 のイベント一覧（`GET /api/v2/events/`）から、東京都・神奈川県・埼玉県・千葉県（`prefecture=tokyo`, `kanagawa`, `saitama`, `chiba`）で今月から 3 か月分のイベントを開催日時順に 100 件ずつ取得する。リクエストは 5 秒に 1 回まで
+2. `scripts/fetch-connpass-events.ts` が connpass API v2 のイベント一覧（`GET /api/v2/events/`）から、東京都・神奈川県・埼玉県・千葉県（`prefecture=tokyo`, `kanagawa`, `saitama`, `chiba`）で今月から 3 か月分のイベントを開催日時順に 100 件ずつ取得する。続けて `data/connpass-supplements.json` の subdomain と event_id も、都道府県なし・同じ年月で取得し、イベント ID で足す（重複は除く）。リクエストは検索をまたいでも 5 秒に 1 回まで。どちらかが失敗したときは `data/events.json` を書き出さない
 3. 主催者のニックネーム・表示名・ID は落とし、`image_url` はそのまま `data/events.json` に書き出す。カードは URL があるときその画像を表示する。API リファレンスでは、この URL はある程度の時間で失効し、外部サイトでの直接参照は控えるよう記載されている
 4. 変更があれば `main` に commit・push し、アプリはその JSON を読む
 
 API キーは GitHub の Environment `workflow` の secret `CONNPASS_API_KEY` に置き、ワークフローから `pnpm fetch:events` で参照します。手元では `.env` にキーを書いて `pnpm fetch:events:local`（`tsx --env-file=.env` 経由）。CI と同じ渡し方なら `CONNPASS_API_KEY=... pnpm fetch:events` でも可（キーはログに出しません）。
 
 API の利用条件は [connpass API利用規約](https://help.connpass.com/api/api-term) と [API リファレンス](https://connpass.com/about/api/v2/) に従います。
+
+### 都道府県の検索に載らないイベント
+
+都道府県（`prefecture`）の検索だけでは拾えないイベントがあります。`event_id` や `subdomain` では API から返るのに、上の 4 県の和集合に含まれないものです。おすすめとしての優遇ではありません。
+
+`data/connpass-supplements.json` は `subdomains` と `event_ids` だけを持ちます。初期値は subdomain `dmm` です。足すときは、その JSON に subdomain（`https://dmm.connpass.com/` なら `dmm`）か event_id を書いて、次の `pnpm fetch:events` か Actions の定期実行を待ちます。subdomain はそのグループの、同じ 3 か月のイベントを都道府県に関係なく足します。対象のカレンダーに載せたいグループだけを書いてください。event_id は、その ID のイベントが同じ 3 か月の窓にあるときだけ足します。
+
+カレンダーに出ていない connpass のイベントは、[表示されていないイベント](https://github.com/illionillion/tokyo-event-calendar/issues/new?template=missing_event.yml) の Issue、または作者への [DM（X）](https://x.com/Sei_engineer) で知らせてください。確認できれば、この設定に足して表示されるようにします。connpass 以外で申し込むイベントは対象外です。
 
 ## Scripts
 
