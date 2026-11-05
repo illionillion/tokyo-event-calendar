@@ -1,15 +1,17 @@
 name: Promo videos
 
-# 週次の LT / もくもく紹介動画（縦 2 本と横 2 本）。ci.yml とは別ワークフローなので、
+# 毎日の LT / もくもく紹介動画（縦 2 本と横 2 本）。ci.yml とは別ワークフローなので、
 # ここが失敗しても lint・テスト・Next のビルドは止まらない。
-# 土曜 6:00 JST（金曜 21:00 UTC）。イベントスナップショット（毎日 UTC 18:00）の後。
+# 毎日・スナップショット後。UTC 19:00 = 日本時間 4:00。
+# イベントスナップショットは毎日 UTC 18:00（日本時間 3:00）。
+# 公開パスは固定。X の投稿頻度と文面はリポジトリ外で、土曜の週次のまま。
 on:
   schedule:
-    - cron: "0 21 * * 5"
+    - cron: "0 19 * * *"
   workflow_dispatch:
     inputs:
       date:
-        description: "基準日（YYYY-MM-DD、日本時間）。空なら実行日。土曜投稿が案内する来週を書き出す。"
+        description: "基準日（YYYY-MM-DD、日本時間）。空なら実行日。毎日の再生成で、次の土曜投稿が案内する来週を書き出す。"
         required: false
         type: string
 
@@ -22,7 +24,7 @@ concurrency:
 
 jobs:
   render:
-    name: Render weekly promo videos
+    name: Render daily promo videos
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -115,6 +117,6 @@ jobs:
           fi
           git config user.name "Yuto Ichinose"
           git config user.email "60034520+illionillion@users.noreply.github.com"
-          git commit -m "chore: 週次の LT・もくもく紹介動画を更新する"
+          git commit -m "chore: 毎日の LT・もくもく紹介動画を更新する"
           # push は GITHUB_TOKEN で行う（この push では Cloudflare のデプロイが走らないことがある）
           git push origin HEAD:main
