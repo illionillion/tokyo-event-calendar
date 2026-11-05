@@ -77,9 +77,9 @@ describe("connpass-snapshot", () => {
     expect(byEventId.searchParams.has("subdomain")).toBe(false);
   });
 
-  it("コミット済みの補完設定は subdomain dmm だけで、event_id は空", () => {
+  it("コミット済みの補完設定は subdomain dmm と akabane-yurumoku で、event_id は空", () => {
     expect(parseConnpassSupplements(committedSupplements)).toEqual({
-      subdomains: ["dmm"],
+      subdomains: ["dmm", "akabane-yurumoku"],
       eventIds: [],
     });
   });
