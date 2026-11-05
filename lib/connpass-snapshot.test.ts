@@ -178,7 +178,7 @@ describe("connpass-snapshot", () => {
     expect(committedSnapshot.events.every((event) => isSnapshotSourceEvent(event))).toBe(true);
   });
 
-  it("ページを順に取り、2 回目以降は 5 秒あけてから呼ぶ", async () => {
+  it("ページを順に取り、2 回目以降は 10 秒あけてから呼ぶ", async () => {
     const pages = [page(1, PAGE_SIZE), page(101, PAGE_SIZE), page(201, 3)];
     const fetchMock = vi.fn(async (url: URL) =>
       jsonResponse(
@@ -284,7 +284,7 @@ describe("connpass-snapshot", () => {
     ).rejects.toThrow("results_available を超えました");
   });
 
-  it("リクエスト同士の間隔は 5 秒より短くできない", async () => {
+  it("リクエスト同士の間隔は 10 秒より短くできない", async () => {
     const fetchMock = vi.fn();
 
     await expect(
@@ -294,7 +294,7 @@ describe("connpass-snapshot", () => {
         fetch: fetchMock as unknown as typeof fetch,
         intervalMs: 1_000,
       })
-    ).rejects.toThrow("5000ms 以上");
+    ).rejects.toThrow("10000ms 以上");
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
