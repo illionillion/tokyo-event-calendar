@@ -7,6 +7,8 @@ import {
   isEventListResponse,
   PAGE_SIZE,
   parseConnpassSupplements,
+  RATE_LIMIT_MAX_RETRIES,
+  rateLimitBackoffMs,
   REQUEST_INTERVAL_MS,
   TARGET_PREFECTURES,
   targetMonths,
@@ -298,22 +300,158 @@ describe("connpass-snapshot", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("エラーのステータスでは途中のデータを返さずに失敗し、API キーをメッセージに含めない", async () => {
+  it("429 以外のエラーでは再試行せず、途中のデータを返さずに失敗し、API キーをメッセージに含めない", async () => {
     const responses = [
       jsonResponse(eventListResponse(page(1, PAGE_SIZE), { results_available: 1_000 })),
-      jsonResponse({}, 429),
+      jsonResponse({ detail: TEST_KEY }, 500),
     ];
     const fetchMock = vi.fn(async () => responses.shift() as Response);
+    const sleep = vi.fn(async () => {});
 
     const result = fetchConnpassEvents({
       apiKey: TEST_KEY,
       months: ["202610"],
       fetch: fetchMock as unknown as typeof fetch,
-      sleep: async () => {},
+      sleep,
     });
 
-    await expect(result).rejects.toThrow("connpass API が 429 を返しました");
+    await expect(result).rejects.toThrow("connpass API が 500 を返しました");
     await expect(result).rejects.not.toThrow(TEST_KEY);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(sleep.mock.calls).toEqual([[REQUEST_INTERVAL_MS]]);
+  });
+
+  it("リクエスト間隔は 10 秒のまま、429 の待ちは 5 秒から倍々になる", () => {
+    expect(REQUEST_INTERVAL_MS).toBe(10_000);
+    expect(RATE_LIMIT_MAX_RETRIES).toBe(3);
+    expect([1, 2, 3].map((retry) => rateLimitBackoffMs(retry))).toEqual([5_000, 10_000, 20_000]);
+  });
+
+  it("429 が数回続いたあと成功したら、同じページを取り直して続ける", async () => {
+    const responses = [
+      jsonResponse(
+        eventListResponse(page(1, PAGE_SIZE), {
+          results_available: PAGE_SIZE + 1,
+          results_start: 1,
+        })
+      ),
+      jsonResponse({ detail: TEST_KEY }, 429),
+      jsonResponse({ detail: TEST_KEY }, 429),
+      jsonResponse(
+        eventListResponse([connpassEvent({ id: 101 })], {
+          results_available: PAGE_SIZE + 1,
+          results_start: 101,
+        })
+      ),
+    ];
+    const fetchMock = vi.fn(async () => responses.shift() as Response);
+    const sleep = vi.fn(async () => {});
+    const logs: string[] = [];
+
+    const events = await fetchConnpassEvents({
+      apiKey: TEST_KEY,
+      months: ["202610"],
+      fetch: fetchMock as unknown as typeof fetch,
+      sleep,
+      log: (message) => logs.push(message),
+    });
+
+    expect(events).toHaveLength(PAGE_SIZE + 1);
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+    const calls = fetchMock.mock.calls as unknown as [URL, RequestInit][];
+    expect(calls.map(([url]) => url.searchParams.get("start"))).toEqual(["1", "101", "101", "101"]);
+    expect(calls.every(([url]) => !url.toString().includes(TEST_KEY))).toBe(true);
+    expect(sleep.mock.calls).toEqual([
+      [REQUEST_INTERVAL_MS],
+      [rateLimitBackoffMs(1)],
+      [rateLimitBackoffMs(2)],
+    ]);
+    expect(logs).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining(
+          `1/${RATE_LIMIT_MAX_RETRIES} 回目の再試行まで ${rateLimitBackoffMs(1)}ms`
+        ),
+        expect.stringContaining(
+          `2/${RATE_LIMIT_MAX_RETRIES} 回目の再試行まで ${rateLimitBackoffMs(2)}ms`
+        ),
+      ])
+    );
+    expect(logs.join("\n")).not.toContain(TEST_KEY);
+  });
+
+  it("429 が再試行上限まで続いたら、取れた分を返さずに失敗し、API キーを出さない", async () => {
+    const responses = [
+      jsonResponse(
+        eventListResponse(page(1, PAGE_SIZE), {
+          results_available: 10_000,
+          results_start: 1,
+        })
+      ),
+      ...Array.from({ length: RATE_LIMIT_MAX_RETRIES + 1 }, () =>
+        jsonResponse({ detail: TEST_KEY }, 429)
+      ),
+    ];
+    const fetchMock = vi.fn(async () => responses.shift() as Response);
+    const sleep = vi.fn(async () => {});
+    const logs: string[] = [];
+
+    const result = fetchConnpassEvents({
+      apiKey: TEST_KEY,
+      months: ["202610"],
+      fetch: fetchMock as unknown as typeof fetch,
+      sleep,
+      log: (message) => logs.push(message),
+    });
+
+    await expect(result).rejects.toThrow(`再試行上限（${RATE_LIMIT_MAX_RETRIES} 回）`);
+    await expect(result).rejects.not.toThrow(TEST_KEY);
+    expect(fetchMock).toHaveBeenCalledTimes(1 + RATE_LIMIT_MAX_RETRIES + 1);
+    expect(sleep.mock.calls).toEqual([
+      [REQUEST_INTERVAL_MS],
+      ...Array.from({ length: RATE_LIMIT_MAX_RETRIES }, (_, index) => [
+        rateLimitBackoffMs(index + 1),
+      ]),
+    ]);
+    expect(logs.filter((message) => message.includes("回目の再試行"))).toHaveLength(
+      RATE_LIMIT_MAX_RETRIES
+    );
+    expect(logs.join("\n")).not.toContain(TEST_KEY);
+  });
+
+  it("429 のあと 429 以外が返ったら、その場で失敗して再試行を続けない", async () => {
+    const responses = [jsonResponse({}, 429), jsonResponse({}, 503)];
+    const fetchMock = vi.fn(async () => responses.shift() as Response);
+    const sleep = vi.fn(async () => {});
+
+    await expect(
+      fetchConnpassEvents({
+        apiKey: TEST_KEY,
+        months: ["202610"],
+        fetch: fetchMock as unknown as typeof fetch,
+        sleep,
+      })
+    ).rejects.toThrow("connpass API が 503 を返しました");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(sleep.mock.calls).toEqual([[rateLimitBackoffMs(1)]]);
+  });
+
+  it("429 の再試行はページ数の上限に数えない", async () => {
+    const responses = [
+      jsonResponse({}, 429),
+      jsonResponse(eventListResponse([connpassEvent({ id: 7 })])),
+    ];
+    const fetchMock = vi.fn(async () => responses.shift() as Response);
+
+    const events = await fetchConnpassEvents({
+      apiKey: TEST_KEY,
+      months: ["202610"],
+      fetch: fetchMock as unknown as typeof fetch,
+      sleep: async () => {},
+      maxRequests: 1,
+    });
+
+    expect(events.map((event) => event.id)).toEqual([7]);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
   it("リクエスト数の上限を超えたら止める", async () => {

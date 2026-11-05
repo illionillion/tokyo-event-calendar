@@ -27,7 +27,7 @@ pnpm dev
 サイトからは connpass API を呼びません（利用者のアクセスで API を呼ぶことはありません）。API を呼ぶのは、スナップショットを更新するとき（GitHub Actions の定期実行・手動実行、または手元の `pnpm fetch:events` / `pnpm fetch:events:local`）だけです。
 
 1. `.github/workflows/update-events.yml` が 1 日 1 回（UTC 18:00 = 日本時間 3:00、手動実行も可）動く
-2. `scripts/fetch-connpass-events.ts` が connpass API v2 のイベント一覧（`GET /api/v2/events/`）から、東京都・神奈川県・埼玉県・千葉県（`prefecture=tokyo`, `kanagawa`, `saitama`, `chiba`）で今月から 3 か月分のイベントを開催日時順に 100 件ずつ取得する。続けて `data/connpass-supplements.json` の subdomain と event_id も、都道府県なし・同じ年月で取得し、イベント ID で足す（重複は除く）。リクエストは検索をまたいでも 10 秒に 1 回まで。どちらかが失敗したときは `data/events.json` を書き出さない
+2. `scripts/fetch-connpass-events.ts` が connpass API v2 のイベント一覧（`GET /api/v2/events/`）から、東京都・神奈川県・埼玉県・千葉県（`prefecture=tokyo`, `kanagawa`, `saitama`, `chiba`）で今月から 3 か月分のイベントを開催日時順に 100 件ずつ取得する。続けて `data/connpass-supplements.json` の subdomain と event_id も、都道府県なし・同じ年月で取得し、イベント ID で足す（重複は除く）。リクエストは検索をまたいでも 10 秒に 1 回まで。429 のときだけ、同じページを短い待ちを挟んで数回まで取り直す。どちらかが失敗したときは `data/events.json` を書き出さない
 3. 主催者のニックネーム・表示名・ID は落とし、`image_url` はそのまま `data/events.json` に書き出す。カードは URL があるときその画像を表示する。API リファレンスでは、この URL はある程度の時間で失効し、外部サイトでの直接参照は控えるよう記載されている
 4. 変更があれば `main` に commit・push し、アプリはその JSON を読む
 

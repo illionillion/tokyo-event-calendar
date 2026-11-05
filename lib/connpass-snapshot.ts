@@ -7,8 +7,26 @@ export const CONNPASS_EVENTS_ENDPOINT = "https://connpass.com/api/v2/events/";
  * リクエストの間隔。API リファレンスの制限（API キーごとに 1 秒間に 1 リクエストまで）より広く、
  * 都道府県検索の 2 ページ目で 429 になりやすいため 10 秒に 1 回までにする。前のレスポンスを受け取ってから待つので、
  * リクエストの開始どうしは必ずこれ以上あく。
+ * 429 が返ったページは、この間隔とは別に短い待ちを挟んで取り直す（`RATE_LIMIT_MAX_RETRIES`）。
  */
 export const REQUEST_INTERVAL_MS = 10_000;
+
+/**
+ * 429 の再試行回数の上限。ページ送りの `MAX_REQUESTS` とは別に数える。
+ * 超えたら、取れた分は返さずに失敗する。
+ */
+export const RATE_LIMIT_MAX_RETRIES = 3;
+
+/**
+ * 429 の 1 回目の再試行までの待ち時間。2 回目は 2 倍、3 回目は 4 倍（5 秒、10 秒、20 秒）。
+ * 成功したリクエスト同士の間隔（`REQUEST_INTERVAL_MS`）は変えない。
+ */
+export const RATE_LIMIT_BACKOFF_BASE_MS = 5_000;
+
+/** `retry` 回目（1 始まり）の 429 再試行までの待ち時間。 */
+export function rateLimitBackoffMs(retry: number): number {
+  return RATE_LIMIT_BACKOFF_BASE_MS * 2 ** (retry - 1);
+}
 
 /** API の count の上限。 */
 export const PAGE_SIZE = 100;
@@ -307,7 +325,51 @@ function mergeById(groups: readonly (readonly SnapshotEvent[])[]): SnapshotEvent
 }
 
 /**
+ * 429 の本文は読まずに捨てる。本文に API キーが含まれていても、ログや例外メッセージには出さない。
+ */
+async function discardResponseBody(response: Response): Promise<void> {
+  try {
+    await response.body?.cancel();
+  } catch {
+    // 本文は結果に使わない
+  }
+}
+
+/**
+ * 1 ページを取る。429 のときだけ exponential backoff で同じ URL を取り直す。
+ * 429 以外のステータスはそのまま返し、呼び出し側が即失敗させる。
+ */
+async function fetchEventPage(url: URL, context: FetchContext): Promise<Response> {
+  const attempts = RATE_LIMIT_MAX_RETRIES + 1;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    context.log(`GET ${url.pathname}${url.search}`);
+    const response = await context.fetchImpl(url, {
+      headers: {
+        "X-API-Key": context.apiKey,
+        "User-Agent": USER_AGENT,
+        Accept: "application/json",
+      },
+    });
+    if (response.status !== 429) return response;
+
+    await discardResponseBody(response);
+    if (attempt > RATE_LIMIT_MAX_RETRIES) break;
+
+    const waitMs = rateLimitBackoffMs(attempt);
+    context.log(
+      `connpass API が 429 を返したため、${attempt}/${RATE_LIMIT_MAX_RETRIES} 回目の再試行まで ${waitMs}ms 待ちます`
+    );
+    await context.sleep(waitMs);
+  }
+
+  throw new Error(
+    `connpass API が 429 を返したため、再試行上限（${RATE_LIMIT_MAX_RETRIES} 回）で中断しました`
+  );
+}
+
+/**
  * 1 種類の検索条件を、1 ページずつ順に取る。2 回目以降（別の検索の続きも含む）は前のレスポンスのあと `intervalMs` 待つ。
+ * 429 の再試行待ちは、この間隔とは別に同じページの中で行う。
  * 都道府県・subdomain・event_id のどれも無い検索は、窓の中の全イベントを取りに行くので拒否する。
  */
 async function fetchQueryPages(query: PageQuery, context: FetchContext): Promise<SnapshotEvent[]> {
@@ -330,14 +392,7 @@ async function fetchQueryPages(query: PageQuery, context: FetchContext): Promise
     if (context.requestCount > 1) await context.sleep(context.intervalMs);
 
     const url = eventsSearchUrl({ ...query, start });
-    context.log(`GET ${url.pathname}${url.search}`);
-    const response = await context.fetchImpl(url, {
-      headers: {
-        "X-API-Key": context.apiKey,
-        "User-Agent": USER_AGENT,
-        Accept: "application/json",
-      },
-    });
+    const response = await fetchEventPage(url, context);
     if (!response.ok) {
       throw new Error(`connpass API が ${response.status} を返しました`);
     }
@@ -375,8 +430,9 @@ async function fetchQueryPages(query: PageQuery, context: FetchContext): Promise
  * 別種の条件を一つの URL に混ぜると絞り込み（AND）になり、取りこぼしを拾えないので、検索は分ける。
  * 同じ種類の複数値は都道府県と同じく和集合（同じ名前のパラメーターを繰り返す）として 1 回の検索にまとめる。
  * 開催年月は都道府県の取得と同じ窓にする。グループの過去イベントを全部は取らない。
- * リクエスト間隔は検索をまたいでも `intervalMs`。どこかで失敗したら、取れた分は返さずに例外にする
- * （API キーはメッセージに含めない）。呼び出し側はそのときスナップショットを書き出さない。
+ * リクエスト間隔は検索をまたいでも `intervalMs`。429 のときだけ同じページを
+ * `RATE_LIMIT_MAX_RETRIES` 回まで取り直す。どこかで失敗したら、取れた分は返さずに例外にする
+ * （API キーはメッセージやログに含めない）。呼び出し側はそのときスナップショットを書き出さない。
  * 重複はイベント id で除き、先に取れた都道府県側を残す。
  */
 export async function fetchConnpassEvents({
