@@ -1,9 +1,9 @@
 {
-  "anchor": "2026-11-06",
+  "anchor": "2026-11-07",
   "weekStart": "2026-11-08",
   "weekEnd": "2026-11-14",
   "weekLabel": "2026年11月8日〜14日",
-  "generatedAt": "2026-11-05T19:10:42.882Z",
+  "generatedAt": "2026-11-06T19:10:25.992Z",
   "cap": 10,
   "videos": [
     {
@@ -12,7 +12,7 @@
       "keyword": "LT",
       "file": "week-lt.mp4",
       "publicPath": "/promo/videos/week-lt.mp4",
-      "matched": 37,
+      "matched": 38,
       "shown": 10,
       "seconds": 24.8
     },
@@ -22,7 +22,7 @@
       "keyword": "LT",
       "file": "week-lt-landscape.mp4",
       "publicPath": "/promo/videos/week-lt-landscape.mp4",
-      "matched": 37,
+      "matched": 38,
       "shown": 10,
       "seconds": 24.8
     },
