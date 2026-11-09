@@ -101,14 +101,22 @@ describe("紹介動画の絞り込み", () => {
     ];
 
     const lt = takePromoEvents(events, week, "LT");
-    expect(lt.matched.map((item) => item.id)).toEqual(["early", "desc", "cancelled", "late"]);
-    expect(lt.shown).toHaveLength(4);
+    expect(lt.matched.map((item) => item.id)).toEqual(["early", "desc", "late"]);
+    expect(lt.shown).toHaveLength(3);
 
     const moku = takePromoEvents(events, week, "もくもく");
     expect(moku.matched.map((item) => item.id)).toEqual(["tag", "moku"]);
     expect(
       takePromoEvents([event({ title: "作業会だけ" })], week, "もくもく").matched
     ).toHaveLength(0);
+  });
+
+  it("中止は動画から除き、開催予定のイベントは残す", () => {
+    const events = [
+      event({ id: "held", title: "朝の LT" }),
+      event({ id: "cancelled", title: "【中止】夜の LT", cancelled: true }),
+    ];
+    expect(takePromoEvents(events, week, "LT").matched.map((item) => item.id)).toEqual(["held"]);
   });
 
   it("11 件目以降は動画に載せず、尺は 30 秒を超えない", () => {
