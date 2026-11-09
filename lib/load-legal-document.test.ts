@@ -68,7 +68,9 @@ describe("loadLegalDocument", () => {
     expect(doc.title).toBe("プライバシーポリシー");
     expect(doc.canonicalPath).toBe("privacy");
     expect(doc.content).toContain("アカウント");
-    expect(doc.content).toContain("アクセス解析");
+    expect(doc.content).toContain(
+      "Cookieを使わないアクセス解析（Cloudflare Web Analytics）を利用しています。"
+    );
   });
 
   it("loads terms.md", () => {

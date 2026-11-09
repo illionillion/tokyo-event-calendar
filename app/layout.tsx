@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Noto_Sans_JP } from "next/font/google";
+import Script from "next/script";
 import { BackToTop } from "@/components/back-to-top";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
@@ -33,6 +34,12 @@ export default function RootLayout({
         <div className="flex min-w-0 flex-1 flex-col pb-8">{children}</div>
         <Footer />
         <BackToTop />
+        <Script
+          defer
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          strategy="afterInteractive"
+          data-cf-beacon='{"token": "c1e9ef71571840cfaad7ea502f5cee48"}'
+        />
       </body>
     </html>
   );
