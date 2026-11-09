@@ -81,7 +81,7 @@ export function promoDurationSeconds(cardCount: number): number {
 
 /**
  * サイトの週表示（`keyword=`）と同じ `matchesKeyword` で週内のイベントを選ぶ。
- * 中止も含む。日付、同じ日の中では開始時刻、その次はタイトル順。
+ * 中止（`cancelled`）は動画に渡さない。日付、同じ日の中では開始時刻、その次はタイトル順。
  */
 export function selectPromoEvents(
   events: readonly Event[],
@@ -90,7 +90,7 @@ export function selectPromoEvents(
 ): Event[] {
   const days = new Set(week);
   return events
-    .filter((event) => days.has(event.date) && matchesKeyword(event, keyword))
+    .filter((event) => days.has(event.date) && !event.cancelled && matchesKeyword(event, keyword))
     .sort(compareEvents);
 }
 
