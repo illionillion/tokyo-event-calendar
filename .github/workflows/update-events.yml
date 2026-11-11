@@ -4,6 +4,12 @@ name: Update events snapshot
 # 都道府県の検索に加え、data/connpass-supplements.json の subdomain と event_id も同じ実行で足す。
 # サイトからは connpass API を呼ばない。API を呼ぶのはスナップショットの更新時だけ
 # （このワークフローの定期実行・手動実行と、手元の pnpm fetch:events / fetch:events:local）。
+#
+# フリープランは 12 秒につき 1 リクエスト、1 日 100 リクエストまで（2026-11-04 から）。
+# この cron は 1 日 1 回。workflow_dispatch を同じ日に 1 回まで見込むと、1 バッチあたり 50 回まで。
+# 2026-11-11 の取得結果は重複除去後 541 件。見込みは 1 バッチ約 7 回（都道府県 6 + subdomain 1 + event_id 0）。
+# 根拠と上限でのスキップは lib/connpass-rate-limit.ts。間隔は 12.5 秒。
+# 終了から 7 日を超えたイベントはスナップショットに書かない。
 on:
   schedule:
     # 1 日 1 回（UTC 18:00 = 日本時間 3:00）

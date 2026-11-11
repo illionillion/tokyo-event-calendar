@@ -11,16 +11,22 @@
  *
  * API キーは環境変数からだけ読み、ログやファイルには出さない。
  * 補完設定の読み取りか、いずれかの API 呼び出しが失敗したときは、スナップショットを書き出さない。
+ * 終了から 7 日を超えたイベントは書き出さない。呼び出し間隔と 1 日の回数は lib/connpass-rate-limit.ts。
  */
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { format, resolveConfig } from "prettier";
 import {
+  DAILY_REQUEST_BUDGET,
+  MAX_REQUESTS_PER_BATCH,
+  REQUEST_INTERVAL_MS,
+} from "../lib/connpass-rate-limit";
+import { omitEventsEndedBeyondRetention } from "../lib/event-retention";
+import {
   buildSnapshot,
   fetchConnpassEvents,
   parseConnpassSupplements,
-  REQUEST_INTERVAL_MS,
   TARGET_PREFECTURES,
   targetMonths,
 } from "../lib/connpass-snapshot";
@@ -46,17 +52,23 @@ async function main(): Promise<void> {
     .filter((part) => part !== null)
     .join(" ");
   console.log(
-    `connpass API: ym=${months.join(",")} prefecture=${TARGET_PREFECTURES.join(",")}${supplementNote ? ` ${supplementNote}` : ""} interval=${REQUEST_INTERVAL_MS}ms`
+    `connpass API: ym=${months.join(",")} prefecture=${TARGET_PREFECTURES.join(",")}${supplementNote ? ` ${supplementNote}` : ""} interval=${REQUEST_INTERVAL_MS}ms batchLimit=${MAX_REQUESTS_PER_BATCH} dailyBudget=${DAILY_REQUEST_BUDGET}`
   );
 
-  const events = await fetchConnpassEvents({
+  const fetched = await fetchConnpassEvents({
     apiKey,
     months,
     supplements,
     log: (message) => console.log(message),
   });
+  const now = new Date();
+  const events = omitEventsEndedBeyondRetention(fetched, now);
+  const omitted = fetched.length - events.length;
+  if (omitted > 0) {
+    console.log(`終了から7日を超えたイベントを ${omitted} 件、スナップショットから除きました`);
+  }
   if (events.length === 0) {
-    throw new Error("イベントが 0 件だったため、スナップショットを更新しません");
+    throw new Error("掲載対象のイベントが 0 件だったため、スナップショットを更新しません");
   }
 
   const snapshot = buildSnapshot(events);

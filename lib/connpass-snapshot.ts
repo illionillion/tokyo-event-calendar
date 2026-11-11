@@ -1,25 +1,27 @@
+import {
+  MAX_REQUESTS_PER_BATCH,
+  REQUEST_INTERVAL_MS,
+  connpassBudgetSkipMessage,
+  createConnpassRequestGate,
+  type ConnpassRequestGate,
+} from "@/lib/connpass-rate-limit";
 import type { EventSnapshot, SnapshotEvent } from "@/lib/types";
 
 /** connpass API v2 のイベント一覧。https://connpass.com/about/api/v2/ */
 export const CONNPASS_EVENTS_ENDPOINT = "https://connpass.com/api/v2/events/";
 
-/**
- * リクエストの間隔。API リファレンスの制限（API キーごとに 1 秒間に 1 リクエストまで）より広く、
- * 都道府県検索の 2 ページ目で 429 になりやすいため 10 秒に 1 回までにする。前のレスポンスを受け取ってから待つので、
- * リクエストの開始どうしは必ずこれ以上あく。
- * 429 が返ったページは、この間隔とは別に短い待ちを挟んで取り直す（`RATE_LIMIT_MAX_RETRIES`）。
- */
-export const REQUEST_INTERVAL_MS = 10_000;
+export { REQUEST_INTERVAL_MS, MAX_REQUESTS_PER_BATCH };
 
 /**
- * 429 の再試行回数の上限。ページ送りの `MAX_REQUESTS` とは別に数える。
+ * 429 の再試行回数の上限。送った回数（`MAX_REQUESTS_PER_BATCH`）には、この再試行も含まれる。
  * 超えたら、取れた分は返さずに失敗する。
  */
 export const RATE_LIMIT_MAX_RETRIES = 3;
 
 /**
- * 429 の 1 回目の再試行までの待ち時間。2 回目は 2 倍、3 回目は 4 倍（5 秒、10 秒、20 秒）。
- * 成功したリクエスト同士の間隔（`REQUEST_INTERVAL_MS`）は変えない。
+ * 429 の 1 回目の再試行で足す待ち時間。2 回目は 2 倍、3 回目は 4 倍（5 秒、10 秒、20 秒）。
+ * 実際の待ちは、これとリクエスト間隔の長い方（`createConnpassRequestGate`）。
+ * 5 秒や 10 秒のままではフリープランの 12 秒を下回るので、間隔まで延ばす。
  */
 export const RATE_LIMIT_BACKOFF_BASE_MS = 5_000;
 
@@ -30,9 +32,6 @@ export function rateLimitBackoffMs(retry: number): number {
 
 /** API の count の上限。 */
 export const PAGE_SIZE = 100;
-
-/** 想定外に件数が多いときに止める上限。全部取り切れないときは書き出さずに失敗させる。 */
-export const MAX_REQUESTS = 100;
 
 /**
  * 取得する都道府県。API の `prefecture`（東京都・神奈川県・埼玉県・千葉県）。
@@ -290,8 +289,6 @@ export type FetchEventsOptions = {
   log?: (message: string) => void;
 };
 
-const defaultSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
-
 type PageQuery = {
   months: readonly string[];
   prefectures: readonly string[];
@@ -302,12 +299,8 @@ type PageQuery = {
 type FetchContext = {
   apiKey: string;
   fetchImpl: typeof fetch;
-  sleep: (ms: number) => Promise<void>;
-  intervalMs: number;
-  maxRequests: number;
+  gate: ConnpassRequestGate;
   log: (message: string) => void;
-  /** 都道府県のページと補完のページを通した、これまでに始めたリクエスト数。 */
-  requestCount: number;
 };
 
 /** 先に入った id を残して、イベント id で一つにまとめる。 */
@@ -336,12 +329,25 @@ async function discardResponseBody(response: Response): Promise<void> {
 }
 
 /**
- * 1 ページを取る。429 のときだけ exponential backoff で同じ URL を取り直す。
+ * 1 ページを取る。429 のときだけ同じ URL を取り直す。
+ * 初回も再試行も、送る前にレートリミッタで間隔と回数を確認する。
  * 429 以外のステータスはそのまま返し、呼び出し側が即失敗させる。
  */
 async function fetchEventPage(url: URL, context: FetchContext): Promise<Response> {
   const attempts = RATE_LIMIT_MAX_RETRIES + 1;
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    const extraDelayMs = attempt === 1 ? 0 : rateLimitBackoffMs(attempt - 1);
+    const turn = await context.gate.acquire(extraDelayMs);
+    if (!turn.ok) {
+      throw new Error(
+        connpassBudgetSkipMessage("次のリクエスト", context.gate.requestCount, context.gate.limit)
+      );
+    }
+    if (extraDelayMs > 0) {
+      context.log(
+        `connpass API が 429 を返したため、${attempt - 1}/${RATE_LIMIT_MAX_RETRIES} 回目の再試行まで ${turn.waitedMs}ms 待ちます`
+      );
+    }
     context.log(`GET ${url.pathname}${url.search}`);
     const response = await context.fetchImpl(url, {
       headers: {
@@ -354,12 +360,6 @@ async function fetchEventPage(url: URL, context: FetchContext): Promise<Response
 
     await discardResponseBody(response);
     if (attempt > RATE_LIMIT_MAX_RETRIES) break;
-
-    const waitMs = rateLimitBackoffMs(attempt);
-    context.log(
-      `connpass API が 429 を返したため、${attempt}/${RATE_LIMIT_MAX_RETRIES} 回目の再試行まで ${waitMs}ms 待ちます`
-    );
-    await context.sleep(waitMs);
   }
 
   throw new Error(
@@ -368,8 +368,8 @@ async function fetchEventPage(url: URL, context: FetchContext): Promise<Response
 }
 
 /**
- * 1 種類の検索条件を、1 ページずつ順に取る。2 回目以降（別の検索の続きも含む）は前のレスポンスのあと `intervalMs` 待つ。
- * 429 の再試行待ちは、この間隔とは別に同じページの中で行う。
+ * 1 種類の検索条件を、1 ページずつ順に取る。
+ * 都道府県・補完・429 の再試行は、すべて同じレートリミッタを通す。
  * 都道府県・subdomain・event_id のどれも無い検索は、窓の中の全イベントを取りに行くので拒否する。
  */
 async function fetchQueryPages(query: PageQuery, context: FetchContext): Promise<SnapshotEvent[]> {
@@ -385,12 +385,6 @@ async function fetchQueryPages(query: PageQuery, context: FetchContext): Promise
   let start = 1;
 
   for (;;) {
-    context.requestCount += 1;
-    if (context.requestCount > context.maxRequests) {
-      throw new Error(`リクエスト数が上限（${context.maxRequests} 回）を超えるため中断しました`);
-    }
-    if (context.requestCount > 1) await context.sleep(context.intervalMs);
-
     const url = eventsSearchUrl({ ...query, start });
     const response = await fetchEventPage(url, context);
     if (!response.ok) {
@@ -430,8 +424,8 @@ async function fetchQueryPages(query: PageQuery, context: FetchContext): Promise
  * 別種の条件を一つの URL に混ぜると絞り込み（AND）になり、取りこぼしを拾えないので、検索は分ける。
  * 同じ種類の複数値は都道府県と同じく和集合（同じ名前のパラメーターを繰り返す）として 1 回の検索にまとめる。
  * 開催年月は都道府県の取得と同じ窓にする。グループの過去イベントを全部は取らない。
- * リクエスト間隔は検索をまたいでも `intervalMs`。429 のときだけ同じページを
- * `RATE_LIMIT_MAX_RETRIES` 回まで取り直す。どこかで失敗したら、取れた分は返さずに例外にする
+ * リクエスト間隔と 1 バッチの回数は、都道府県・subdomain・event_id・429 の再試行で
+ * 同じレートリミッタを使う。上限に達したリクエストは送らず、取り切れていなければ例外にする
  * （API キーはメッセージやログに含めない）。呼び出し側はそのときスナップショットを書き出さない。
  * 重複はイベント id で除き、先に取れた都道府県側を残す。
  */
@@ -441,15 +435,12 @@ export async function fetchConnpassEvents({
   prefectures = TARGET_PREFECTURES,
   supplements,
   fetch: fetchImpl = fetch,
-  sleep = defaultSleep,
+  sleep,
   intervalMs = REQUEST_INTERVAL_MS,
-  maxRequests = MAX_REQUESTS,
+  maxRequests = MAX_REQUESTS_PER_BATCH,
   log = () => {},
 }: FetchEventsOptions): Promise<SnapshotEvent[]> {
   if (!apiKey) throw new Error("connpass API キーがありません");
-  if (intervalMs < REQUEST_INTERVAL_MS) {
-    throw new Error(`リクエスト間隔は ${REQUEST_INTERVAL_MS}ms 以上にしてください`);
-  }
 
   const allowlist = parseConnpassSupplements({
     subdomains: supplements?.subdomains ?? [],
@@ -459,11 +450,8 @@ export async function fetchConnpassEvents({
   const context: FetchContext = {
     apiKey,
     fetchImpl,
-    sleep,
-    intervalMs,
-    maxRequests,
+    gate: createConnpassRequestGate({ intervalMs, maxRequests, sleep }),
     log,
-    requestCount: 0,
   };
 
   const byPrefecture = await fetchQueryPages(
@@ -487,5 +475,9 @@ export async function fetchConnpassEvents({
     );
   }
 
-  return mergeById([byPrefecture, bySubdomain, byEventId]);
+  const events = mergeById([byPrefecture, bySubdomain, byEventId]);
+  log(
+    `connpass API を ${context.gate.requestCount} 回呼びました（このバッチの上限 ${context.gate.limit} 回）`
+  );
+  return events;
 }
