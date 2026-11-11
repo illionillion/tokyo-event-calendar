@@ -13,6 +13,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "../lib/promo-args";
 import { formatDayHeading, parseDateKey, todayKey } from "../lib/dates";
+import { omitEventsEndedBeyondRetention } from "../lib/event-retention";
 import { materializeEvents } from "../lib/events";
 import {
   PROMO_EVENT_CAP,
@@ -166,7 +167,9 @@ async function main(): Promise<void> {
   const snapshot = JSON.parse(
     await readFile(path.join(rootDir, "data", "events.json"), "utf8")
   ) as EventSnapshot;
-  const events = materializeEvents(todayKey(), snapshot.events);
+  const now = new Date();
+  const retained = omitEventsEndedBeyondRetention(snapshot.events, now);
+  const events = materializeEvents(todayKey(now), retained);
   const variants = PROMO_VARIANTS.filter((variant) => !args.only || variant.id === args.only);
 
   await mkdir(path.join(remotionDir, "public", "brand"), { recursive: true });

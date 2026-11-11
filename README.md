@@ -27,9 +27,10 @@ pnpm dev
 サイトからは connpass API を呼びません（利用者のアクセスで API を呼ぶことはありません）。API を呼ぶのは、スナップショットを更新するとき（GitHub Actions の定期実行・手動実行、または手元の `pnpm fetch:events` / `pnpm fetch:events:local`）だけです。
 
 1. `.github/workflows/update-events.yml` が 1 日 1 回（UTC 18:00 = 日本時間 3:00、手動実行も可）動く
-2. `scripts/fetch-connpass-events.ts` が connpass API v2 のイベント一覧（`GET /api/v2/events/`）から、東京都・神奈川県・埼玉県・千葉県（`prefecture=tokyo`, `kanagawa`, `saitama`, `chiba`）で今月から 3 か月分のイベントを開催日時順に 100 件ずつ取得する。続けて `data/connpass-supplements.json` の subdomain と event_id も、都道府県なし・同じ年月で取得し、イベント ID で足す（重複は除く）。リクエストは検索をまたいでも 10 秒に 1 回まで。429 のときだけ、同じページを短い待ちを挟んで数回まで取り直す。どちらかが失敗したときは `data/events.json` を書き出さない
-3. 主催者のニックネーム・表示名・ID は落とし、`image_url` はそのまま `data/events.json` に書き出す。カードは URL があるときその画像を表示する。API リファレンスでは、この URL はある程度の時間で失効し、外部サイトでの直接参照は控えるよう記載されている
-4. 変更があれば `main` に commit・push し、アプリはその JSON を読む
+2. `scripts/fetch-connpass-events.ts` が connpass API v2 のイベント一覧（`GET /api/v2/events/`）から、東京都・神奈川県・埼玉県・千葉県（`prefecture=tokyo`, `kanagawa`, `saitama`, `chiba`）で今月から 3 か月分のイベントを開催日時順に 100 件ずつ取得する。続けて `data/connpass-supplements.json` の subdomain と event_id も、都道府県なし・同じ年月で取得し、イベント ID で足す（重複は除く）。都道府県・補完・429 の再試行は、同じレートリミッタで 12.5 秒以上あける。フリープランは 12 秒につき 1 リクエスト、1 日 100 リクエストまで（2026-11-04 から。[API の利用について](https://help.connpass.com/api/)）。定期実行は 1 日 1 回で、同じ日の手動実行を 1 回まで見込むと 1 バッチ 50 回まで。2026-11-11 の取得結果は重複除去後 541 件で、見込みは約 7 回（都道府県 6 + subdomain 1 + event_id 0）なので、1 日 14 回で 100 回を下回る。上限を超えるリクエストは送らず、取り切れていなければ `data/events.json` を書き出さない。根拠は `lib/connpass-rate-limit.ts`
+3. 終了から 7 日を超えて経過したイベントは、スナップショットにもサイトの表示（ビルド時の日別 JSON と軽い一覧）にも残さない。ちょうど 7 日は残す。終了時刻が無いときは開始時刻を終了時刻として同じ基準で除く。取得に失敗したときも `data/events.json` は書き出さない
+4. 主催者のニックネーム・表示名・ID は落とし、`image_url` はそのまま `data/events.json` に書き出す。カードは URL があるときその画像を表示する。API リファレンスでは、この URL はある程度の時間で失効し、外部サイトでの直接参照は控えるよう記載されている
+5. 変更があれば `main` に commit・push し、アプリはその JSON を読む。表示用の JSON を作るときにも、終了から 7 日を超えたイベントを除く
 
 API キーは GitHub の Environment `workflow` の secret `CONNPASS_API_KEY` に置き、ワークフローから `pnpm fetch:events` で参照します。手元では `.env` にキーを書いて `pnpm fetch:events:local`（`tsx --env-file=.env` 経由）。CI と同じ渡し方なら `CONNPASS_API_KEY=... pnpm fetch:events` でも可（キーはログに出しません）。
 

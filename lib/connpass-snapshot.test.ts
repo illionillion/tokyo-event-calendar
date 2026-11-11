@@ -180,7 +180,7 @@ describe("connpass-snapshot", () => {
     expect(committedSnapshot.events.every((event) => isSnapshotSourceEvent(event))).toBe(true);
   });
 
-  it("ページを順に取り、2 回目以降は 10 秒あけてから呼ぶ", async () => {
+  it("ページを順に取り、2 回目以降は 12.5 秒あけてから呼ぶ", async () => {
     const pages = [page(1, PAGE_SIZE), page(101, PAGE_SIZE), page(201, 3)];
     const fetchMock = vi.fn(async (url: URL) =>
       jsonResponse(
@@ -286,7 +286,7 @@ describe("connpass-snapshot", () => {
     ).rejects.toThrow("results_available を超えました");
   });
 
-  it("リクエスト同士の間隔は 10 秒より短くできない", async () => {
+  it("リクエスト同士の間隔は 12.5 秒より短くできない", async () => {
     const fetchMock = vi.fn();
 
     await expect(
@@ -296,7 +296,7 @@ describe("connpass-snapshot", () => {
         fetch: fetchMock as unknown as typeof fetch,
         intervalMs: 1_000,
       })
-    ).rejects.toThrow("10000ms 以上");
+    ).rejects.toThrow(`${REQUEST_INTERVAL_MS}ms 以上`);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -321,8 +321,8 @@ describe("connpass-snapshot", () => {
     expect(sleep.mock.calls).toEqual([[REQUEST_INTERVAL_MS]]);
   });
 
-  it("リクエスト間隔は 10 秒のまま、429 の待ちは 5 秒から倍々になる", () => {
-    expect(REQUEST_INTERVAL_MS).toBe(10_000);
+  it("リクエスト間隔は 12.5 秒で、429 の backoff は 5 秒から倍々になる", () => {
+    expect(REQUEST_INTERVAL_MS).toBe(12_500);
     expect(RATE_LIMIT_MAX_RETRIES).toBe(3);
     expect([1, 2, 3].map((retry) => rateLimitBackoffMs(retry))).toEqual([5_000, 10_000, 20_000]);
   });
@@ -363,16 +363,16 @@ describe("connpass-snapshot", () => {
     expect(calls.every(([url]) => !url.toString().includes(TEST_KEY))).toBe(true);
     expect(sleep.mock.calls).toEqual([
       [REQUEST_INTERVAL_MS],
-      [rateLimitBackoffMs(1)],
-      [rateLimitBackoffMs(2)],
+      [REQUEST_INTERVAL_MS],
+      [REQUEST_INTERVAL_MS],
     ]);
     expect(logs).toEqual(
       expect.arrayContaining([
         expect.stringContaining(
-          `1/${RATE_LIMIT_MAX_RETRIES} 回目の再試行まで ${rateLimitBackoffMs(1)}ms`
+          `1/${RATE_LIMIT_MAX_RETRIES} 回目の再試行まで ${REQUEST_INTERVAL_MS}ms`
         ),
         expect.stringContaining(
-          `2/${RATE_LIMIT_MAX_RETRIES} 回目の再試行まで ${rateLimitBackoffMs(2)}ms`
+          `2/${RATE_LIMIT_MAX_RETRIES} 回目の再試行まで ${REQUEST_INTERVAL_MS}ms`
         ),
       ])
     );
@@ -408,9 +408,9 @@ describe("connpass-snapshot", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1 + RATE_LIMIT_MAX_RETRIES + 1);
     expect(sleep.mock.calls).toEqual([
       [REQUEST_INTERVAL_MS],
-      ...Array.from({ length: RATE_LIMIT_MAX_RETRIES }, (_, index) => [
-        rateLimitBackoffMs(index + 1),
-      ]),
+      [REQUEST_INTERVAL_MS],
+      [REQUEST_INTERVAL_MS],
+      [rateLimitBackoffMs(3)],
     ]);
     expect(logs.filter((message) => message.includes("回目の再試行"))).toHaveLength(
       RATE_LIMIT_MAX_RETRIES
@@ -432,26 +432,26 @@ describe("connpass-snapshot", () => {
       })
     ).rejects.toThrow("connpass API が 503 を返しました");
     expect(fetchMock).toHaveBeenCalledTimes(2);
-    expect(sleep.mock.calls).toEqual([[rateLimitBackoffMs(1)]]);
+    expect(sleep.mock.calls).toEqual([[REQUEST_INTERVAL_MS]]);
   });
 
-  it("429 の再試行はページ数の上限に数えない", async () => {
+  it("429 の再試行も 1 日の回数に数え、上限を超える再試行は送らない", async () => {
     const responses = [
       jsonResponse({}, 429),
       jsonResponse(eventListResponse([connpassEvent({ id: 7 })])),
     ];
     const fetchMock = vi.fn(async () => responses.shift() as Response);
 
-    const events = await fetchConnpassEvents({
-      apiKey: TEST_KEY,
-      months: ["202610"],
-      fetch: fetchMock as unknown as typeof fetch,
-      sleep: async () => {},
-      maxRequests: 1,
-    });
-
-    expect(events.map((event) => event.id)).toEqual([7]);
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    await expect(
+      fetchConnpassEvents({
+        apiKey: TEST_KEY,
+        months: ["202610"],
+        fetch: fetchMock as unknown as typeof fetch,
+        sleep: async () => {},
+        maxRequests: 1,
+      })
+    ).rejects.toThrow(/スキップします/);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it("リクエスト数の上限を超えたら止める", async () => {
@@ -464,15 +464,19 @@ describe("connpass-snapshot", () => {
       )
     );
 
-    await expect(
-      fetchConnpassEvents({
-        apiKey: TEST_KEY,
-        months: ["202610"],
-        fetch: fetchMock as unknown as typeof fetch,
-        sleep: async () => {},
-        maxRequests: 2,
-      })
-    ).rejects.toThrow("上限（2 回）");
+    const result = fetchConnpassEvents({
+      apiKey: TEST_KEY,
+      months: ["202610"],
+      fetch: fetchMock as unknown as typeof fetch,
+      sleep: async () => {},
+      maxRequests: 2,
+    });
+
+    await expect(result).rejects.toThrow(
+      /上限（2 回）に達したため、次のリクエストをスキップします/
+    );
+    await expect(result).rejects.toThrow(/1 日の予算は 100 回/);
+    await expect(result).rejects.toThrow(/更新しません/);
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
@@ -634,7 +638,7 @@ describe("connpass-snapshot", () => {
         sleep: async () => {},
         maxRequests: 1,
       })
-    ).rejects.toThrow("上限（1 回）");
+    ).rejects.toThrow(/上限（1 回）に達したため、次のリクエストをスキップします/);
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
