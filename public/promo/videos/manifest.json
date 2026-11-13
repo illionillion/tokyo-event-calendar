@@ -1,9 +1,9 @@
 {
-  "anchor": "2026-11-13",
+  "anchor": "2026-11-14",
   "weekStart": "2026-11-15",
   "weekEnd": "2026-11-21",
   "weekLabel": "2026年11月15日〜21日",
-  "generatedAt": "2026-11-12T19:10:52.594Z",
+  "generatedAt": "2026-11-13T19:10:49.874Z",
   "cap": 10,
   "videos": [
     {
@@ -32,7 +32,7 @@
       "keyword": "もくもく",
       "file": "week-mokumoku.mp4",
       "publicPath": "/promo/videos/week-mokumoku.mp4",
-      "matched": 21,
+      "matched": 23,
       "shown": 10,
       "seconds": 24.8
     },
@@ -42,7 +42,7 @@
       "keyword": "もくもく",
       "file": "week-mokumoku-landscape.mp4",
       "publicPath": "/promo/videos/week-mokumoku-landscape.mp4",
-      "matched": 21,
+      "matched": 23,
       "shown": 10,
       "seconds": 24.8
     }
