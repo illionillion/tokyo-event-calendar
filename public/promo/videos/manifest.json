@@ -1,9 +1,9 @@
 {
-  "anchor": "2026-11-21",
-  "weekStart": "2026-11-22",
-  "weekEnd": "2026-11-28",
-  "weekLabel": "2026年11月22日〜28日",
-  "generatedAt": "2026-11-20T19:10:57.159Z",
+  "anchor": "2026-11-22",
+  "weekStart": "2026-11-29",
+  "weekEnd": "2026-12-05",
+  "weekLabel": "2026年11月29日〜12月5日",
+  "generatedAt": "2026-11-21T19:09:54.069Z",
   "cap": 10,
   "videos": [
     {
@@ -12,7 +12,7 @@
       "keyword": "LT",
       "file": "week-lt.mp4",
       "publicPath": "/promo/videos/week-lt.mp4",
-      "matched": 50,
+      "matched": 24,
       "shown": 10,
       "seconds": 24.8
     },
@@ -22,7 +22,7 @@
       "keyword": "LT",
       "file": "week-lt-landscape.mp4",
       "publicPath": "/promo/videos/week-lt-landscape.mp4",
-      "matched": 50,
+      "matched": 24,
       "shown": 10,
       "seconds": 24.8
     },
@@ -32,9 +32,9 @@
       "keyword": "もくもく",
       "file": "week-mokumoku.mp4",
       "publicPath": "/promo/videos/week-mokumoku.mp4",
-      "matched": 28,
-      "shown": 10,
-      "seconds": 24.8
+      "matched": 7,
+      "shown": 7,
+      "seconds": 18.8
     },
     {
       "id": "mokumoku",
@@ -42,9 +42,9 @@
       "keyword": "もくもく",
       "file": "week-mokumoku-landscape.mp4",
       "publicPath": "/promo/videos/week-mokumoku-landscape.mp4",
-      "matched": 28,
-      "shown": 10,
-      "seconds": 24.8
+      "matched": 7,
+      "shown": 7,
+      "seconds": 18.8
     }
   ]
 }
