@@ -71,7 +71,7 @@ describe("loadLegalDocument", () => {
     expect(doc.content).toContain(
       "Cookieを使わないアクセス解析（Cloudflare Web Analytics）を利用しています。"
     );
-    expect(doc.content).toContain("終了から 7 日を超えて経過したイベント");
+    expect(doc.content).toContain("終了から 3 か月を超えて経過したイベント");
   });
 
   it("loads terms.md", () => {
@@ -79,7 +79,7 @@ describe("loadLegalDocument", () => {
     expect(doc.title).toBe("利用規約");
     expect(doc.canonicalPath).toBe("terms");
     expect(doc.content).toContain("connpass API から 1 日 1 回取得");
-    expect(doc.content).toContain("終了から 7 日を超えて経過したイベント");
+    expect(doc.content).toContain("終了から 3 か月を超えて経過したイベント");
     expect(doc.content).toContain("日本法");
   });
 

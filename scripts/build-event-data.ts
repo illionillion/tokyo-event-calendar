@@ -2,7 +2,7 @@
  * `data/events.json`（connpass のスナップショット）から、ブラウザが取りにいく静的な JSON を
  * `public/data/` に書き出す。`pnpm build` / `pnpm dev` の前に毎回動く（生成物はコミットしない）。
  * イベントのデータを Worker にバンドルしないための手順。
- * 終了から 7 日を超えたイベントは、スナップショットに残っていても日別 JSON と軽い一覧には出さない。
+ * 終了から 3 か月を超えたイベントは、スナップショットに残っていても日別 JSON と軽い一覧には出さない。
  */
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -26,7 +26,7 @@ async function main(): Promise<void> {
   const retained = omitEventsEndedBeyondRetention(snapshot.events, now);
   const omitted = snapshot.events.length - retained.length;
   if (omitted > 0) {
-    console.log(`終了から7日を超えたイベントを ${omitted} 件、表示用データから除きました`);
+    console.log(`終了から3か月を超えたイベントを ${omitted} 件、表示用データから除きました`);
   }
   const events = materializeEvents(todayKey(now), retained);
   const { index, days, lite } = buildDailyEventData(events, new Date().toISOString());
