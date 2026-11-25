@@ -11,7 +11,8 @@
  *
  * API キーは環境変数からだけ読み、ログやファイルには出さない。
  * 補完設定の読み取りか、いずれかの API 呼び出しが失敗したときは、スナップショットを書き出さない。
- * 終了から 7 日を超えたイベントは書き出さない。呼び出し間隔と 1 日の回数は lib/connpass-rate-limit.ts。
+ * 終了から 3 か月を超えたイベントは書き出さない。取得対象月の外の終了済みイベントは既存スナップショットから引き継ぐ。
+ * 呼び出し間隔と 1 日の回数は lib/connpass-rate-limit.ts。
  */
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -22,14 +23,20 @@ import {
   MAX_REQUESTS_PER_BATCH,
   REQUEST_INTERVAL_MS,
 } from "../lib/connpass-rate-limit";
-import { omitEventsEndedBeyondRetention } from "../lib/event-retention";
+import {
+  isPastEndedRetention,
+  mergeRetainedSnapshotEvents,
+  omitEventsEndedBeyondRetention,
+} from "../lib/event-retention";
 import {
   buildSnapshot,
   fetchConnpassEvents,
+  isEventListResponse,
   parseConnpassSupplements,
   TARGET_PREFECTURES,
   targetMonths,
 } from "../lib/connpass-snapshot";
+import type { SnapshotEvent } from "../lib/types";
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const outputPath = path.join(rootDir, "data", "events.json");
@@ -62,10 +69,27 @@ async function main(): Promise<void> {
     log: (message) => console.log(message),
   });
   const now = new Date();
-  const events = omitEventsEndedBeyondRetention(fetched, now);
-  const omitted = fetched.length - events.length;
-  if (omitted > 0) {
-    console.log(`終了から7日を超えたイベントを ${omitted} 件、スナップショットから除きました`);
+  const previous = await readPreviousEvents();
+  const fetchedKept = omitEventsEndedBeyondRetention(fetched, now);
+  const events = mergeRetainedSnapshotEvents(fetched, previous, now, months);
+  const omittedFetched = fetched.length - fetchedKept.length;
+  const fetchedIds = new Set(fetched.map((event) => event.id));
+  const expiredPrevious = previous.filter(
+    (event) => !fetchedIds.has(event.id) && isPastEndedRetention(event, now)
+  ).length;
+  const carried = events.length - fetchedKept.length;
+  if (omittedFetched > 0) {
+    console.log(`終了から3か月を超えたイベントを ${omittedFetched} 件、今回の取得分から除きました`);
+  }
+  if (expiredPrevious > 0) {
+    console.log(
+      `終了から3か月を超えたイベントを ${expiredPrevious} 件、既存スナップショットから除きました`
+    );
+  }
+  if (carried > 0) {
+    console.log(
+      `取得対象月の外にある終了済みイベントを ${carried} 件、既存スナップショットから引き継ぎました`
+    );
   }
   if (events.length === 0) {
     throw new Error("掲載対象のイベントが 0 件だったため、スナップショットを更新しません");
@@ -81,6 +105,19 @@ async function main(): Promise<void> {
   console.log(
     `${snapshot.events.length} 件を ${path.relative(rootDir, outputPath)} に書き出しました`
   );
+}
+
+async function readPreviousEvents(): Promise<SnapshotEvent[]> {
+  try {
+    const raw: unknown = JSON.parse(await readFile(outputPath, "utf8"));
+    if (!isEventListResponse(raw)) {
+      console.log("既存のスナップショットを読み取れなかったため、今回の取得分だけを使います");
+      return [];
+    }
+    return raw.events;
+  } catch {
+    return [];
+  }
 }
 
 async function readSupplements(): Promise<unknown> {
